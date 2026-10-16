@@ -48,6 +48,9 @@ interface Counters {
   songsFinished: number;
   xyloSongs: number;
   xyloThreeStars: number;
+  /** Right answers in ear training, and scales or chords played along. */
+  earCorrect: number;
+  scalesPlayed: number;
   maxLevel: number;
   maxStage: number;
   /** The most lessons read so far, and how many lessons the course had at that time. */
@@ -74,7 +77,7 @@ function emptyState(): State {
     days: {},
     counters: {
       correct: 0, bestCombo: 0, piecesPassed: 0, stepsPassed: 0, songsFinished: 0,
-      xyloSongs: 0, xyloThreeStars: 0, maxLevel: 1, maxStage: 1, lessonsRead: 0, lessonsTotal: 0,
+      xyloSongs: 0, xyloThreeStars: 0, earCorrect: 0, scalesPlayed: 0, maxLevel: 1, maxStage: 1, lessonsRead: 0, lessonsTotal: 0,
     },
     songStars: {},
     xyloBest: {},
@@ -249,6 +252,19 @@ export class GameStore {
     c.bestCombo = Math.max(c.bestCombo, this.comboNow);
     const bonus = this.comboNow % 5 === 0 ? this.comboNow / 5 : 0;
     return this.award(BASE_ANSWER_XP + bonus);
+  }
+
+  /** An ear training question: 3 XP when it is right. It has its own count, so the quiz combo is left alone. */
+  recordEarAnswer(correct: boolean): Award {
+    if (!correct) return this.award(0);
+    this.state.counters.earCorrect++;
+    return this.award(3);
+  }
+
+  /** A scale or a chord played along to the end: 5 XP. */
+  recordScalePlayed(): Award {
+    this.state.counters.scalesPlayed++;
+    return this.award(5);
   }
 
   /** A piece of the levels played and passed. `level` is the level the player is on now. */

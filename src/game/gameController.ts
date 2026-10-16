@@ -22,6 +22,14 @@ export class GameController {
     return this.announce(this.store.recordAnswer(correct));
   }
 
+  earAnswer(correct: boolean): Award {
+    return this.announce(this.store.recordEarAnswer(correct));
+  }
+
+  scalePlayed(): Award {
+    return this.announce(this.store.recordScalePlayed());
+  }
+
   levelPassed(level: number): Award {
     return this.announce(this.store.recordLevelPassed(level));
   }

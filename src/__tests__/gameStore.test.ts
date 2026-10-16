@@ -326,3 +326,43 @@ describe('saving', () => {
     expect(calls).toBe(2);
   });
 });
+
+describe('ear training and scales', () => {
+  it('pays 3 XP for a right ear answer and nothing for a wrong one, and does not touch the quiz combo', () => {
+    const { store } = storeAt('2026-10-16');
+    store.recordAnswer(true);
+    expect(store.combo()).toBe(1);
+    expect(store.recordEarAnswer(true).xp).toBe(3);
+    expect(store.recordEarAnswer(false).xp).toBe(0);
+    expect(store.combo()).toBe(1);
+    expect(store.stats().earCorrect).toBe(1);
+    expect(store.stats().correct).toBe(1); // the note quiz counter is separate
+  });
+
+  it('pays 5 XP for a scale or chord played along, and counts it', () => {
+    const { store } = storeAt('2026-10-16');
+    expect(store.recordScalePlayed().xp).toBe(5);
+    expect(store.stats().scalesPlayed).toBe(1);
+  });
+
+  it('earns the ear badge at 25 right answers and the scales badge at 5 played', () => {
+    const { store } = storeAt('2026-10-16');
+    for (let i = 0; i < 24; i++) store.recordEarAnswer(true);
+    expect(store.hasBadge('ear-25')).toBe(false);
+    expect(store.recordEarAnswer(true).newBadges).toContain('ear-25');
+    for (let i = 0; i < 4; i++) store.recordScalePlayed();
+    expect(store.hasBadge('scales-5')).toBe(false);
+    expect(store.recordScalePlayed().newBadges).toContain('scales-5');
+  });
+
+  it('keeps the new counters in storage, and starts old saves at zero', () => {
+    const storage = fakeStorage();
+    const { store } = storeAt('2026-10-16', storage);
+    store.recordEarAnswer(true);
+    store.recordScalePlayed();
+    const again = storeAt('2026-10-16', storage).store;
+    expect(again.stats()).toMatchObject({ earCorrect: 1, scalesPlayed: 1 });
+    const old = JSON.stringify({ version: 1, xp: 40, goal: 50, days: {}, counters: { correct: 3 }, badges: {} });
+    expect(storeAt('2026-10-16', fakeStorage({ 'game.v1': old })).store.stats()).toMatchObject({ earCorrect: 0, scalesPlayed: 0, correct: 3 });
+  });
+});

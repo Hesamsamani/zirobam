@@ -19,6 +19,8 @@ const STATS: ReadonlyArray<{ id: string; label: MessageKey; value: (s: ReturnTyp
   { id: 'steps', label: 'game.stat.steps', value: (s) => s.stepsPassed },
   { id: 'songs', label: 'game.stat.songs', value: (s) => s.songsFinished },
   { id: 'xylo', label: 'game.stat.xylo', value: (s) => s.xyloSongs },
+  { id: 'ear', label: 'game.stat.ear', value: (s) => s.earCorrect },
+  { id: 'scales', label: 'game.stat.scales', value: (s) => s.scalesPlayed },
 ];
 
 function make<K extends keyof HTMLElementTagNameMap>(tag: K, className: string): HTMLElementTagNameMap[K] {

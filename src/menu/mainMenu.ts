@@ -1,7 +1,7 @@
 import { t, type MessageKey } from '../i18n';
 import type { View } from '../app/router';
 
-export type TileId = 'lessons' | 'learn' | 'catalog' | 'levels' | 'songs' | 'xylophone' | 'metronome' | 'progress' | 'settings';
+export type TileId = 'lessons' | 'learn' | 'ear' | 'scales' | 'catalog' | 'levels' | 'songs' | 'xylophone' | 'metronome' | 'progress' | 'settings';
 
 export interface MenuTile {
   id: TileId;
@@ -17,6 +17,8 @@ export interface MenuTile {
 export const MENU_TILES: readonly MenuTile[] = [
   { id: 'lessons', group: 'path', title: 'menu.lessons.title', desc: 'menu.lessons.desc', target: { view: 'lessons' } },
   { id: 'learn', group: 'path', title: 'menu.learn.title', desc: 'menu.learn.desc', target: { view: 'learn' } },
+  { id: 'ear', group: 'path', title: 'menu.ear.title', desc: 'menu.ear.desc', target: { view: 'ear' } },
+  { id: 'scales', group: 'path', title: 'menu.scales.title', desc: 'menu.scales.desc', target: { view: 'scales' } },
   { id: 'levels', group: 'path', title: 'menu.levels.title', desc: 'menu.levels.desc', target: { view: 'levels' } },
   { id: 'songs', group: 'path', title: 'menu.songs.title', desc: 'menu.songs.desc', target: { view: 'songs' } },
   { id: 'catalog', group: 'tool', title: 'menu.catalog.title', desc: 'menu.catalog.desc', target: { view: 'catalog' } },
@@ -56,6 +58,8 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 const ICONS: Readonly<Record<TileId, string>> = {
   lessons: 'M4 5.5A1.5 1.5 0 0 1 5.5 4H12v15H5.5A1.5 1.5 0 0 0 4 20.5zM20 5.5A1.5 1.5 0 0 0 18.5 4H12v15h6.5a1.5 1.5 0 0 1 1.5 1.5z',
   learn: 'M12 3a9 9 0 1 0 .01 0M12 7.5a4.5 4.5 0 1 0 .01 0M12 12h.01',
+  ear: 'M6 15.5V10a6 6 0 1 1 12 0c0 2.6-1.4 3.6-2.4 4.6-.9.9-1.1 1.6-1.1 2.9a2.5 2.5 0 0 1-4.9.6M12 10a2 2 0 0 1 4 0',
+  scales: 'M3 19h3v-3h3v-3h3v-3h3V7h3V4M3 19h18',
   levels: 'M3 6h18M3 9.5h18M3 13h18M3 16.5h18M3 20h18M12.2 16.2a2.2 1.6 -20 1 0 .01 0M14.3 15.6V5',
   songs: 'M9 17.5V6l10-2v11.5M9 17.5a2.2 2.2 0 1 1-4.4 0 2.2 2.2 0 0 1 4.4 0zM19 15.5a2.2 2.2 0 1 1-4.4 0 2.2 2.2 0 0 1 4.4 0z',
   catalog: 'M4 6h10M4 11h10M4 16h6M18.2 17.2a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM18.2 17.2V8l3 1',

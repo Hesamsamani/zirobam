@@ -116,6 +116,7 @@ test.describe('Lessons', () => {
 
   test('finishing the whole course pays the bonus and earns the student badge', async ({ page }) => {
     await page.goto('/#/lessons');
+    await expect(page.locator('.lesson-card').first()).toBeVisible(); // the list is drawn after the page loads
     const ids = await page.locator('.lesson-card').evaluateAll((cards) => cards.map((c) => (c as HTMLElement).dataset.lesson!));
     const last = ids[ids.length - 1];
     await page.evaluate((all) => localStorage.setItem('lessons.read.v1', JSON.stringify(all.slice(0, -1))), ids);

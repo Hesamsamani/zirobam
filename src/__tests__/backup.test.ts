@@ -57,7 +57,7 @@ const goodBackup = (over: Partial<BackupFile> = {}): BackupFile => ({
 
 describe('which keys are backed up', () => {
   it('takes the progress and the settings of the app', () => {
-    for (const key of ['game.v1', 'lessons.read.v1', 'noteStats.v1', 'xyloStats.v1', 'sightreading-progress', 'practiceState', 'ui.locale', 'ui.noteNames', 'ui.aidsOpen', 'xylo.row', 'metronome.v1', 'learn.stage', 'practice.options.v1']) {
+    for (const key of ['game.v1', 'lessons.read.v1', 'noteStats.v1', 'xyloStats.v1', 'sightreading-progress', 'practiceState', 'ui.locale', 'ui.noteNames', 'ui.aidsOpen', 'xylo.row', 'metronome.v1', 'learn.stage', 'practice.options.v1', 'earStats.v1', 'ear.stage', 'scales.v1']) {
       expect(isBackupKey(key), key).toBe(true);
     }
   });

@@ -48,6 +48,8 @@ import '@fontsource/crimson-pro/latin-600.css';
 import { InstallPrompt } from './pwa/installPrompt';
 import { PwaPanel } from './pwa/pwaPanel';
 import { SongMakerView } from './songs/songMakerView';
+import { EarView } from './ear/earView';
+import { ScalesView } from './scales/scalesView';
 import { buildTimingEventList, effectiveHand, normalizeNote, type TimingEvent } from './practice/timingEvents';
 import { WaitSession, countWaitNotes } from './practice/waitMode';
 import { PracticeOptionsStore, nextLadderBpm } from './practice/practiceOptions';
@@ -1238,14 +1240,40 @@ function setupNavigation(learn: LearnHandle) {
     onReadAnswer: (correct) => game.answer(correct),
     onSongFinished: (songId, stars) => game.xyloSong(songId, stars),
   });
-  const lessonPlayer = new LessonPlayer({
-    // the piano the exercises use; it loads on first use
+  // the piano the exercises, ear training and scales listen with; it loads on first use
+  const pianoVoice = {
     ready: async () => {
       await initAudio();
       return Boolean(sampler?.loaded);
     },
-    play: (note, seconds, startsIn) => void sampler?.triggerAttackRelease(note, seconds, Tone.now() + 0.05 + startsIn),
+    play: (note: string, seconds: number, startsIn: number) => void sampler?.triggerAttackRelease(note, seconds, Tone.now() + 0.05 + startsIn),
     stopAll: () => sampler?.releaseAll(),
+  };
+  const lessonPlayer = new LessonPlayer(pianoVoice);
+  const earStats = new NoteStats(undefined, 'earStats.v1');
+  const ear = new EarView({
+    stats: earStats,
+    voice: { ...pianoVoice, ready: async () => (await Tone.start(), pianoVoice.ready()) },
+    hub: noteInput,
+    formatName: (note) => formatNoteName(note, getNoteNameSystem()),
+    onBack: () => appShell.navigate('home'),
+    onAnswer: (correct) => game.earAnswer(correct),
+  });
+  const scales = new ScalesView({
+    toolkit: new VerovioToolkit(verovioModule) as unknown as NotationToolkit,
+    voice: { ...pianoVoice, ready: async () => (await Tone.start(), pianoVoice.ready()) },
+    hub: noteInput,
+    formatName: (note) => formatNoteName(note, getNoteNameSystem()),
+    onBack: () => appShell.navigate('home'),
+    onPlayed: () => game.scalePlayed(),
+  });
+  onLocaleChange(() => {
+    ear.refresh();
+    scales.refresh();
+  });
+  onNoteNamesChange(() => {
+    ear.refresh();
+    scales.refresh();
   });
   const lessons = new LessonsView({
     toolkit: new VerovioToolkit(verovioModule) as unknown as NotationToolkit,
@@ -1286,7 +1314,7 @@ function setupNavigation(learn: LearnHandle) {
   songsView = songs;
   xylophoneView = xylophone;
   progressView = progress;
-  document.getElementById('app')!.prepend(menu.element, lessons.element, songs.element, maker.element, catalog.element, xylophone.element, progress.element);
+  document.getElementById('app')!.prepend(menu.element, lessons.element, songs.element, maker.element, ear.element, scales.element, catalog.element, xylophone.element, progress.element);
 
   document.getElementById('homeButton')!.addEventListener('click', () => appShell.navigate('home'));
 
@@ -1301,6 +1329,8 @@ function setupNavigation(learn: LearnHandle) {
       if (STAND_VIEWS.includes(view) && (isPlaying || isStarting)) stop();
       if (view === 'learn') learn.close();
       if (view === 'xylophone') xylophone.deactivate();
+      if (view === 'ear') ear.deactivate();
+      if (view === 'scales') scales.deactivate();
       if (view === 'lessons') lessons.stop();
     },
     change: (view, param) => {
@@ -1342,6 +1372,12 @@ function setupNavigation(learn: LearnHandle) {
           break;
         case 'xylophone':
           xylophone.activate();
+          break;
+        case 'ear':
+          ear.activate();
+          break;
+        case 'scales':
+          scales.activate();
           break;
         case 'progress':
           progress.refresh();
