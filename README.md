@@ -2,13 +2,37 @@
 
 A personal study fork of [ftrain/sightreading](https://github.com/ftrain/sightreading), extended so a beginner can learn to read music notes in **English or Persian**, with or without a MIDI keyboard. Persian README: [README.fa.md](README.fa.md).
 
-## What this fork adds (work in progress)
+## What this fork adds
 
-- English and Persian interface, with right-to-left layout for Persian text (the staff and keyboard stay left-to-right).
-- Note names as letters (C D E), solfège (Do Re Mi) or Persian solfège (دو ر می).
-- Play without a MIDI keyboard: on-screen piano and computer keyboard.
-- A beginner "Name the note" mode with short lessons and weak-note practice.
-- Planned: microphone input for an acoustic instrument.
+- **English and Persian interface**, with right-to-left layout for Persian text. The staff, the piano and the note buttons stay left-to-right. Choose the language in Options (the three-dot button).
+- **Three ways to name notes:** letters (C D E), solfège (Do Re Mi) and Persian solfège (دو ر می). The choice applies everywhere: level names, the piano, the quiz and, if you tick "Show note names on the staff", under every note. Sharps and flats that come from the key signature are included (F♯ in D major).
+- **Play without a MIDI keyboard.** The piano button opens an on-screen piano, and the computer keyboard plays notes too (table below). Keys are matched by position, so it also works with a Persian keyboard layout. Letters on the piano show which key plays which note.
+- **Learn the notes.** The book button opens five short lessons (the staff, clefs, middle C, ledger lines, note names) and a "Name the note" quiz: one note on a staff, seven answer buttons, or play the note on any input. Notes you miss come back more often, and five stages unlock after 20 answers at 90 percent.
+- **Phones:** the control bar wraps onto two rows so every button, including Options, stays reachable.
+- **Planned:** microphone input for an acoustic instrument.
+
+| Computer keys | Notes |
+|---|---|
+| `A S D F G H J K L ;` `'` | white keys, C4 to F5 |
+| `W E T Y U O P` | black keys |
+| `Z` / `X` | octave down / up |
+
+## Run it
+
+```bash
+npm ci
+npm run dev      # http://localhost:5173/sightreading/
+npm test         # unit tests
+npx playwright test
+npm run build
+```
+
+## Known limitations
+
+- The piano sound is fetched from `tonejs.github.io` (needs internet; one external request after the first key press or Start).
+- Persian music terms (دیز, بمل, the level names) are waiting for the owner's review.
+- 13 upstream end-to-end tests fail in this environment exactly as they do on the original code (2 desktop playback tests and 11 on the phone profiles). None of them involve this fork's changes.
+- Audit warnings in dev tooling (Vite, Vitest, gh-pages) are not fixed yet; nothing in the shipped bundle is flagged.
 
 Design: [docs/superpowers/specs/2026-10-16-bilingual-note-trainer-design.md](docs/superpowers/specs/2026-10-16-bilingual-note-trainer-design.md). Why this base app was chosen: [research/candidates.md](research/candidates.md).
 

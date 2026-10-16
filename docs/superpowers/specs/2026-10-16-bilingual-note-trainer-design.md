@@ -21,25 +21,34 @@ Persian quarter-tones (کرن/سری), offline PWA, GitHub Pages deploy, a rewri
 - UI text lives in `index.html` (about 60 strings), `main.ts` (about 40, built dynamically), `musicGenerator.ts` (`getLessonDescription()`, key names) and `songs/index.ts` (6 titles).
 - The app loads fonts from Google Fonts; there is no localisation of any kind.
 
+## Status
+
+**Milestone 1 implemented 2026-10-16** (plan: `docs/superpowers/plans/2026-10-16-bilingual-note-trainer.md`). Milestone 2 (microphone) is not started.
+
 ## Architecture
 
-New modules (each has one purpose and its own tests); existing files change only where listed.
+New modules (each has one purpose and its own tests); existing files change only where listed. This is what was built:
 
 ```
 src/i18n/
-  index.ts            t(key, params), getLocale(), setLocale(), onLocaleChange(), applyTranslations(root)
+  index.ts            t(key, params), getLocale(), setLocale(), onLocaleChange(), applyTranslations(root), formatNumber()
   locales/en.ts       source of truth for all keys
   locales/fa.ts       must define every key of en.ts (enforced by the type system and a test)
-  noteNames.ts        formatNoteName(note, system), NoteNameSystem, default per locale
-  digits.ts           toPersianDigits() / formatNumber(n, locale)
+  noteNames.ts        formatNoteName(note, system), formatKeyName(), NoteNameSystem, default per locale
+  digits.ts           toPersianDigits() / toLatinDigits()
+src/lessonText.ts     translated level descriptions
 src/input/
   noteInput.ts        tiny typed hub: onNoteOn / onNoteOff (name like "C#4"); sources emit into it
   computerKeyboard.ts physical-key map (KeyboardEvent.code), octave shift
   onScreenPiano.ts    DOM piano (pointer events), highlights keys, labels via noteNames
+src/rendering/
+  noteLabels.ts       note names under noteheads
 src/learn/
   noteScheduler.ts    pure: picks the next note to ask using per-pitch history
   noteStats.ts        per-pitch correct/seen counts, saved in localStorage
   nameTheNote.ts      the quiz: question, answer check, stages
+  noteCard.ts         draws one note on a staff with its own Verovio toolkit
+  learnView.ts        the quiz and lesson screens
   lessons.ts          5 short bilingual explanation screens
 ```
 

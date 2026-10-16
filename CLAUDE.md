@@ -119,3 +119,25 @@ This is the owner's personal fork. Design: `docs/superpowers/specs/2026-10-16-bi
 - **Don't add network dependencies** (CDNs, analytics). Fonts are self-hosted.
 - **Tests first:** new modules get Vitest tests before code; upstream tests must stay green (`npm test`); E2E with `npx playwright test`.
 - **Persian terminology** (دیز, بمل, solfège names) is pending the owner's review.
+- **No constructor parameter properties** (`constructor(private x: T)`): `tsconfig` has `erasableSyntaxOnly`. Declare the field and assign it in the constructor.
+- **Don't use `innerHTML`** in new code (a security hook flags it). Build DOM with `createElement`, `textContent` and `replaceChildren()`; parse SVG strings with `DOMParser`.
+
+### Module map (milestone 1, done 2026-10-16)
+
+| Path | Purpose |
+|---|---|
+| `src/i18n/` | `t()`, locale state and `<html lang dir>`, digits, note-name systems (`noteNames.ts`), dictionaries in `locales/en.ts` and `fa.ts` |
+| `src/lessonText.ts` | Translated level descriptions that follow the note-name system |
+| `src/input/noteInput.ts` | The hub every note source emits into (`midi`, `screen`, `computer`, later `microphone`) |
+| `src/input/computerKeyboard.ts`, `onScreenPiano.ts` | Keyboard by physical key, clickable piano |
+| `src/rendering/noteLabels.ts` | Names under noteheads (spelling comes from Verovio's sounding pitch via `spellFromMidi`) |
+| `src/learn/` | `noteStats`, `noteScheduler`, `nameTheNote` (pure logic); `noteCard`, `learnView`, `lessons` (screens) |
+
+`main.ts` only wires these together (`setupPiano`, `setupLearnMode`, the language block at the end of `setupControls`).
+
+### Test hooks and commands
+
+- `#learnView` carries `data-panel` (`quiz` or `lessons`), `data-pitch` (the note asked) and `data-result` (`correct` or `wrong`, absent between questions).
+- Unit: `npm test` (300+ tests). End to end: `npx playwright test` (needs `npm run dev` or lets Playwright start it).
+- Upstream baseline in this environment: 13 of its own end-to-end tests fail the same way on the original code (2 desktop playback tests, 11 on the phone profiles). Don't treat those as regressions; compare against `05158c5` if in doubt.
+- Mobile control bar: at 820px and below it wraps onto two rows (end of `style.css`).
