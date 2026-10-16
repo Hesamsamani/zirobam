@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <title>Sight Reading Practice</title>
+    <title data-i18n="app.documentTitle">Sight Reading Practice</title>
   </head>
   <body>
     <div id="app">
@@ -20,7 +20,7 @@
         <div id="scoreHeader">
           <div class="score-title">
             <h1>Sight Reading</h1>
-            <span id="lessonInfo" class="lesson-subtitle">C and G only — whole notes</span>
+            <span id="lessonInfo" class="lesson-subtitle">C and G — whole notes</span>
           </div>
           <div class="score-meta">
             <span id="levelDisplay" class="level-badge">1a</span>
@@ -49,7 +49,7 @@
         <div id="celebrationOverlay" class="celebration-overlay" hidden>
           <div class="celebration-content">
             <div class="celebration-sparkles"></div>
-            <div class="celebration-text">Complete!</div>
+            <div class="celebration-text" data-i18n="celebration.complete">Complete!</div>
           </div>
         </div>
 
@@ -62,39 +62,39 @@
 
         <div id="scoreContainer">
           <div id="countoff" aria-live="polite" aria-atomic="true"></div>
-          <div id="notation" role="img" aria-label="Music notation for sight reading practice"></div>
+          <div id="notation" role="img" aria-label="Music notation for sight reading practice" data-i18n-attr="aria-label:notation.aria"></div>
         </div>
       </main>
 
       <!-- Floating Control Bar -->
       <div id="controlBar">
         <div class="control-section transport">
-          <button id="playPause" class="play-btn" aria-label="Start">
+          <button id="playPause" class="play-btn" aria-label="Start" data-i18n-attr="aria-label:control.start">
             <svg class="icon-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
             <svg class="icon-stop" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12"/></svg>
           </button>
         </div>
 
         <div class="control-section tempo">
-          <label for="bpm" class="control-label">Tempo</label>
+          <label for="bpm" class="control-label" data-i18n="control.tempo">Tempo</label>
           <div class="tempo-control">
             <input type="number" id="bpm" value="30" min="20" max="200" step="5" />
-            <span class="tempo-unit">BPM</span>
+            <span class="tempo-unit" data-i18n="control.bpm">BPM</span>
           </div>
         </div>
 
         <div class="control-section level">
-          <button id="levelDown" class="level-btn" aria-label="Previous level">
+          <button id="levelDown" class="level-btn" aria-label="Previous level" data-i18n-attr="aria-label:control.prevLevel">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
           </button>
           <span class="level-indicator" id="levelIndicator">Level 1a</span>
-          <button id="levelUp" class="level-btn" aria-label="Next level">
+          <button id="levelUp" class="level-btn" aria-label="Next level" data-i18n-attr="aria-label:control.nextLevel">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
           </button>
         </div>
 
         <div class="control-section fingering">
-          <button id="fingeringToggle" class="fingering-btn" aria-label="Toggle fingering" aria-pressed="false">
+          <button id="fingeringToggle" class="fingering-btn" aria-label="Toggle fingering" data-i18n-attr="aria-label:control.toggleFingering" aria-pressed="false">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <!-- Simple "123" numbers icon -->
               <text x="3" y="16" font-size="10" font-weight="bold" fill="currentColor" stroke="none">123</text>
@@ -103,7 +103,7 @@
         </div>
 
         <div class="control-section metronome">
-          <button id="metronomeToggle" class="metronome-btn active" aria-label="Toggle metronome" aria-pressed="true">
+          <button id="metronomeToggle" class="metronome-btn active" aria-label="Toggle metronome" data-i18n-attr="aria-label:control.toggleMetronome" aria-pressed="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <!-- Classic metronome shape -->
               <path d="M8 22h8l-2-16h-4l-2 16z"/>
@@ -114,7 +114,7 @@
         </div>
 
         <div class="control-section upload">
-          <label class="upload-btn" for="xmlUpload" aria-label="Upload MusicXML file">
+          <label class="upload-btn" for="xmlUpload" aria-label="Upload MusicXML file" data-i18n-attr="aria-label:control.uploadFile">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M12 15V3m0 0l-4 4m4-4l4 4" stroke-linecap="round" stroke-linejoin="round"/>
               <path d="M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17" stroke-linecap="round" stroke-linejoin="round"/>
@@ -124,7 +124,7 @@
         </div>
 
         <div class="control-section options">
-          <button id="optionsToggle" class="options-btn" aria-label="Options" aria-expanded="false">
+          <button id="optionsToggle" class="options-btn" aria-label="Options" data-i18n-attr="aria-label:control.options" aria-expanded="false">
             <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="2"/><circle cx="12" cy="5" r="2"/><circle cx="12" cy="19" r="2"/></svg>
           </button>
         </div>
@@ -133,117 +133,116 @@
       <!-- Options Panel (hidden by default) -->
       <div id="optionsPanel" class="options-panel" hidden>
         <div class="options-header">
-          <h2>Options</h2>
-          <button id="optionsClose" class="close-btn" aria-label="Close options">×</button>
+          <h2 data-i18n="options.title">Options</h2>
+          <button id="optionsClose" class="close-btn" aria-label="Close options" data-i18n-attr="aria-label:options.close">×</button>
         </div>
 
         <div class="options-group">
-          <h3>Playback</h3>
+          <h3 data-i18n="options.language">Language</h3>
+          <div class="option-row">
+            <select id="languageSelect" aria-label="Language" data-i18n-attr="aria-label:options.language">
+              <option value="en">English</option>
+              <option value="fa">فارسی</option>
+            </select>
+          </div>
+          <label class="option-row" id="persianDigitsRow">
+            <span data-i18n="options.persianDigits">Persian digits</span>
+            <input type="checkbox" id="persianDigits" checked />
+          </label>
+        </div>
+
+        <div class="options-group">
+          <h3 data-i18n="options.noteNames">Note names</h3>
+          <div class="option-row">
+            <select id="noteNameSystem" aria-label="Note names" data-i18n-attr="aria-label:options.noteNames">
+              <option value="letters" data-i18n="noteSystem.letters">Letters (C D E)</option>
+              <option value="solfege" data-i18n="noteSystem.solfege">Solfège (Do Re Mi)</option>
+              <option value="solfege-fa" data-i18n="noteSystem.solfegeFa">Persian solfège (دو ر می)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="options-group">
+          <h3 data-i18n="options.playback">Playback</h3>
           <label class="option-row">
-            <span>Master Volume</span>
+            <span data-i18n="options.masterVolume">Master Volume</span>
             <input type="range" id="masterVolume" min="0" max="100" value="80" />
           </label>
           <label class="option-row">
-            <span>Metronome</span>
+            <span data-i18n="options.metronome">Metronome</span>
             <input type="checkbox" id="metronome" checked />
           </label>
           <label class="option-row">
-            <span>Metronome Volume</span>
+            <span data-i18n="options.metronomeVolume">Metronome Volume</span>
             <input type="range" id="metronomeVolume" min="0" max="100" value="50" />
           </label>
         </div>
 
         <div class="options-group">
-          <h3>Jump to Level</h3>
+          <h3 data-i18n="options.jumpToLevel">Jump to Level</h3>
           <div class="option-row level-jump">
-            <select id="levelJump" aria-label="Jump to level">
-              <option value="1">Level 1 — Whole notes (RH)</option>
-              <option value="2">Level 2 — Whole notes (LH)</option>
-              <option value="3">Level 3 — Whole notes (Both)</option>
-              <option value="4">Level 4 — Half notes</option>
-              <option value="5">Level 5 — Quarter notes</option>
-              <option value="6">Level 6 — Rests & 3/4</option>
-              <option value="7">Level 7 — Dotted rhythms</option>
-              <option value="8">Level 8 — Eighth notes</option>
-              <option value="9">Level 9 — Dotted eighths</option>
-              <option value="10">Level 10 — Sixteenths</option>
-              <option value="11">Level 11 — G Major</option>
-              <option value="12">Level 12 — F Major</option>
-              <option value="13">Level 13 — D Major</option>
-              <option value="14">Level 14 — Bb Major</option>
-              <option value="15">Level 15 — A Major</option>
-              <option value="16">Level 16 — Eb Major</option>
-              <option value="17">Level 17 — E Major</option>
-              <option value="18">Level 18 — Ab Major</option>
-            </select>
+            <select id="levelJump" aria-label="Jump to level" data-i18n-attr="aria-label:options.jumpToLevelAria"></select>
           </div>
         </div>
 
         <div class="options-group">
-          <h3>Practice Key</h3>
+          <h3 data-i18n="options.practiceKey">Practice Key</h3>
           <div class="option-row">
-            <select id="keySelect" aria-label="Select practice key">
-              <option value="">Use level default</option>
-              <option value="C">C Major</option>
-              <option value="G">G Major</option>
-              <option value="F">F Major</option>
-              <option value="D">D Major</option>
-              <option value="Bb">Bb Major</option>
-              <option value="A">A Major</option>
-              <option value="Eb">Eb Major</option>
-              <option value="E">E Major</option>
-              <option value="Ab">Ab Major</option>
-            </select>
+            <select id="keySelect" aria-label="Select practice key" data-i18n-attr="aria-label:options.practiceKeyAria"></select>
           </div>
         </div>
 
         <div class="options-group">
-          <h3>Learning Aids</h3>
+          <h3 data-i18n="options.learningAids">Learning Aids</h3>
           <label class="option-row">
-            <span>Show Fingering</span>
+            <span data-i18n="options.showFingering">Show Fingering</span>
             <input type="checkbox" id="showFingering" />
+          </label>
+          <label class="option-row">
+            <span data-i18n="options.showNoteNames">Show note names on the staff</span>
+            <input type="checkbox" id="showNoteNames" />
           </label>
         </div>
 
         <div class="options-group">
-          <h3>Practice Songs</h3>
+          <h3 data-i18n="options.practiceSongs">Practice Songs</h3>
           <div class="option-row">
-            <select id="songSelect" aria-label="Select a song to practice">
-              <option value="">Choose a song...</option>
-              <optgroup label="Beginner">
-                <option value="mary-lamb">Mary Had a Little Lamb</option>
-                <option value="twinkle">Twinkle Twinkle Little Star</option>
-                <option value="ode-to-joy">Ode to Joy (Beethoven)</option>
+            <select id="songSelect" aria-label="Select a song to practice" data-i18n-attr="aria-label:options.songAria">
+              <option value="" data-i18n="options.chooseSong">Choose a song...</option>
+              <optgroup label="Beginner" data-i18n-attr="label:options.songsBeginner">
+                <option value="mary-lamb" data-i18n="song.maryLamb">Mary Had a Little Lamb</option>
+                <option value="twinkle" data-i18n="song.twinkle">Twinkle Twinkle Little Star</option>
+                <option value="ode-to-joy" data-i18n="song.odeToJoy">Ode to Joy (Beethoven)</option>
               </optgroup>
-              <optgroup label="Easy">
-                <option value="happy-birthday">Happy Birthday</option>
-                <option value="minuet-g">Minuet in G (Bach)</option>
+              <optgroup label="Easy" data-i18n-attr="label:options.songsEasy">
+                <option value="happy-birthday" data-i18n="song.happyBirthday">Happy Birthday</option>
+                <option value="minuet-g" data-i18n="song.minuetG">Minuet in G (Bach)</option>
               </optgroup>
             </select>
           </div>
           <div class="option-row">
             <label class="file-upload-label" for="xmlUploadOptions">
-              <span>Or upload file</span>
+              <span data-i18n="options.orUploadFile">Or upload file</span>
               <span class="upload-hint">.xml, .musicxml, .mxl, .mid</span>
             </label>
             <input type="file" id="xmlUploadOptions" accept=".xml,.musicxml,.mxl,.mid,.midi" />
           </div>
-          <button id="exitPracticeMode" class="exit-practice-btn" hidden>
+          <button id="exitPracticeMode" class="exit-practice-btn" data-i18n="options.returnToLevels" hidden>
             Return to Levels
           </button>
         </div>
 
         <div class="options-group midi-options">
-          <h3>MIDI Input</h3>
-          <select id="midiInput" aria-label="Select MIDI input device">
-            <option value="">No MIDI Device</option>
+          <h3 data-i18n="options.midiInput">MIDI Input</h3>
+          <select id="midiInput" aria-label="Select MIDI input device" data-i18n-attr="aria-label:options.midiInputAria">
+            <option value="" data-i18n="midi.none">No MIDI Device</option>
           </select>
         </div>
 
         <div class="options-footer">
           <a href="https://github.com/ftrain/sightreading" target="_blank" rel="noopener" class="github-link">
             <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-            View on GitHub
+            <span data-i18n="options.viewOnGithub">View on GitHub</span>
           </a>
         </div>
       </div>

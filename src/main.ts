@@ -32,11 +32,19 @@ import {
   parseMidi,
   isMidiFile,
   ProgressivePracticeSession,
-  getStepTypeLabel,
-  getStepDescription,
 } from './upload';
 import { buildMusicXML, type NoteIdMapping } from './music/xml/builder';
 import { getSongById } from './songs';
+import {
+  t, initLocale, setLocale, getLocale, onLocaleChange, applyTranslations,
+  formatNumber, setPersianDigits, isLocale,
+} from './i18n';
+import type { MessageKey } from './i18n';
+import {
+  getNoteNameSystem, setNoteNameSystem, loadNoteNameSystem, onNoteNamesChange,
+  formatKeyName, isNoteNameSystem,
+} from './i18n/noteNames';
+import { describeLesson, keyIdForLevel } from './lessonText';
 
 // State
 let toolkit: VerovioToolkit;
@@ -129,6 +137,9 @@ function updateMobileMode() {
 }
 
 async function init() {
+  initLocale();
+  loadNoteNameSystem();
+
   // Initialize Verovio
   const VerovioModule = await createVerovioModule();
   toolkit = new VerovioToolkit(VerovioModule);
@@ -602,6 +613,62 @@ function buildTimingEvents() {
   }
 }
 
+function localizeLevel(levelString: string): string {
+  return levelString.replace(/^\d+/, (n) => formatNumber(Number(n)));
+}
+
+function describeCurrentLesson(): string {
+  const match = /^(\d+)([a-d])$/.exec(getFullLevelString());
+  if (!match) return currentLessonDescription;
+  return describeLesson(Number(match[1]), 'abcd'.indexOf(match[2]));
+}
+
+const KEY_IDS = ['C', 'G', 'F', 'D', 'Bb', 'A', 'Eb', 'E', 'Ab'];
+
+function populateLevelJump() {
+  const select = document.getElementById('levelJump') as HTMLSelectElement | null;
+  if (!select) return;
+  const previous = select.value || String(getLevel());
+  select.replaceChildren();
+  for (let level = 1; level <= 18; level++) {
+    const option = document.createElement('option');
+    option.value = String(level);
+    option.textContent =
+      level <= 10
+        ? t(`levelJump.${level}` as MessageKey)
+        : t('levelJump.key', { n: level, key: formatKeyName(keyIdForLevel(level)) });
+    select.appendChild(option);
+  }
+  select.value = previous;
+}
+
+function populateKeySelect() {
+  const select = document.getElementById('keySelect') as HTMLSelectElement | null;
+  if (!select) return;
+  const previous = select.value;
+  select.replaceChildren();
+  const defaultOption = document.createElement('option');
+  defaultOption.value = '';
+  defaultOption.textContent = t('options.keyDefault');
+  select.appendChild(defaultOption);
+  for (const id of KEY_IDS) {
+    const option = document.createElement('option');
+    option.value = id;
+    option.textContent = formatKeyName(id);
+    select.appendChild(option);
+  }
+  select.value = previous;
+}
+
+function stepTypeLabel(type: 'single' | 'pair' | 'consolidate'): string {
+  return t(`practice.stepType.${type}` as MessageKey);
+}
+
+function describeMeasures(measures: number[]): string {
+  if (measures.length === 1) return t('practice.measure', { n: measures[0] });
+  return t('practice.measures', { from: measures[0], to: measures[measures.length - 1] });
+}
+
 function updateLevelDisplay() {
   const levelDisplay = document.getElementById('levelDisplay');
   const levelIndicator = document.getElementById('levelIndicator');
@@ -610,11 +677,11 @@ function updateLevelDisplay() {
   const levelJump = document.getElementById('levelJump') as HTMLSelectElement;
 
   const levelString = getFullLevelString();
-  const levelText = `Level ${levelString}`;
+  const levelText = t('control.level', { level: localizeLevel(levelString) });
 
   // Update the badge in the score header
   if (levelDisplay) {
-    levelDisplay.textContent = levelString;
+    levelDisplay.textContent = localizeLevel(levelString);
   }
 
   // Update the control bar indicator
@@ -628,7 +695,7 @@ function updateLevelDisplay() {
   }
 
   if (lessonInfo) {
-    lessonInfo.textContent = currentLessonDescription;
+    lessonInfo.textContent = describeCurrentLesson();
   }
 
   if (progressInfo) {
@@ -638,16 +705,16 @@ function updateLevelDisplay() {
     // Show both note mastery and tempo mastery progress
     let progressText = '';
     if (remaining > 0) {
-      progressText = `${remaining} more to advance`;
+      progressText = t('progress.moreToAdvance', { n: remaining });
     }
 
     // Show tempo increase suggestion if mastered at current tempo
     if (shouldIncreaseTempo()) {
       progressText += progressText ? ' | ' : '';
-      progressText += 'Ready to increase tempo!';
+      progressText += t('progress.readyTempo');
     } else if (tempoMasteryRemaining > 0 && remaining === 0) {
       progressText += progressText ? ' | ' : '';
-      progressText += `${tempoMasteryRemaining} at tempo`;
+      progressText += t('progress.atTempo', { n: tempoMasteryRemaining });
     }
 
     progressInfo.textContent = progressText;
@@ -684,7 +751,11 @@ function updateMidiDevices(midiAccess: MIDIAccess) {
   const midiSelect = document.getElementById('midiInput') as HTMLSelectElement;
   if (midiSelect) {
     const currentValue = midiSelect.value;
-    midiSelect.innerHTML = '<option value="">No MIDI Device</option>';
+    const noneOption = document.createElement('option');
+    noneOption.value = '';
+    noneOption.dataset.i18n = 'midi.none';
+    noneOption.textContent = t('midi.none');
+    midiSelect.replaceChildren(noneOption);
 
     for (const [id, input] of midiInputs) {
       const option = document.createElement('option');
@@ -1133,6 +1204,44 @@ function setupControls() {
       }
     }
   });
+
+  // Language, digits and note-name selectors
+  const languageSelect = document.getElementById('languageSelect') as HTMLSelectElement;
+  const persianDigitsInput = document.getElementById('persianDigits') as HTMLInputElement;
+  const persianDigitsRow = document.getElementById('persianDigitsRow') as HTMLElement;
+  const noteSystemSelect = document.getElementById('noteNameSystem') as HTMLSelectElement;
+
+  persianDigitsInput.checked = localStorage.getItem('ui.persianDigits') !== '0';
+
+  const syncLanguageControls = () => {
+    languageSelect.value = getLocale();
+    persianDigitsRow.hidden = getLocale() !== 'fa';
+    noteSystemSelect.value = getNoteNameSystem();
+  };
+
+  languageSelect.addEventListener('change', () => {
+    if (isLocale(languageSelect.value)) setLocale(languageSelect.value);
+  });
+  persianDigitsInput.addEventListener('change', () => setPersianDigits(persianDigitsInput.checked));
+  noteSystemSelect.addEventListener('change', () => {
+    if (isNoteNameSystem(noteSystemSelect.value)) setNoteNameSystem(noteSystemSelect.value);
+  });
+
+  const refreshTexts = () => {
+    applyTranslations();
+    populateLevelJump();
+    populateKeySelect();
+    // Practice mode shows the song's own title and key; only levels mode uses translated headings
+    if (currentMode === 'levels') {
+      const scoreTitle = document.querySelector('.score-title h1');
+      if (scoreTitle) scoreTitle.textContent = t('app.title');
+      updateLevelDisplay();
+    }
+    syncLanguageControls();
+  };
+  onLocaleChange(refreshTexts);
+  onNoteNamesChange(refreshTexts);
+  refreshTexts();
 }
 
 async function start() {
@@ -1141,7 +1250,7 @@ async function start() {
   isPlaying = true;
   const playPauseBtn = document.getElementById('playPause')!;
   playPauseBtn.classList.add('playing');
-  playPauseBtn.setAttribute('aria-label', 'Stop');
+  playPauseBtn.setAttribute('aria-label', t('control.stop'));
 
   currentBeatIndex = 0;
   hadMistake = false;
@@ -1299,7 +1408,7 @@ function onPieceComplete() {
         showCelebration();
         const progressInfo = document.getElementById('progressInfo');
         if (progressInfo) {
-          progressInfo.textContent = 'Complete! Use ← to review.';
+          progressInfo.textContent = t('progress.complete');
         }
       }
     } else {
@@ -1364,7 +1473,7 @@ function stop() {
   isCountingOff = false;
   const playPauseBtn = document.getElementById('playPause')!;
   playPauseBtn.classList.remove('playing');
-  playPauseBtn.setAttribute('aria-label', 'Start');
+  playPauseBtn.setAttribute('aria-label', t('control.start'));
 
   updateCountoffDisplay(0);
 
@@ -1697,7 +1806,7 @@ async function handleFileUpload(file: File) {
     }
 
     if (parsed.measures.length === 0) {
-      alert('No measures found in the uploaded file.');
+      alert(t('error.noMeasures'));
       return;
     }
 
@@ -1731,7 +1840,7 @@ async function handleFileUpload(file: File) {
   } catch (error) {
     console.error('Error parsing file:', error);
     const fileTypes = isMidiFile(file.name) ? 'MIDI' : 'MusicXML or MXL';
-    alert(`Error parsing file. Please ensure it is a valid ${fileTypes} file.`);
+    alert(t('error.parse', { type: fileTypes }));
   }
 }
 
@@ -1839,7 +1948,7 @@ function exitPracticeMode() {
   // Restore header
   const scoreTitle = document.querySelector('.score-title h1');
   if (scoreTitle) {
-    scoreTitle.textContent = 'Sight Reading';
+    scoreTitle.textContent = t('app.title');
   }
 
   // Hide practice info bar
@@ -1878,20 +1987,22 @@ function updatePracticeDisplay() {
   // Step type
   const stepTypeEl = document.getElementById('practiceStepType');
   if (stepTypeEl) {
-    stepTypeEl.textContent = getStepTypeLabel(segment.stepType);
+    stepTypeEl.textContent = stepTypeLabel(segment.stepType);
     stepTypeEl.className = `step-type step-type-${segment.stepType}`;
   }
 
   // Step description
+  const measuresText = describeMeasures(allSteps[currentIndex].measures);
+  const stepOfText = t('practice.stepOf', { current: progress.currentStep, total: progress.totalSteps });
   const stepDescEl = document.getElementById('practiceStepDesc');
   if (stepDescEl) {
-    stepDescEl.textContent = segment.description;
+    stepDescEl.textContent = measuresText;
   }
 
   // Step number text
   const stepNumEl = document.getElementById('practiceStepNum');
   if (stepNumEl) {
-    stepNumEl.textContent = `Step ${progress.currentStep} of ${progress.totalSteps}`;
+    stepNumEl.textContent = stepOfText;
   }
 
   // Calculate percentage based on step index (not mastery)
@@ -1915,7 +2026,7 @@ function updatePracticeDisplay() {
   const container = document.getElementById('practiceProgressContainer');
   if (container) {
     container.setAttribute('aria-valuenow', String(Math.round(stepPercent)));
-    container.setAttribute('aria-valuetext', `Step ${progress.currentStep} of ${progress.totalSteps}: ${segment.description}`);
+    container.setAttribute('aria-valuetext', `${stepOfText}: ${measuresText}`);
   }
 }
 
@@ -1956,9 +2067,9 @@ function setupProgressBarDrag() {
     const descEl = document.getElementById('progressPreviewDesc');
     const numEl = document.getElementById('progressPreviewNum');
 
-    if (stepTypeEl) stepTypeEl.textContent = getStepTypeLabel(step.type);
-    if (descEl) descEl.textContent = getStepDescription(step);
-    if (numEl) numEl.textContent = `Step ${stepIndex + 1} of ${allSteps.length}`;
+    if (stepTypeEl) stepTypeEl.textContent = stepTypeLabel(step.type);
+    if (descEl) descEl.textContent = describeMeasures(step.measures);
+    if (numEl) numEl.textContent = t('practice.stepOf', { current: stepIndex + 1, total: allSteps.length });
 
     // Position preview above the cursor
     const previewRect = preview.getBoundingClientRect();

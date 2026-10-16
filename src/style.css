@@ -1320,3 +1320,9 @@ body.is-playing #controlBar:hover {
   white-space: nowrap;
   border: 0;
 }
+
+/* The options panel grew (language, note names): let it scroll instead of running off the top */
+.options-panel {
+  max-height: calc(100vh - 124px);
+  overflow-y: auto;
+}
