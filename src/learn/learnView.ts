@@ -13,7 +13,10 @@ export interface LearnViewDeps {
   renderNote: (pitch: string, clef: Clef, into: HTMLElement) => void;
   formatLetter: (letter: string) => string;
   autoAdvanceMs?: number;
+  /** Called whenever the view closes, however it happened. */
   onClose?: () => void;
+  /** What the Close button does. Without it the button just closes the view. */
+  onExit?: () => void;
 }
 
 function make<K extends keyof HTMLElementTagNameMap>(
@@ -72,7 +75,7 @@ export class LearnView {
     lessonsButton.addEventListener('click', () => this.showLessons(0));
     const closeButton = make('button', 'learn-text-btn', 'learn.close');
     closeButton.type = 'button';
-    closeButton.addEventListener('click', () => this.close());
+    closeButton.addEventListener('click', () => (this.deps.onExit ? this.deps.onExit() : this.close()));
     controls.append(this.stageSelect, lessonsButton, closeButton);
     header.appendChild(controls);
 

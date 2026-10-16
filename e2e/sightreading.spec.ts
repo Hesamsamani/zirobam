@@ -8,7 +8,7 @@ async function closeOptionsPanel(page: Page): Promise<void> {
 
 test.describe('Sight Reading App', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/#/levels');
     // Wait for Verovio to load and render
     await page.waitForSelector('#notation svg', { timeout: 10000 });
   });
@@ -207,7 +207,7 @@ test.describe('Mobile Responsiveness', () => {
   test.use({ viewport: { width: 375, height: 667 } }); // iPhone SE portrait
 
   test('should display controls compactly on mobile', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/#/levels');
     await page.waitForSelector('#notation svg', { timeout: 10000 });
 
     // Control bar is now #controlBar, not #controls
@@ -216,7 +216,7 @@ test.describe('Mobile Responsiveness', () => {
   });
 
   test('should have readable notation on mobile', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/#/levels');
     await page.waitForSelector('#notation svg', { timeout: 10000 });
 
     const notation = page.locator('#notation');
@@ -228,7 +228,7 @@ test.describe('Mobile Landscape', () => {
   test.use({ viewport: { width: 844, height: 390 } }); // iPhone landscape
 
   test('should optimize for 4 bars in landscape', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/#/levels');
     await page.waitForSelector('#notation svg', { timeout: 10000 });
 
     // In landscape mobile, notation should be visible and optimized
@@ -248,7 +248,7 @@ test.describe('Mobile Landscape', () => {
 
 test.describe('Lesson Progression', () => {
   test('should start with simple whole notes at level 1', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/#/levels');
     await page.waitForSelector('#notation svg', { timeout: 10000 });
 
     // At level 1, we should only see whole notes
@@ -260,7 +260,7 @@ test.describe('Lesson Progression', () => {
   });
 
   test('level progression should be gradual', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/#/levels');
     await page.waitForSelector('#notation svg', { timeout: 10000 });
 
     // Test that levels 1-3 have progressively more complexity
@@ -284,7 +284,7 @@ test.describe('Lesson Progression', () => {
 
 test.describe('Accessibility', () => {
   test('should have proper ARIA labels', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/#/levels');
 
     // Check that form controls have labels
     const bpmInput = page.locator('#bpm');
@@ -293,7 +293,7 @@ test.describe('Accessibility', () => {
   });
 
   test('should support keyboard navigation', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/#/levels');
 
     // Tab through controls
     await page.keyboard.press('Tab');
@@ -309,7 +309,7 @@ test.describe('Accessibility', () => {
 
 test.describe('Sub-level Progression', () => {
   test('should track mastery within a level', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/#/levels');
     await page.waitForSelector('#notation svg', { timeout: 10000 });
 
     // Check that level display exists and shows level (e.g., "1a", "2b")
@@ -375,7 +375,7 @@ async function chooseSong(page: Page, songId: string, bpm: string): Promise<void
 
 test.describe('Playback Timing', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/#/levels');
     await page.waitForSelector('#notation svg', { timeout: 10000 });
     await recordBeats(page);
   });
@@ -431,7 +431,7 @@ test.describe('Playback Timing', () => {
 
 test.describe('Audio/Visual Alignment', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/#/levels');
     await page.waitForSelector('#notation svg', { timeout: 10000 });
     await recordBeats(page);
   });
@@ -477,7 +477,7 @@ test.describe('Audio/Visual Alignment', () => {
 
 test.describe('Built-in Song SVG Timing', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/#/levels');
     await page.waitForSelector('#notation svg', { timeout: 10000 });
   });
 
@@ -712,7 +712,7 @@ test.describe('Built-in Song SVG Timing', () => {
 
 test.describe('Tie Continuation', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/#/levels');
     await page.waitForSelector('#notation svg', { timeout: 10000 });
   });
 

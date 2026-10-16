@@ -19,7 +19,7 @@ async function readBeats(page: Page): Promise<BeatEvent[]> {
 }
 
 async function openApp(page: Page): Promise<void> {
-  await page.goto('/');
+  await page.goto('/#/levels');
   await page.waitForSelector('#notation svg', { timeout: 10000 });
 }
 
@@ -34,7 +34,7 @@ test.describe('Startup', () => {
         },
       });
     });
-    await page.goto('/');
+    await page.goto('/#/levels');
     await expect(page.locator('#notation svg').first()).toBeVisible({ timeout: 10000 });
     expect(errors, errors.join('\n')).toHaveLength(0);
   });

@@ -114,6 +114,31 @@ describe('quiz panel', () => {
     expect(closed).toBe(1);
   });
 
+  it('has a Close button that closes the view itself when the app gave no way to leave', () => {
+    view.open();
+    q<HTMLButtonElement>('.learn-header .learn-text-btn:last-child').click();
+    expect(view.isOpen()).toBe(false);
+    expect(closed).toBe(1);
+  });
+
+  it('asks the app to leave, instead of closing itself, when an exit is given', () => {
+    const onExit = vi.fn();
+    const other = new LearnView({
+      quiz: new NameTheNoteQuiz(stats, seeded(5)),
+      hub,
+      renderNote,
+      formatLetter: (letter) => letter,
+      onClose: () => closed++,
+      onExit,
+    });
+    document.body.appendChild(other.element);
+    other.open();
+    other.element.querySelector<HTMLButtonElement>('.learn-header .learn-text-btn:last-child')!.click();
+    expect(onExit).toHaveBeenCalledTimes(1);
+    expect(other.isOpen()).toBe(true);
+    other.dispose();
+  });
+
   it('keeps later stages locked until 20 answers at 90%, then unlocks stage 2', () => {
     view.open();
     const stageOption = (n: number) => q<HTMLSelectElement>('.learn-stage-select').options[n - 1];

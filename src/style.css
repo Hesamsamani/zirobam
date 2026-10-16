@@ -1843,3 +1843,240 @@ body.learn-open .practice-info {
     bottom: 170px;
   }
 }
+
+/* ============================================
+   MAIN MENU, SCREENS AND NAVIGATION
+   ============================================ */
+.view-hidden {
+  display: none !important;
+}
+
+.home-btn {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.home-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.home-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* The options panel is also opened from screens without a control bar */
+body:not([data-view='levels']):not([data-view='practice']):not([data-view='learn']) .options-panel {
+  bottom: var(--space-md);
+  max-height: calc(100vh - 2 * var(--space-md));
+  overflow-y: auto;
+}
+
+.main-menu,
+.songs-view {
+  flex: 1;
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: var(--space-xl) var(--space-lg) var(--space-xl);
+}
+
+.menu-header {
+  margin-bottom: var(--space-xl);
+}
+
+.menu-title,
+.view-title {
+  margin: 0 0 var(--space-xs);
+  font-family: var(--font-serif);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.menu-title {
+  font-size: 2.25rem;
+}
+
+.view-title {
+  font-size: 1.75rem;
+}
+
+.menu-subtitle,
+.view-subtitle {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 1rem;
+}
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-md);
+}
+
+.menu-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-xs);
+  min-height: 150px;
+  padding: var(--space-lg);
+  background: var(--surface);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  color: var(--text);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), transform var(--transition-fast), background var(--transition-fast);
+}
+
+.menu-tile:hover {
+  border-color: var(--accent);
+  background: #2a2926;
+  transform: translateY(-2px);
+}
+
+.menu-tile:focus-visible,
+.song-card:focus-visible,
+.back-btn:focus-visible,
+.home-btn:focus-visible {
+  outline: 2px solid var(--current);
+  outline-offset: 2px;
+}
+
+.menu-tile-icon {
+  font-size: 2rem;
+  line-height: 1.2;
+}
+
+.menu-tile-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.menu-tile-desc {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.view-header {
+  margin-bottom: var(--space-lg);
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-md);
+  padding: var(--space-xs) var(--space-md) var(--space-xs) var(--space-sm);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.back-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+}
+
+.back-arrow {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+html[dir='rtl'] .back-arrow {
+  transform: scaleX(-1);
+}
+
+html[dir='rtl'] .back-btn {
+  padding: var(--space-xs) var(--space-sm) var(--space-xs) var(--space-md);
+}
+
+.song-group {
+  margin-bottom: var(--space-lg);
+}
+
+.song-group-title {
+  margin: 0 0 var(--space-sm);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.song-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.song-card {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: var(--space-md) var(--space-lg);
+  background: var(--surface);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  color: var(--text);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.song-card:hover {
+  border-color: var(--accent);
+  background: #2a2926;
+}
+
+@media (max-width: 560px) {
+  .main-menu,
+  .songs-view {
+    padding: var(--space-lg) var(--space-md);
+  }
+
+  .menu-title {
+    font-size: 1.75rem;
+  }
+
+  .menu-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-sm);
+  }
+
+  .menu-tile {
+    min-height: 140px;
+    padding: var(--space-md);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-tile:hover {
+    transform: none;
+  }
+}

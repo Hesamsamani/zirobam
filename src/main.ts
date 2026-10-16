@@ -35,7 +35,11 @@ import {
   ProgressivePracticeSession,
 } from './upload';
 import { buildMusicXML, type NoteIdMapping } from './music/xml/builder';
-import { getSongById } from './songs';
+import { BUILT_IN_SONGS, getSongById } from './songs';
+import { Router, VIEWS, type View } from './app/router';
+import { AppShell } from './app/shell';
+import { MainMenu } from './menu/mainMenu';
+import { SongsView } from './menu/songsView';
 import {
   t, initLocale, setLocale, getLocale, onLocaleChange, applyTranslations,
   formatNumber, setPersianDigits, isLocale,
@@ -125,6 +129,15 @@ let currentMeasureCount = 4;
 // App mode: 'levels' for generated exercises, 'practice' for uploaded files
 type AppMode = 'levels' | 'practice';
 let currentMode: AppMode = 'levels';
+
+// Screens (see setupNavigation)
+let shell: AppShell | null = null;
+let mainMenu: MainMenu | null = null;
+let songsView: SongsView | null = null;
+let pianoKeyboard: ComputerKeyboard | null = null;
+let learnReturnView: View = 'home';
+/** The screens that show the music stand, the control bar and the exercise. */
+const STAND_VIEWS: readonly View[] = ['levels', 'practice', 'learn'];
 let practiceSession: ProgressivePracticeSession | null = null;
 
 // Scrolling state for consolidation mode
@@ -189,7 +202,8 @@ async function init() {
     stopUserNote(noteName, source);
   });
   setupPiano();
-  setupLearnMode();
+  const learn = setupLearnMode();
+  setupNavigation(learn);
 
   // Handle window resize - re-render existing music, don't generate new
   window.addEventListener('resize', () => {
@@ -873,7 +887,12 @@ function handleNoteOff(noteName: string) {
   activeNotes.delete(noteName);
 }
 
-function setupLearnMode() {
+interface LearnHandle {
+  open(): void;
+  close(): void;
+}
+
+function setupLearnMode(): LearnHandle {
   // The quiz draws single notes with its own Verovio toolkit so the main score's options stay untouched
   const quizToolkit = new VerovioToolkit(verovioModule) as unknown as NotationToolkit;
   const toggle = document.getElementById('learnToggle')!;
@@ -890,21 +909,98 @@ function setupLearnMode() {
     renderNote: createNoteCardRenderer(quizToolkit, { scale: 100, pageWidth: 340 }),
     formatLetter: (letter) => formatNoteName(letter, getNoteNameSystem()),
     onClose: () => setLearnOpen(false),
+    onExit: () => shell?.navigate(learnReturnView),
   });
   document.getElementById('musicStand')!.appendChild(view.element);
 
+  // The book button switches between the exercise and the lessons
   toggle.addEventListener('click', () => {
-    if (view.isOpen()) {
-      view.close();
-      return;
-    }
-    if (isPlaying) stop();
-    setLearnOpen(true);
-    view.open();
+    shell?.navigate(shell.current() === 'learn' ? learnReturnView : 'learn');
   });
 
   onLocaleChange(() => view.refresh());
   onNoteNamesChange(() => view.refresh());
+
+  return {
+    open: () => {
+      setLearnOpen(true);
+      view.open();
+    },
+    close: () => view.close(),
+  };
+}
+
+function openOptionsPanel() {
+  const panel = document.getElementById('optionsPanel');
+  if (panel) panel.hidden = false;
+  document.getElementById('optionsToggle')?.setAttribute('aria-expanded', 'true');
+}
+
+/** Builds the home and song screens and decides what each screen needs when it opens or closes. */
+function setupNavigation(learn: LearnHandle) {
+  const router = new Router();
+  const appShell = new AppShell(router);
+  shell = appShell;
+
+  const menu = new MainMenu({
+    navigate: (view) => appShell.navigate(view),
+    openSettings: openOptionsPanel,
+    levelLabel: () => localizeLevel(getFullLevelString()),
+  });
+  const songs = new SongsView({
+    songs: BUILT_IN_SONGS,
+    onChoose: (songId) => {
+      loadBuiltInSong(songId);
+      if (currentMode === 'practice') appShell.navigate('practice');
+    },
+    onBack: () => appShell.navigate('home'),
+  });
+  mainMenu = menu;
+  songsView = songs;
+  document.getElementById('app')!.prepend(menu.element, songs.element);
+
+  document.getElementById('homeButton')!.addEventListener('click', () => appShell.navigate('home'));
+
+  // The score was measured while it was hidden, so draw it again at its real size
+  const showStand = () => {
+    updateVerovioOptions();
+    rerenderCurrentMusic();
+  };
+
+  appShell.register(VIEWS, {
+    leave: (view) => {
+      if (STAND_VIEWS.includes(view) && (isPlaying || isStarting)) stop();
+      if (view === 'learn') learn.close();
+    },
+    enter: (view, previous) => {
+      if (STAND_VIEWS.includes(view)) pianoKeyboard?.attach();
+      else pianoKeyboard?.detach();
+
+      switch (view) {
+        case 'home':
+          menu.refresh();
+          break;
+        case 'songs':
+          songs.refresh();
+          break;
+        case 'levels':
+          if (currentMode === 'practice') exitPracticeMode();
+          showStand();
+          break;
+        case 'practice':
+          if (currentMode !== 'practice') appShell.navigate('songs'); // nothing to practise yet
+          else showStand();
+          break;
+        case 'learn':
+          learnReturnView = previous && previous !== 'learn' ? previous : 'home';
+          showStand();
+          learn.open();
+          break;
+      }
+    },
+  });
+
+  appShell.start();
 }
 
 function setupPiano() {
@@ -919,6 +1015,7 @@ function setupPiano() {
     piano.setHints(keyHints(keyboard.getOctave()));
   };
   const keyboard = new ComputerKeyboard(noteInput, document, refresh);
+  pianoKeyboard = keyboard;
   keyboard.attach();
   onNoteNamesChange(refresh);
   refresh();
@@ -1330,7 +1427,7 @@ function setupControls() {
   // while another screen such as Learn is open
   document.addEventListener('keydown', async (e) => {
     if (e.code !== 'Space' || e.repeat) return;
-    if (isSpaceReserved(e.target) || document.body.classList.contains('learn-open')) return;
+    if (isSpaceReserved(e.target) || !['levels', 'practice'].includes(document.body.dataset.view ?? '')) return;
     e.preventDefault();
     if (isPlaying || isStarting) {
       stop();
@@ -1363,6 +1460,8 @@ function setupControls() {
 
   const refreshTexts = () => {
     applyTranslations();
+    mainMenu?.refresh();
+    songsView?.refresh();
     populateLevelJump();
     populateKeySelect();
     // Practice mode shows the song's own title and key; only levels mode uses translated headings
@@ -2106,6 +2205,8 @@ function enterPracticeMode() {
 
   // Update practice info display
   updatePracticeDisplay();
+
+  if (shell?.current() === 'levels') shell.navigate('practice');
 }
 
 /**
@@ -2145,6 +2246,8 @@ function exitPracticeMode() {
 
   // Generate fresh level content
   generateAndRender();
+
+  if (shell?.current() === 'practice') shell.navigate('levels');
 }
 
 /**

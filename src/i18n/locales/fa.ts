@@ -160,7 +160,7 @@ export const fa: Record<MessageKey, string> = {
   'learn.noStats': 'برای دیدن دقت خود به ۲۰ نت پاسخ دهید.',
   'learn.unlocked': 'مرحله‌ی {n} باز شد!',
   'learn.lessons': 'درس‌ها',
-  'learn.close': 'بازگشت به تمرین',
+  'learn.close': 'بستن',
   'lessons.count': 'درس {n} از {total}',
   'lessons.prev': 'قبلی',
   'lessons.next': 'بعدی',
@@ -180,4 +180,21 @@ export const fa: Record<MessageKey, string> = {
   'lessons.names.title': 'نام نت‌ها و صفحه‌کلید',
   'lessons.names.body':
     'هفت نام برای نت‌ها وجود دارد که روی صفحه‌کلید پیانو تکرار می‌شوند: دو ر می فا سل لا سی (در نام‌گذاری حرفی C D E F G A B). کلیدهای سفید همین هفت نت‌اند و کلیدهای سیاه دیزها (♯) و بمل‌ها (♭) هستند.',
+
+  // منو و پیمایش
+  'nav.home': 'منوی اصلی',
+  'menu.title': 'مربی نت‌خوانی',
+  'menu.subtitle': 'امروز چه چیزی را تمرین کنیم؟',
+  'menu.back': 'بازگشت به منو',
+  'menu.learn.title': 'یادگیری نت‌ها',
+  'menu.learn.desc': 'درس‌های کوتاه و آزمون «نام نت را پیدا کنید»',
+  'menu.levels.title': 'سطح‌های نت‌خوانی',
+  'menu.levels.desc': 'سطح‌به‌سطح بخوانید و بنوازید. الان در سطح {level} هستید.',
+  'menu.songs.title': 'آهنگ‌ها',
+  'menu.songs.desc': 'آهنگ‌های آشنا، هر بار چند میزان',
+  'menu.settings.title': 'تنظیمات',
+  'menu.settings.desc': 'زبان، نام نت‌ها، صدا و MIDI',
+  'songs.title': 'آهنگ‌ها',
+  'songs.subtitle': 'یک آهنگ را انتخاب کنید. هر بار چند میزان از آن را تمرین می‌کنید.',
+  'options.songsIntermediate': 'متوسط',
 };

@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Bilingual interface and practice without MIDI', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/#/levels');
     await page.evaluate(() => localStorage.clear());
     await page.reload();
     await page.waitForSelector('#notation svg', { timeout: 15000 });

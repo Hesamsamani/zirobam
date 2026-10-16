@@ -159,7 +159,7 @@ export const en = {
   'learn.noStats': 'Answer 20 notes to see your accuracy.',
   'learn.unlocked': 'Stage {n} unlocked!',
   'learn.lessons': 'Lessons',
-  'learn.close': 'Back to practice',
+  'learn.close': 'Close',
   'lessons.count': 'Lesson {n} of {total}',
   'lessons.prev': 'Previous',
   'lessons.next': 'Next',
@@ -179,6 +179,23 @@ export const en = {
   'lessons.names.title': 'Note names and the keyboard',
   'lessons.names.body':
     'There are seven note names, repeating up the keyboard: C D E F G A B, or in solfège Do Re Mi Fa Sol La Si. In Persian they are دو ر می فا سل لا سی. The white keys are these seven notes; the black keys are sharps (♯) and flats (♭).',
+
+  // Main menu and navigation
+  'nav.home': 'Main menu',
+  'menu.title': 'Music Notes Trainer',
+  'menu.subtitle': 'What would you like to practise?',
+  'menu.back': 'Back to menu',
+  'menu.learn.title': 'Learn the notes',
+  'menu.learn.desc': 'Short lessons and the "Name the note" quiz',
+  'menu.levels.title': 'Sight-reading levels',
+  'menu.levels.desc': 'Read and play, one level at a time. You are on level {level}.',
+  'menu.songs.title': 'Songs',
+  'menu.songs.desc': 'Well-known melodies, a few bars at a time',
+  'menu.settings.title': 'Settings',
+  'menu.settings.desc': 'Language, note names, sound and MIDI',
+  'songs.title': 'Songs',
+  'songs.subtitle': 'Choose a melody. You practise it a few bars at a time.',
+  'options.songsIntermediate': 'Intermediate',
 } as const;
 
 export type MessageKey = keyof typeof en;
