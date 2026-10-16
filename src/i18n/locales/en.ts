@@ -82,7 +82,7 @@ export const en = {
   'progress.complete': 'Complete! Use ← to review.',
   'practice.stepType.single': 'Learning',
   'practice.stepType.pair': 'Connecting',
-  'practice.stepType.consolidate': 'Consolidating',
+  'practice.stepType.consolidate': 'Putting it together',
   'practice.measure': 'Measure {n}',
   'practice.measures': 'Measures {from}-{to}',
   'practice.stepOf': 'Step {current} of {total}',
@@ -247,6 +247,25 @@ export const en = {
   'metro.popout': 'Floating metronome',
   'metro.close': 'Close the metronome',
   'metro.drag': 'Drag to move',
+
+  // Practice steps
+  'practice.hint.single': 'Play this measure on its own, without a mistake.',
+  'practice.hint.pair': 'Now join it to the measure after it.',
+  'practice.hint.consolidate': 'Play the whole phrase through.',
+  'practice.map': 'Measures of the piece',
+  'practice.measureAria': 'Measure {n}',
+  'practice.measureDone': 'Measure {n}, done',
+  'practice.measureCurrent': 'Measure {n}, in this step',
+  'practice.prev': 'Previous step',
+  'practice.next': 'Next step',
+  'practice.attempt': 'Attempt {n}',
+  'practice.wrongNotes': 'Wrong notes: {n}',
+  'practice.missedNotes': 'Missed: {n}',
+  'practice.detailsJoin': ', ',
+  'practice.status.retry': 'Not yet. {details}. Playing it again.',
+  'practice.status.retryPlain': 'Not yet. Playing it again.',
+  'practice.status.passed': 'Clean run. Next: {next}.',
+  'practice.status.finished': 'Clean run. That was the last step.',
 } as const;
 
 export type MessageKey = keyof typeof en;

@@ -41,6 +41,8 @@ import { AppShell } from './app/shell';
 import { MainMenu } from './menu/mainMenu';
 import { SongsView } from './menu/songsView';
 import { XylophoneView } from './xylophone/xylophoneView';
+import { PracticePanel } from './practice/practicePanel';
+import { songTitle } from './songs/songText';
 import { XyloSound } from './xylophone/xyloSound';
 import { TempoStore } from './metronome/tempoStore';
 import { MetronomeEngine } from './metronome/metronomeEngine';
@@ -143,6 +145,10 @@ let shell: AppShell | null = null;
 let mainMenu: MainMenu | null = null;
 let songsView: SongsView | null = null;
 let xylophoneView: XylophoneView | null = null;
+let practicePanel: PracticePanel | null = null;
+/** Tries at the current practice step (1 for the first), and wrong notes in the current try. */
+let practiceAttempt = 1;
+let mistakeCount = 0;
 let pianoKeyboard: ComputerKeyboard | null = null;
 let learnReturnView: View = 'home';
 /** The screens that show the music stand, the control bar and the exercise. */
@@ -746,13 +752,15 @@ function populateKeySelect() {
   select.value = previous;
 }
 
-function stepTypeLabel(type: 'single' | 'pair' | 'consolidate'): string {
-  return t(`practice.stepType.${type}` as MessageKey);
-}
-
 function describeMeasures(measures: number[]): string {
   if (measures.length === 1) return t('practice.measure', { n: measures[0] });
   return t('practice.measures', { from: measures[0], to: measures[measures.length - 1] });
+}
+
+/** "Not yet. Wrong notes: 2. Playing it again." (or the missed notes when none were wrong) */
+function retryMessage(wrong: number, missed: number): string {
+  const details = wrong > 0 ? t('practice.wrongNotes', { n: formatNumber(wrong) }) : missed > 0 ? t('practice.missedNotes', { n: formatNumber(missed) }) : '';
+  return details ? t('practice.status.retry', { details }) : t('practice.status.retryPlain');
 }
 
 function updateLevelDisplay() {
@@ -1222,12 +1230,12 @@ function checkNoteMatch(playedNote: string) {
   }
 
   if (!matchedAny && !matchedUpcoming && currentElements.length > 0) {
-    currentElements.forEach((el) => {
-      if (!el.classList.contains('correct')) {
-        el.classList.add('wrong');
-        hadMistake = true;
-      }
-    });
+    const unmarked = currentElements.filter((el) => !el.classList.contains('correct'));
+    if (unmarked.length > 0) {
+      hadMistake = true;
+      mistakeCount++;
+      unmarked.forEach((el) => el.classList.add('wrong'));
+    }
   }
 }
 
@@ -1443,7 +1451,7 @@ function setupControls() {
   });
 
   // Practice progress bar drag
-  setupProgressBarDrag();
+  setupPracticePanel();
 
   // Click celebration overlay to dismiss
   const celebrationOverlay = document.getElementById('celebrationOverlay');
@@ -1553,13 +1561,17 @@ function setupControls() {
     mainMenu?.refresh();
     songsView?.refresh();
     xylophoneView?.refresh();
+    practicePanel?.refresh();
     populateLevelJump();
     populateKeySelect();
-    // Practice mode shows the song's own title and key; only levels mode uses translated headings
+    const scoreTitle = document.querySelector('.score-title h1');
     if (currentMode === 'levels') {
-      const scoreTitle = document.querySelector('.score-title h1');
       if (scoreTitle) scoreTitle.textContent = t('app.title');
       updateLevelDisplay();
+    } else if (practiceSession) {
+      if (scoreTitle) scoreTitle.textContent = practiceTitle();
+      const lessonInfo = document.getElementById('lessonInfo');
+      if (lessonInfo) lessonInfo.textContent = practiceKeyLine();
     }
     syncLanguageControls();
     refreshNoteLabels();
@@ -1614,6 +1626,7 @@ async function start() {
 
   currentBeatIndex = 0;
   hadMistake = false;
+  mistakeCount = 0;
   notesPlayed = 0;
   notesRequired = countRequiredNotes();
 
@@ -1742,10 +1755,17 @@ function onPieceComplete() {
     // Auto-advance only if the segment was played (see didPassPiece), not merely allowed to run out
     if (didPassPiece({ hadMistake, notesPlayed, notesRequired })) {
       // Advance to next step
+      practiceSession.markMastered();
+      practiceAttempt = 1;
+      mistakeCount = 0;
       const hasMore = practiceSession.nextStep();
 
       if (hasMore) {
         renderPracticeStep();
+        practicePanel?.setStatus(
+          t('practice.status.passed', { next: describeMeasures(practiceSession.getCurrentStep().measures) }),
+          'good'
+        );
 
         // Save progress
         savePracticeState();
@@ -1764,6 +1784,8 @@ function onPieceComplete() {
       } else {
         // Practice complete - show celebration!
         stop();
+        updatePracticeDisplay();
+        practicePanel?.setStatus(t('practice.status.finished'), 'good');
         showCelebration();
         const progressInfo = document.getElementById('progressInfo');
         if (progressInfo) {
@@ -1773,7 +1795,11 @@ function onPieceComplete() {
     } else {
       // Had mistakes or didn't play enough - loop the current segment
       // Give countoff for 4+ bars to help re-orient
+      practiceAttempt++;
+      updatePracticeDisplay();
+      practicePanel?.setStatus(retryMessage(mistakeCount, Math.max(0, notesRequired - notesPlayed)), 'retry');
       hadMistake = false;
+      mistakeCount = 0;
       notesPlayed = 0; // Reset for retry
       currentBeatIndex = 0;
       const needsCountoff = currentMeasureCount >= 4;
@@ -2267,13 +2293,28 @@ function loadBuiltInSong(songId: string) {
 /**
  * Enter practice mode UI.
  */
+/** The piece's name in the current language (built-in songs are translated; uploads keep their own title). */
+function practiceTitle(): string {
+  const song = currentPracticeSongId ? getSongById(currentPracticeSongId) : undefined;
+  return song ? songTitle(song) : practiceSession?.getTitle() ?? '';
+}
+
+/** "G major" in the chosen note-name system and language. */
+function practiceKeyLine(): string {
+  const name = practiceSession?.getKeySignature().name ?? '';
+  const match = /^([A-G][#b]?) major$/.exec(name);
+  return match ? formatKeyName(match[1]) : name;
+}
+
 function enterPracticeMode() {
   if (!practiceSession) return;
+  practiceAttempt = 1;
+  mistakeCount = 0;
 
   // Update header
   const scoreTitle = document.querySelector('.score-title h1');
   if (scoreTitle) {
-    scoreTitle.textContent = practiceSession.getTitle();
+    scoreTitle.textContent = practiceTitle();
   }
 
   // Show practice info bar
@@ -2286,7 +2327,7 @@ function enterPracticeMode() {
   const lessonInfo = document.getElementById('lessonInfo');
   if (levelDisplay) levelDisplay.style.display = 'none';
   if (progressInfo) progressInfo.style.display = 'none';
-  if (lessonInfo) lessonInfo.textContent = practiceSession.getKeySignature().name;
+  if (lessonInfo) lessonInfo.textContent = practiceKeyLine();
 
   // Hide level controls in control bar
   const levelSection = document.querySelector('.control-section.level');
@@ -2344,216 +2385,38 @@ function exitPracticeMode() {
 }
 
 /**
- * Update the practice mode display (step info, progress bar).
+ * Update the practice step panel: which step, the measure map, the attempt count.
  */
 function updatePracticeDisplay() {
   if (!practiceSession) return;
-
-  const segment = practiceSession.getCurrentSegment();
-  const progress = practiceSession.getProgress();
-  const allSteps = practiceSession.getAllSteps();
-  const currentIndex = practiceSession.getCurrentStepIndex();
-
-  // Step type
-  const stepTypeEl = document.getElementById('practiceStepType');
-  if (stepTypeEl) {
-    stepTypeEl.textContent = stepTypeLabel(segment.stepType);
-    stepTypeEl.className = `step-type step-type-${segment.stepType}`;
-  }
-
-  // Step description
-  const measuresText = describeMeasures(allSteps[currentIndex].measures);
-  const stepOfText = t('practice.stepOf', { current: progress.currentStep, total: progress.totalSteps });
-  const stepDescEl = document.getElementById('practiceStepDesc');
-  if (stepDescEl) {
-    stepDescEl.textContent = measuresText;
-  }
-
-  // Step number text
-  const stepNumEl = document.getElementById('practiceStepNum');
-  if (stepNumEl) {
-    stepNumEl.textContent = stepOfText;
-  }
-
-  // Calculate percentage based on step index (not mastery)
-  const stepPercent = allSteps.length > 1
-    ? (currentIndex / (allSteps.length - 1)) * 100
-    : 0;
-
-  // Progress bar fill
-  const progressBar = document.getElementById('practiceProgressBar');
-  if (progressBar) {
-    progressBar.style.width = `${stepPercent}%`;
-  }
-
-  // Progress thumb position
-  const progressThumb = document.getElementById('practiceProgressThumb');
-  if (progressThumb) {
-    progressThumb.style.left = `${stepPercent}%`;
-  }
-
-  // Update ARIA attributes
-  const container = document.getElementById('practiceProgressContainer');
-  if (container) {
-    container.setAttribute('aria-valuenow', String(Math.round(stepPercent)));
-    container.setAttribute('aria-valuetext', `${stepOfText}: ${measuresText}`);
-  }
+  practicePanel?.update({
+    steps: practiceSession.getAllSteps(),
+    currentIndex: practiceSession.getCurrentStepIndex(),
+    measureCount: practiceSession.getMeasureCount(),
+    attempt: practiceAttempt,
+  });
 }
 
-/**
- * Setup drag functionality for the practice progress bar.
- * Shows a preview tooltip while dragging, renders music only on release.
- */
-function setupProgressBarDrag() {
-  const container = document.getElementById('practiceProgressContainer');
-  const preview = document.getElementById('progressPreview');
-  const progressBar = document.getElementById('practiceProgressBar');
-  const progressThumb = document.getElementById('practiceProgressThumb');
-  if (!container) return;
+/** Moves to another practice step (from the map or the step buttons). */
+function jumpToPracticeStep(index: number) {
+  if (!practiceSession) return;
+  if (isPlaying) stop();
+  if (!practiceSession.goToStep(index)) return;
+  practiceAttempt = 1;
+  mistakeCount = 0;
+  renderPracticeStep();
+  savePracticeState();
+}
 
-  let isDragging = false;
-  let previewStepIndex = 0;
-
-  const getStepFromPosition = (clientX: number): number => {
-    if (!practiceSession) return 0;
-
-    const rect = container.getBoundingClientRect();
-    const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
-    const percent = x / rect.width;
-    const allSteps = practiceSession.getAllSteps();
-    const stepIndex = Math.round(percent * (allSteps.length - 1));
-    return Math.max(0, Math.min(stepIndex, allSteps.length - 1));
-  };
-
-  const showPreview = (stepIndex: number, clientX: number, clientY: number) => {
-    if (!practiceSession || !preview) return;
-
-    previewStepIndex = stepIndex;
-    const allSteps = practiceSession.getAllSteps();
-    const step = allSteps[stepIndex];
-
-    // Update preview content
-    const stepTypeEl = document.getElementById('progressPreviewStep');
-    const descEl = document.getElementById('progressPreviewDesc');
-    const numEl = document.getElementById('progressPreviewNum');
-
-    if (stepTypeEl) stepTypeEl.textContent = stepTypeLabel(step.type);
-    if (descEl) descEl.textContent = describeMeasures(step.measures);
-    if (numEl) numEl.textContent = t('practice.stepOf', { current: stepIndex + 1, total: allSteps.length });
-
-    // Position preview above the cursor
-    const previewRect = preview.getBoundingClientRect();
-    const viewportWidth = window.innerWidth;
-    let left = clientX - previewRect.width / 2;
-    // Keep within viewport
-    left = Math.max(10, Math.min(left, viewportWidth - previewRect.width - 10));
-    preview.style.left = `${left}px`;
-    preview.style.top = `${clientY - previewRect.height - 20}px`;
-
-    preview.classList.add('visible');
-
-    // Update progress bar visual without rendering music
-    const stepPercent = allSteps.length > 1
-      ? (stepIndex / (allSteps.length - 1)) * 100
-      : 0;
-    if (progressBar) progressBar.style.width = `${stepPercent}%`;
-    if (progressThumb) progressThumb.style.left = `${stepPercent}%`;
-  };
-
-  const hidePreview = () => {
-    if (preview) {
-      preview.classList.remove('visible');
-    }
-  };
-
-  const jumpToStep = (stepIndex: number) => {
-    if (!practiceSession) return;
-    if (isPlaying) stop();
-    practiceSession.goToStep(stepIndex);
-    renderPracticeStep();
-    savePracticeState();
-  };
-
-  // Mouse events
-  container.addEventListener('mousedown', (e) => {
-    isDragging = true;
-    container.classList.add('dragging');
-    const stepIndex = getStepFromPosition(e.clientX);
-    showPreview(stepIndex, e.clientX, e.clientY);
-    e.preventDefault();
+function setupPracticePanel() {
+  const panel = new PracticePanel({
+    onJump: jumpToPracticeStep,
+    onPrevious: () => practiceSession && jumpToPracticeStep(practiceSession.getCurrentStepIndex() - 1),
+    onNext: () => practiceSession && jumpToPracticeStep(practiceSession.getCurrentStepIndex() + 1),
   });
-
-  document.addEventListener('mousemove', (e) => {
-    if (!isDragging) return;
-    const stepIndex = getStepFromPosition(e.clientX);
-    showPreview(stepIndex, e.clientX, e.clientY);
-  });
-
-  document.addEventListener('mouseup', () => {
-    if (isDragging) {
-      isDragging = false;
-      container.classList.remove('dragging');
-      hidePreview();
-      // Now actually render the step
-      jumpToStep(previewStepIndex);
-    }
-  });
-
-  // Touch events
-  container.addEventListener('touchstart', (e) => {
-    isDragging = true;
-    container.classList.add('dragging');
-    if (e.touches.length > 0) {
-      const touch = e.touches[0];
-      const stepIndex = getStepFromPosition(touch.clientX);
-      showPreview(stepIndex, touch.clientX, touch.clientY);
-    }
-    e.preventDefault();
-  }, { passive: false });
-
-  document.addEventListener('touchmove', (e) => {
-    if (!isDragging || e.touches.length === 0) return;
-    const touch = e.touches[0];
-    const stepIndex = getStepFromPosition(touch.clientX);
-    showPreview(stepIndex, touch.clientX, touch.clientY);
-  });
-
-  document.addEventListener('touchend', () => {
-    if (isDragging) {
-      isDragging = false;
-      container.classList.remove('dragging');
-      hidePreview();
-      // Now actually render the step
-      jumpToStep(previewStepIndex);
-    }
-  });
-
-  // Keyboard navigation (immediate, no preview needed)
-  container.addEventListener('keydown', (e) => {
-    if (!practiceSession) return;
-    const currentIndex = practiceSession.getCurrentStepIndex();
-    const allSteps = practiceSession.getAllSteps();
-
-    if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
-      e.preventDefault();
-      if (currentIndex < allSteps.length - 1) {
-        jumpToStep(currentIndex + 1);
-      }
-    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
-      e.preventDefault();
-      if (currentIndex > 0) {
-        jumpToStep(currentIndex - 1);
-      }
-    } else if (e.key === 'Home') {
-      e.preventDefault();
-      jumpToStep(0);
-    } else if (e.key === 'End') {
-      e.preventDefault();
-      jumpToStep(allSteps.length - 1);
-    }
-  });
-
-  // Note: Click is handled via mousedown+mouseup, no separate click handler needed
+  practicePanel = panel;
+  document.getElementById('practiceInfo')!.appendChild(panel.element);
+  updatePracticeDisplay(); // a session restored at start-up was set up before the panel existed
 }
 
 /**

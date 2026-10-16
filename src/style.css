@@ -542,153 +542,252 @@ body {
 }
 
 /* ============================================
-   PRACTICE MODE INFO BAR
+   PRACTICE STEPS
+   A map of the piece's measures with a pencil bracket under the measures of the current step.
    ============================================ */
 .practice-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  max-width: 1100px;
+  width: 100%;
+  max-width: 760px;
   margin: 0 auto var(--space-md);
-  padding: var(--space-sm) var(--space-md);
-  background: rgba(139, 115, 85, 0.15);
-  border: 1px solid rgba(139, 115, 85, 0.25);
-  border-radius: 8px;
 }
 
 .practice-info[hidden] {
   display: none;
 }
 
-.practice-step {
+.practice-panel {
+  padding: 14px 18px 12px;
+  background: linear-gradient(#272420, #211f1c);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.pp-head {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+}
+
+.pp-glyph-holder {
+  display: flex;
+  color: var(--current);
+}
+
+.pp-glyph {
+  width: 36px;
+  height: 21px;
+}
+
+.pp-title {
+  display: flex;
+  flex: 1 1 150px;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
 }
 
-.step-type {
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--accent-light);
-}
-
-.step-desc {
+.pp-type {
   font-family: var(--font-serif);
-  font-size: 1rem;
+  font-size: 1.3rem;
+  font-weight: 500;
+  line-height: 1.15;
   color: var(--text);
 }
 
-.practice-progress {
+.pp-where {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.pp-steps {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-inline-start: auto;
+}
+
+.pp-counts {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 4px;
-}
-
-.step-num {
-  font-size: 0.75rem;
   color: var(--text-muted);
+  font-size: 0.8rem;
+  line-height: 1.35;
 }
 
-.progress-bar-container {
-  width: 180px;
-  height: 24px;
-  position: relative;
-  cursor: pointer;
-  padding: 8px 0;
+.pp-attempt {
+  color: #e0877f;
+  font-weight: 500;
 }
 
-.progress-bar-track {
-  width: 100%;
-  height: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
-  overflow: hidden;
+.pp-nav {
+  display: flex;
+  gap: 6px;
 }
 
-.progress-fill {
-  height: 100%;
-  background: var(--accent);
-  border-radius: 4px;
-  transition: width 0.1s ease;
-  pointer-events: none;
-}
-
-.progress-thumb {
-  position: absolute;
-  top: 50%;
-  width: 16px;
-  height: 16px;
-  background: var(--accent-light);
-  border: 2px solid white;
+.pp-step-btn {
+  width: 34px;
+  height: 34px;
+  padding: 0 0 2px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 50%;
-  transform: translate(-50%, -50%);
-  cursor: grab;
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.progress-thumb:hover {
-  transform: translate(-50%, -50%) scale(1.1);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-}
-
-.progress-thumb:active,
-.progress-bar-container.dragging .progress-thumb {
-  cursor: grabbing;
-  transform: translate(-50%, -50%) scale(1.2);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
-}
-
-.progress-bar-container:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 4px;
-  border-radius: 4px;
-}
-
-/* Preview tooltip shown while dragging */
-.progress-preview {
-  position: fixed;
-  background: var(--surface);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 8px;
-  padding: var(--space-sm) var(--space-md);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-  z-index: 300;
-  pointer-events: none;
-  opacity: 0;
-  transform: translateY(10px);
-  transition: opacity 0.15s ease, transform 0.15s ease;
-  min-width: 200px;
-  max-width: 320px;
-}
-
-.progress-preview.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.progress-preview-step {
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--accent-light);
-  margin-bottom: 2px;
-}
-
-.progress-preview-desc {
-  font-family: var(--font-serif);
-  font-size: 1rem;
   color: var(--text);
-  margin-bottom: var(--space-xs);
+  font: inherit;
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
 }
 
-.progress-preview-num {
-  font-size: 0.75rem;
+.pp-step-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.pp-step-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.pp-map {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.pp-measures {
+  display: grid;
+  grid-template-columns: repeat(var(--columns, 8), minmax(0, 1fr));
+  column-gap: 4px;
+}
+
+/* One measure: five faint staff lines, the barline on its right, its number like a rehearsal mark */
+.pp-measure {
+  position: relative;
+  height: 36px;
+  padding: 0 0 2px 7px;
+  display: flex;
+  align-items: flex-end;
+  background:
+    repeating-linear-gradient(to bottom, transparent 0, transparent 5px, rgba(255, 255, 255, 0.08) 5px, rgba(255, 255, 255, 0.08) 6px),
+    transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-right: 2px solid rgba(255, 255, 255, 0.26);
+  border-radius: 3px;
   color: var(--text-muted);
+  font-family: var(--font-serif);
+  font-size: 0.85rem;
+  font-style: italic;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.pp-measure:hover {
+  border-color: var(--accent-light);
+}
+
+.pp-measure:focus-visible {
+  outline: 2px solid var(--current);
+  outline-offset: 2px;
+}
+
+.pp-measure[data-state='done'] {
+  color: var(--correct);
+  border-color: rgba(90, 154, 110, 0.45);
+  background-color: rgba(90, 154, 110, 0.1);
+}
+
+/* The pencil tick on a measure that has been played through */
+.pp-measure[data-state='done']::after {
+  content: '';
+  position: absolute;
+  top: 5px;
+  right: 7px;
+  width: 9px;
+  height: 5px;
+  border-left: 2px solid var(--correct);
+  border-bottom: 2px solid var(--correct);
+  transform: rotate(-45deg);
+}
+
+.pp-measure[data-state='current'] {
+  color: var(--text);
+  border-color: var(--current);
+  background-color: rgba(201, 162, 39, 0.14);
+}
+
+/* The bracket: a square one for a measure, a tie for two, a long slur for a phrase */
+.pp-bracket {
+  grid-row: 2;
+  grid-column: var(--from) / var(--to);
+  height: 11px;
+  margin-top: 5px;
+  border: 2px solid var(--current);
+  border-top: 0;
+  border-radius: 0 0 2px 2px;
+}
+
+.pp-bracket[data-type='pair'] {
+  height: 12px;
+  border-radius: 0 0 60px 60px / 0 0 12px 12px;
+}
+
+.pp-bracket[data-type='consolidate'] {
+  height: 16px;
+  border-radius: 0 0 50% 50% / 0 0 100% 100%;
+}
+
+.pp-bracket.open-start {
+  border-left: 0;
+  border-bottom-left-radius: 0;
+}
+
+.pp-bracket.open-end {
+  border-right: 0;
+  border-bottom-right-radius: 0;
+}
+
+.pp-status {
+  min-height: 1.45em;
+  margin: 12px 0 0;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.pp-status[data-tone='good'] {
+  color: #7fc093;
+}
+
+.pp-status[data-tone='retry'] {
+  color: #e0877f;
+}
+
+@media (max-width: 560px) {
+  .practice-panel {
+    padding: 12px 12px 10px;
+  }
+
+  .pp-type {
+    font-size: 1.1rem;
+  }
+
+  .pp-measure {
+    height: 32px;
+    padding-left: 4px;
+    font-size: 0.78rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pp-measure,
+  .pp-step-btn {
+    transition: none;
+  }
 }
 
 /* Legacy progress bar for level mode */
@@ -1058,11 +1157,6 @@ body.is-playing #controlBar:hover {
     display: none;
   }
 
-  .practice-info {
-    flex-direction: row;
-    gap: var(--space-sm);
-  }
-
   .progress-bar {
     width: 80px;
   }
@@ -1130,22 +1224,6 @@ body.is-playing #controlBar:hover {
 
   .midi-options {
     display: none;
-  }
-
-  .practice-info {
-    padding: var(--space-xs) var(--space-sm);
-  }
-
-  .step-type {
-    font-size: 0.6rem;
-  }
-
-  .step-desc {
-    font-size: 0.875rem;
-  }
-
-  .step-num {
-    font-size: 0.65rem;
   }
 
   .progress-bar {
