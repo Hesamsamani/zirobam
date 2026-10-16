@@ -1326,3 +1326,74 @@ body.is-playing #controlBar:hover {
   max-height: calc(100vh - 124px);
   overflow-y: auto;
 }
+
+/* ============================================
+   PERSIAN / RIGHT-TO-LEFT
+   Only text and panels flip. The score and the keyboards stay left to right.
+   ============================================ */
+@font-face {
+  font-family: 'Vazirmatn';
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/Vazirmatn-Regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Vazirmatn';
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/Vazirmatn-Medium.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Vazirmatn';
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/Vazirmatn-SemiBold.ttf') format('truetype');
+}
+
+html[lang='fa'] {
+  --font-sans: 'Vazirmatn', system-ui, sans-serif;
+  --font-serif: 'Vazirmatn', system-ui, sans-serif;
+}
+
+/* Persian letters must stay joined: no letter-spacing, no forced capitals, no italics */
+html[lang='fa'] *,
+html[lang='fa'] *::before,
+html[lang='fa'] *::after {
+  letter-spacing: normal !important;
+  text-transform: none !important;
+}
+
+html[lang='fa'] .lesson-subtitle,
+html[lang='fa'] .theory-hint {
+  font-style: normal;
+}
+
+/* Notation and keyboards always run left to right, in every language */
+#notation,
+#pianoDock,
+.piano,
+.learn-note,
+.learn-answers {
+  direction: ltr;
+}
+
+/* Arrows point the way the text reads */
+html[dir='rtl'] .level-btn svg {
+  transform: scaleX(-1);
+}
+
+/* Panels open on the side of the control bar button that opens them */
+html[dir='rtl'] .options-panel {
+  right: auto;
+  left: var(--space-lg);
+}
+
+html[dir='rtl'] .fingering-panel {
+  left: auto;
+  right: var(--space-lg);
+}
