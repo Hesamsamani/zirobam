@@ -30,6 +30,7 @@ test.describe('Lessons', () => {
 
   test('has lessons about notes, rhythm and the piano', async ({ page }) => {
     await page.goto('/#/lessons');
+    await expect(page.locator('.course-unit')).toHaveCount(3); // the list is drawn after the page loads
     for (const unit of ['notes', 'rhythm', 'piano']) {
       expect(await page.locator(`.course-unit[data-unit="${unit}"] .lesson-card`).count(), unit).toBeGreaterThanOrEqual(10);
     }

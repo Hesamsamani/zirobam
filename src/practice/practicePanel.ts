@@ -99,6 +99,7 @@ export class PracticePanel {
   private readonly songKey: HTMLElement;
   private readonly jumpTogether: HTMLButtonElement;
   private readonly jumpWhole: HTMLButtonElement;
+  private readonly jumps: HTMLElement;
   private view: PracticeView | null = null;
   private builtFor = 0;
   private buttons: HTMLButtonElement[] = [];
@@ -152,6 +153,7 @@ export class PracticePanel {
     this.jumpWhole.type = 'button';
     this.jumpWhole.addEventListener('click', () => this.jump('whole'));
     jumps.append(this.jumpTogether, this.jumpWhole);
+    this.jumps = jumps;
 
     const foot = make('div', 'pp-foot');
     foot.append(this.statusEl, jumps);
@@ -165,6 +167,11 @@ export class PracticePanel {
     button.textContent = glyphChar;
     button.addEventListener('click', onClick);
     return button;
+  }
+
+  /** Puts a small tool (a button) in the row of the step buttons, where it costs no extra room. */
+  addTool(tool: HTMLElement): void {
+    this.jumps.appendChild(tool);
   }
 
   /** Shows a step. The status line goes back to the hint for that kind of step. */

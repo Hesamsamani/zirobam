@@ -5286,3 +5286,159 @@ html[dir='rtl'] .nav-arrow {
   font-size: 0.75rem;
   line-height: 1.5;
 }
+
+/* ============================================
+   PRACTICE AIDS
+   ============================================ */
+.practice-aids {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.pa-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.pa-label {
+  min-width: 3.4em;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.pa-chip {
+  min-height: 34px;
+  padding: 0 12px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.pa-chip:hover:not(:disabled) {
+  border-color: var(--accent-light);
+}
+
+.pa-chip[aria-pressed='true'] {
+  border-color: var(--current);
+  background: rgba(201, 162, 39, 0.16);
+  color: #fff;
+}
+
+.pa-chip:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.pa-chip:focus-visible {
+  outline: 2px solid var(--current);
+  outline-offset: 2px;
+}
+
+@media (pointer: coarse) {
+  .pa-chip {
+    min-height: 40px;
+  }
+}
+
+/* the hand that is not practised is played by the app: it is drawn faintly */
+#notation[data-hand='right'] .staff[data-hand='left'],
+#notation[data-hand='left'] .staff[data-hand='right'] {
+  opacity: 0.28;
+}
+
+.pa-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 14px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+.pa-open:hover {
+  color: var(--text);
+  border-color: var(--accent-light);
+}
+
+.pa-open::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-inline-end: 1.5px solid currentColor;
+  border-block-end: 1.5px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform var(--transition-fast);
+}
+
+.pa-open[aria-expanded='true']::after {
+  transform: translateY(1px) rotate(-135deg);
+}
+
+.pa-open:focus-visible {
+  outline: 2px solid var(--current);
+  outline-offset: 2px;
+}
+
+.pa-count {
+  min-width: 1.5em;
+  padding: 0 6px;
+  background: rgba(201, 162, 39, 0.22);
+  border-radius: 999px;
+  color: var(--current);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+@media (pointer: coarse) {
+  .pa-open {
+    min-height: 40px;
+  }
+}
+
+.practice-aids[hidden] {
+  display: none;
+}
+
+.pp-jumps .pa-open {
+  min-height: 36px;
+}
+
+.pa-icon {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+
+/* on a narrow screen the button is the picture and the number only, so it fits in the row of the step buttons */
+@media (max-width: 560px) {
+  .pa-open-text {
+    display: none;
+  }
+
+  .pa-open::after {
+    display: none;
+  }
+
+  .pa-open {
+    min-width: 44px;
+    justify-content: center;
+    padding: 0 10px;
+  }
+}

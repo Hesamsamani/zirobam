@@ -22,7 +22,7 @@ const EXACT_KEYS: ReadonlySet<string> = new Set([
   'practiceState',
   'maker.draft.v1',
 ]);
-const KEY_PREFIXES: readonly string[] = ['ui.', 'xylo.', 'learn.', 'metronome.'];
+const KEY_PREFIXES: readonly string[] = ['ui.', 'xylo.', 'learn.', 'metronome.', 'practice.'];
 
 /** True for the browser keys that belong in a backup; everything else (other sites' data, devices) stays out. */
 export function isBackupKey(key: string): boolean {

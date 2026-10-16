@@ -48,6 +48,10 @@ import '@fontsource/crimson-pro/latin-600.css';
 import { InstallPrompt } from './pwa/installPrompt';
 import { PwaPanel } from './pwa/pwaPanel';
 import { SongMakerView } from './songs/songMakerView';
+import { buildTimingEventList, effectiveHand, normalizeNote, type TimingEvent } from './practice/timingEvents';
+import { WaitSession, countWaitNotes } from './practice/waitMode';
+import { PracticeOptionsStore, nextLadderBpm } from './practice/practiceOptions';
+import { PracticeAids } from './practice/practiceAids';
 import { applyBackup, backupFileName, browserStorage, createBackup } from './backup/backup';
 import { BackupPanel, type BackupPanelDeps } from './backup/backupView';
 import { downloadTextFile } from './backup/download';
@@ -111,14 +115,19 @@ let sampler: Tone.Sampler | null = null;
 let scheduledEvents: number[] = [];
 
 // Timing data from music generator (source of truth for durations and playback)
-interface TimingEvent {
-  time: number; // Start time in beats
-  duration: number; // Duration in beats
-  pitches: string[]; // Pitches to play (e.g., ['C4', 'E4', 'G4'])
-  isTieContinuation?: boolean; // True if ANY pitch is a tied note
-  tiedPitches?: string[]; // Specific pitches that are tied (don't play, check if held)
-}
 let timingEvents: TimingEvent[] = [];
+
+// Practice aids: wait for me, repeat a step, speed up as I improve, one hand at a time
+const practiceOptions = new PracticeOptionsStore();
+let practiceAids: PracticeAids | null = null;
+/** Set while the piece waits at a note for the student (wait mode). */
+let waitSession: WaitSession | null = null;
+/** The tempo the student set; the quick speeds (50, 75, 100 percent) are shares of it. */
+let practiceBaseBpm = 60;
+/** The step was already counted as passed, so repeating it does not pay again. */
+let stepAwarded = false;
+/** The waiting hint is shown when the student presses Start; later rounds keep the message about the last one. */
+let waitHintPending = false;
 
 // Current time signature
 let currentTimeSig = { beats: 4, beatType: 4 };
@@ -476,11 +485,14 @@ let metronomePanel: MetronomePanel | null = null;
 let metronomeWindow: FloatingWindow | null = null;
 
 /** The one way to change the exercise tempo: keeps the field, the exercise and the metronome window in step. */
-function setExerciseBpm(value: number | string) {
+function setExerciseBpm(value: number | string, quickSpeed = false) {
   bpm = clampBpm(value);
   const input = document.getElementById('bpm') as HTMLInputElement | null;
   if (input) input.value = String(bpm);
   tempoStore.setBpm(bpm);
+  // a quick speed (or the ladder) is a share of the tempo the student chose; any other change is a new choice
+  if (!quickSpeed) practiceBaseBpm = bpm;
+  practiceAids?.refresh();
 }
 
 /** `time` is the audio time Tone.js passes to the Transport callback. */
@@ -678,97 +690,36 @@ function buildMeiIdMapping(meiString: string) {
 }
 
 // Build timing events from the generated note data
-// This is the source of truth for durations
-// Handles ties: notes with tieEnd=true are continuations (check if key is held, no new attack)
+// This is the source of truth for durations (see practice/timingEvents.ts)
 function buildTimingEvents() {
-  timingEvents = [];
-
-  // Build a map of time -> { duration, pitches, tiedPitches } from source note data
-  const roundTime = (t: number) => Math.round(t * 1000) / 1000;
-
-  interface EventData {
-    duration: number;
-    pitches: string[];
-    tiedPitches: string[]; // Pitches that are tie continuations (don't play, check if held)
-  }
-  const allEvents: Map<string, EventData> = new Map();
-
-  // Process right hand notes
-  let currentTime = 0;
-  for (const note of currentRightHandNotes) {
-    const timeKey = String(roundTime(currentTime));
-    const pitches = getAllPitchesFromNote(note);
-    const isTieContinuation = note.tieEnd === true;
-
-    const existing = allEvents.get(timeKey);
-    if (existing) {
-      // Add pitches to existing event (may be chord or simultaneous with LH)
-      existing.pitches.push(...pitches);
-      // Use shortest duration at this time
-      if (note.duration < existing.duration) existing.duration = note.duration;
-      // Track tied pitches separately
-      if (isTieContinuation && !note.isRest) {
-        existing.tiedPitches.push(...pitches);
-      }
-    } else {
-      allEvents.set(timeKey, {
-        duration: note.duration,
-        pitches: [...pitches],
-        tiedPitches: isTieContinuation && !note.isRest ? [...pitches] : [],
-      });
-    }
-    currentTime += note.duration;
-  }
-
-  // Process left hand notes
-  currentTime = 0;
-  for (const note of currentLeftHandNotes) {
-    const timeKey = String(roundTime(currentTime));
-    const pitches = getAllPitchesFromNote(note);
-    const isTieContinuation = note.tieEnd === true;
-
-    const existing = allEvents.get(timeKey);
-    if (existing) {
-      existing.pitches.push(...pitches);
-      if (note.duration < existing.duration) existing.duration = note.duration;
-      // Track tied pitches separately
-      if (isTieContinuation && !note.isRest) {
-        existing.tiedPitches.push(...pitches);
-      }
-    } else {
-      allEvents.set(timeKey, {
-        duration: note.duration,
-        pitches: [...pitches],
-        tiedPitches: isTieContinuation && !note.isRest ? [...pitches] : [],
-      });
-    }
-    currentTime += note.duration;
-  }
-
-  // Convert to sorted array
-  const sortedTimes = Array.from(allEvents.keys()).map(Number).sort((a, b) => a - b);
-
-  for (let i = 0; i < sortedTimes.length; i++) {
-    const time = sortedTimes[i];
-    const timeKey = String(time);
-    const eventData = allEvents.get(timeKey)!;
-    const nextTime = i < sortedTimes.length - 1 ? sortedTimes[i + 1] : time + eventData.duration;
-    const duration = nextTime - time;
-    const hasTiedPitches = eventData.tiedPitches.length > 0;
-    timingEvents.push({
-      time,
-      duration,
-      pitches: eventData.pitches,
-      isTieContinuation: hasTiedPitches,
-      tiedPitches: hasTiedPitches ? eventData.tiedPitches : undefined,
-    });
-  }
+  timingEvents = buildTimingEventList(currentRightHandNotes, currentLeftHandNotes, practisedHand());
 
   // Expose for E2E testing (used by tie continuation tests)
   if (typeof window !== 'undefined') {
     (window as unknown as Record<string, unknown>).__timingEvents = timingEvents;
     (window as unknown as Record<string, unknown>).__currentRightHandNotes = currentRightHandNotes;
   }
+  tagHands();
+}
+
+/** The hand the student practises now: only a song in practice mode is practised one hand at a time. */
+function practisedHand() {
+  if (currentMode !== 'practice') return 'both' as const;
+  return effectiveHand(currentRightHandNotes, currentLeftHandNotes, practiceOptions.get().hand);
+}
+
+/**
+ * Marks the staves of the score as the right and the left hand and says which hand is practised, so the other
+ * one can be drawn faintly (the app plays it).
+ */
+function tagHands() {
+  const notation = document.getElementById('notation');
+  if (!notation) return;
+  notation.querySelectorAll('.measure').forEach((measure) => {
+    const staves = Array.from(measure.children).filter((child) => child.classList.contains('staff'));
+    staves.forEach((staff, i) => staff.setAttribute('data-hand', i === 0 ? 'right' : 'left'));
+  });
+  notation.dataset.hand = practisedHand();
 }
 
 let showNoteNames = storageGet('ui.showNoteNames') === '1';
@@ -1123,9 +1074,11 @@ function setupMetronomeWindow() {
   tempoStore.onChange((state, key) => {
     if (key === 'bpm' && state.bpm !== bpm) {
       bpm = state.bpm;
+      practiceBaseBpm = bpm;
       const input = document.getElementById('bpm') as HTMLInputElement | null;
       if (input) input.value = String(bpm);
       setBpm(bpm);
+      practiceAids?.refresh();
     }
     if (key === 'volume') {
       metronomeVolume = sliderToDb(state.volume);
@@ -1448,8 +1401,119 @@ function stopUserNote(noteName: string, source: NoteSource) {
   sampler.triggerRelease(noteName);
 }
 
+/**
+ * Wait mode: starts a round of the piece that does not move on its own. The notes of the first moment are marked
+ * and the piece waits until they are played; there is no count-in and no tempo.
+ */
+function beginWaiting() {
+  isCountingOff = false;
+  updateCountoffDisplay(0);
+  Tone.getTransport().stop();
+  Tone.getTransport().cancel();
+  scheduledEvents = [];
+  hadMistake = false;
+  mistakeCount = 0;
+  notesPlayed = 0;
+  currentBeatIndex = 0;
+  resetVisualHighlighting();
+  const session = new WaitSession(timingEvents);
+  waitSession = session;
+  notesRequired = countWaitNotes(timingEvents);
+  if (session.finished()) {
+    waitSession = null;
+    onPieceComplete();
+    return;
+  }
+  showWaitTarget(true);
+}
+
+/** Marks the notes of the moment the piece waits at, plays what the other hand has there, and says what to do. */
+function showWaitTarget(first = false) {
+  const session = waitSession;
+  if (!session) return;
+  const index = session.index();
+  const event = timingEvents[index];
+  const notation = document.getElementById('notation')!;
+  notation.querySelectorAll('.note.current, .rest.current').forEach((el) => {
+    el.classList.remove('current');
+    el.classList.add('past');
+  });
+  const roundTime = (t: number) => Math.round(t * 1000) / 1000;
+  const noteIds = currentNoteIdMapping.timeToIds.get(roundTime(event.time)) || [];
+  for (const id of noteIds) document.getElementById(id)?.classList.add('current');
+
+  if (sampler && sampler.loaded) {
+    for (const pitch of event.accompaniment ?? []) sampler.triggerAttackRelease(pitch, '2n');
+  }
+  const needed = session.expected();
+  if (first && waitHintPending) {
+    waitHintPending = false;
+    practicePanel?.setStatus(t(needed.length > 1 ? 'practice.wait.chord' : 'practice.wait.hint'), 'hint');
+  }
+  updateScrollPosition(event.time);
+  currentBeatIndex = index + 1; // like a timed round: the moment that is current is currentBeatIndex - 1
+  document.dispatchEvent(new CustomEvent('trainer:beat', {
+    detail: { beatIndex: index, time: event.time, pitches: event.pitches, noteIds, audioTime: 0, waiting: true },
+  }));
+}
+
+/** A key was played while the piece waits: right ones move it on, wrong ones are marked and counted. */
+function handleWaitPress(playedNote: string) {
+  const session = waitSession;
+  if (!session) return;
+  const press = session.press(playedNote);
+  if (press.result === 'ignored') return;
+
+  const notation = document.getElementById('notation')!;
+  const current = Array.from(notation.querySelectorAll('.note.current'));
+  if (press.result === 'wrong') {
+    hadMistake = true;
+    mistakeCount++;
+    current.filter((el) => !el.classList.contains('correct')).forEach((el) => el.classList.add('wrong'));
+    return;
+  }
+
+  // a right note: mark the note on the staff that has this pitch, or else the first one not marked yet
+  const played = normalizeNote(playedNote);
+  const unmarked = current.filter((el) => !el.classList.contains('correct') && !el.classList.contains('rest'));
+  const target =
+    unmarked.find((el) => {
+      const data = el.getAttribute('id') ? toolkit.getElementAttr(el.getAttribute('id')!) : null;
+      return data && data.pname && data.oct && String(data.pname).toUpperCase() === played.charAt(0) && String(data.oct) === played.slice(-1);
+    }) ?? unmarked[0];
+  target?.classList.add('correct');
+  target?.classList.remove('wrong');
+  notesPlayed++;
+
+  if (press.result === 'advance') {
+    showWaitTarget();
+  } else if (press.result === 'done') {
+    // a moment to see the last note marked, then the same ending as a timed round
+    setTimeout(() => {
+      if (!isPlaying || waitSession !== session) return;
+      waitSession = null;
+      onPieceComplete();
+    }, 250);
+  }
+}
+
+/** Starts a round of the piece: waiting at the first note, or counting in and playing in time. */
+function beginRound(countoffTotal: number) {
+  if (practiceOptions.get().wait && currentMode === 'practice') {
+    beginWaiting();
+    return;
+  }
+  Tone.getTransport().bpm.value = bpm; // the tempo may have changed since the last round
+  scheduleMusic(countoffTotal);
+  Tone.getTransport().start();
+}
+
 function checkNoteMatch(playedNote: string) {
   if (!isPlaying || isCountingOff) return;
+  if (waitSession) {
+    handleWaitPress(playedNote);
+    return;
+  }
 
   const notation = document.getElementById('notation')!;
   const normalizedPlayed = normalizeNote(playedNote);
@@ -1537,17 +1601,6 @@ function checkNoteMatch(playedNote: string) {
       unmarked.forEach((el) => el.classList.add('wrong'));
     }
   }
-}
-
-function normalizeNote(note: string): string {
-  return note
-    .replace('Db', 'C#')
-    .replace('Eb', 'D#')
-    .replace('Fb', 'E')
-    .replace('Gb', 'F#')
-    .replace('Ab', 'G#')
-    .replace('Bb', 'A#')
-    .replace('Cb', 'B');
 }
 
 function setupControls() {
@@ -1862,6 +1915,7 @@ function setupControls() {
     songsView?.refresh();
     xylophoneView?.refresh();
     practicePanel?.refresh();
+    practiceAids?.refresh();
     gameHud?.refresh();
     progressView?.refresh();
     populateLevelJump();
@@ -1953,9 +2007,8 @@ async function start() {
   countoffBeats = 0;
   // Don't show initial number - it will appear on first beat
 
-  scheduleMusic(countoffTotal);
-
-  Tone.getTransport().start();
+  waitHintPending = true;
+  beginRound(countoffTotal);
 }
 
 function scheduleMusic(countoffTotal: number) {
@@ -2058,11 +2111,31 @@ function onPieceComplete() {
 
     // Auto-advance only if the segment was played (see didPassPiece), not merely allowed to run out
     if (didPassPiece({ hadMistake, notesPlayed, notesRequired })) {
-      // Advance to next step
+      // A clean pass: the step is mastered (and pays once, even when it is repeated)
       practiceSession.markMastered();
-      game.stepPassed();
+      if (!stepAwarded) {
+        game.stepPassed();
+        stepAwarded = true;
+      }
       practiceAttempt = 1;
       mistakeCount = 0;
+      const options = practiceOptions.get();
+      const faster = options.ladder ? nextLadderBpm(bpm, practiceBaseBpm) : bpm;
+      if (faster !== bpm) setExerciseBpm(faster, true);
+
+      if (options.loop) {
+        // repeat this step instead of moving on
+        updatePracticeDisplay();
+        practicePanel?.setStatus(faster !== bpm || options.ladder ? t('practice.status.faster', { bpm: formatNumber(bpm) }) : t('practice.status.loop'), 'good');
+        hadMistake = false;
+        notesPlayed = 0;
+        notesRequired = countRequiredNotes();
+        currentBeatIndex = 0;
+        isCountingOff = true;
+        countoffBeats = 0;
+        beginRound(currentTimeSig.beats);
+        return;
+      }
       const hasMore = practiceSession.nextStep();
 
       if (hasMore) {
@@ -2083,9 +2156,7 @@ function onPieceComplete() {
         currentBeatIndex = 0;
         isCountingOff = true;
         countoffBeats = 0;
-        const countoffTotal = currentTimeSig.beats;
-        scheduleMusic(countoffTotal);
-        Tone.getTransport().start();
+        beginRound(currentTimeSig.beats);
       } else {
         // Practice complete - show celebration!
         stop();
@@ -2115,8 +2186,7 @@ function onPieceComplete() {
       const needsCountoff = currentMeasureCount >= 4;
       isCountingOff = needsCountoff;
       countoffBeats = 0;
-      scheduleMusic(needsCountoff ? currentTimeSig.beats : 0);
-      Tone.getTransport().start();
+      beginRound(needsCountoff ? currentTimeSig.beats : 0);
     }
   } else {
     // Level mode: the piece must have been played, not merely allowed to run to the end
@@ -2170,6 +2240,7 @@ function stop() {
   startToken++;
   setStarting(false);
   isPlaying = false;
+  waitSession = null;
   metronomePanel?.setExerciseRunning(false);
   isCountingOff = false;
   const playPauseBtn = document.getElementById('playPause')!;
@@ -2265,7 +2336,8 @@ function advanceBeat(time: number) {
   // Play pitches from source data (timingEvents), NOT from Verovio SVG
   // But skip tied pitches - they're still ringing from the previous attack
   const allPitches = timingEvent?.pitches ?? [];
-  const pitchesToPlay = allPitches.filter(p => !tiedPitches.includes(p));
+  // the notes to play, and (when one hand is practised) the other hand's notes, played by the app
+  const pitchesToPlay = [...allPitches.filter(p => !tiedPitches.includes(p)), ...(timingEvent?.accompaniment ?? [])];
 
   if (sampler && sampler.loaded && pitchesToPlay.length > 0) {
     for (const pitch of pitchesToPlay) {
@@ -2282,45 +2354,6 @@ function advanceBeat(time: number) {
   }));
 
   currentBeatIndex++;
-}
-
-/**
- * Convert NoteData to Tone.js pitch string (e.g., 'C4', 'F#5', 'Bb3')
- */
-function noteDataToPitch(note: NoteData): string | null {
-  if (note.isRest) return null;
-
-  let pitchName = note.step;
-  if (note.alter === 1) pitchName += '#';
-  else if (note.alter === -1) pitchName += 'b';
-
-  return `${pitchName}${note.octave}`;
-}
-
-/**
- * Get all pitches from a NoteData, including chord notes.
- * Returns an array of Tone.js pitch strings.
- */
-function getAllPitchesFromNote(note: NoteData): string[] {
-  if (note.isRest) return [];
-
-  const pitches: string[] = [];
-
-  // Main note pitch
-  const mainPitch = noteDataToPitch(note);
-  if (mainPitch) pitches.push(mainPitch);
-
-  // Chord notes
-  if (note.chordNotes) {
-    for (const chordNote of note.chordNotes) {
-      let pitchName = chordNote.step;
-      if (chordNote.alter === 1) pitchName += '#';
-      else if (chordNote.alter === -1) pitchName += 'b';
-      pitches.push(`${pitchName}${chordNote.octave}`);
-    }
-  }
-
-  return pitches;
 }
 
 // ============================================
@@ -2715,6 +2748,29 @@ function setupPracticePanel() {
   practicePanel = panel;
   const info = document.getElementById('practiceInfo')!;
   info.appendChild(panel.element);
+  const aids = new PracticeAids({
+    options: practiceOptions,
+    baseBpm: () => practiceBaseBpm,
+    currentBpm: () => bpm,
+    setBpm: (value) => setExerciseBpm(value, true),
+  });
+  practiceAids = aids;
+  panel.addTool(aids.opener);
+  info.appendChild(aids.element);
+  aids.setHandsAvailable(
+    currentRightHandNotes.some((n) => !n.isRest),
+    currentLeftHandNotes.some((n) => !n.isRest),
+  );
+  // a change of hand or of wait mode starts the step again: what is playing was set up for the old choice
+  let lastOptions = practiceOptions.get();
+  practiceOptions.onChange(() => {
+    const next = practiceOptions.get();
+    const changed = next.hand !== lastOptions.hand || next.wait !== lastOptions.wait;
+    lastOptions = next;
+    if (!changed || currentMode !== 'practice') return;
+    if (isPlaying) stop();
+    if (practiceSession) renderPracticeStep();
+  });
   updatePracticeDisplay(); // a session restored at start-up was set up before the panel existed
 
   // The panel, the piano and the control bar take room from the score; refit it whenever one of them changes size
@@ -2743,6 +2799,11 @@ function renderPracticeStep() {
   // Update current notes and measure count
   currentRightHandNotes = segment.rightHand;
   currentLeftHandNotes = segment.leftHand;
+  stepAwarded = false;
+  practiceAids?.setHandsAvailable(
+    segment.rightHand.some((n) => !n.isRest),
+    segment.leftHand.some((n) => !n.isRest),
+  );
   currentTimeSig = timeSig;
   currentMeasureCount = step.measures.length;
 

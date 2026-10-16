@@ -298,3 +298,14 @@ describe('before any step is shown', () => {
     expect(qa('.pp-measure')).toHaveLength(0);
   });
 });
+
+describe('tools in the row of the step buttons', () => {
+  it('puts a small tool next to the shortcut buttons, so it costs no extra row', () => {
+    const tool = document.createElement('button');
+    tool.className = 'my-tool';
+    panel.addTool(tool);
+    const row = panel.element.querySelector('.pp-jumps')!;
+    expect(row.contains(tool)).toBe(true);
+    expect(row.lastElementChild).toBe(tool);
+  });
+});
