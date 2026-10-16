@@ -4,7 +4,7 @@ A personal study fork of [ftrain/sightreading](https://github.com/ftrain/sightre
 
 ## What this fork adds
 
-- **Main menu.** Lessons, Note quiz, Sight-reading levels, Songs, Song library, Xylophone, Metronome, Progress and Settings. Every screen has its own address (`#/lessons/octaves`, `#/catalog?artist=Queen`), so the Back button, reloads and shared links work.
+- **Main menu.** Lessons, Note quiz, Sight-reading levels, Songs, Song library, Ear training, Scales and chords, Xylophone, Metronome, Progress and Settings. Every screen has its own address (`#/lessons/octaves`, `#/catalog?artist=Queen`), so the Back button, reloads and shared links work.
 - **English and Persian interface**, with right-to-left layout for Persian text. The staff, the piano, the keyboard pictures and the note buttons stay left-to-right. Choose the language in Options (the three-dot button).
 - **Three ways to name notes:** letters (C D E), solfège (Do Re Mi) and Persian solfège (دو ر می). The choice applies everywhere: level names, the piano, the quiz, the lessons and, if you tick "Show note names on the staff", under every note.
 - **Play without a MIDI keyboard.** The piano button opens an on-screen piano, and the computer keyboard plays notes too (table below). Keys are matched by position, so it also works with a Persian keyboard layout.
@@ -50,7 +50,7 @@ npm run build
 - A new version of the app is used the next time it is opened after the update (the old files stay until then).
 - Persian music terms (دیز, بمل, the lesson texts, the level names) are waiting for the owner's review.
 - The song library lists titles, artists and an estimated level. It contains no notes of copyrighted songs: the notes come from the sheet-music links or from your own file. The lists were put together by hand, so a few details may be wrong, and the Persian list is shorter than the international one.
-- All unit tests (about 960) and all end-to-end tests (about 500, on desktop, phone and phone-landscape profiles) pass.
+- All unit tests (1,386) and the end-to-end tests (about 690, on desktop, phone and phone-landscape profiles, plus an offline run against the production build) pass. One playback-timing check on the phone profile failed once in a full run and then passed 123 times in a row, so it may be a rare timing flake.
 - Audit warnings in dev tooling (Vite, Vitest, gh-pages) are not fixed yet; nothing in the shipped bundle is flagged.
 
 Design: [docs/superpowers/specs/2026-10-16-bilingual-note-trainer-design.md](docs/superpowers/specs/2026-10-16-bilingual-note-trainer-design.md). Why this base app was chosen: [research/candidates.md](research/candidates.md).
