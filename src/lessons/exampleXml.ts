@@ -14,36 +14,43 @@ export interface StaffExample {
   free?: boolean;
 }
 
-/** What to draw next to a note: the sign when its pitch differs from what the key signature gives. */
-function accidentalXml(note: ParsedNote, fifths: number): string {
+/**
+ * What to draw next to a note. A sign is needed when the pitch differs from what is in force: the key
+ * signature at the start of a measure, then whatever the earlier notes of the same pitch in the measure set.
+ */
+function accidentalXml(note: ParsedNote, inForce: number): string {
   if (note.natural) return '<accidental>natural</accidental>';
-  if (note.alter === keyAlter(note.step, fifths)) return '';
+  if (note.alter === inForce) return '';
   return note.alter > 0 ? '<accidental>sharp</accidental>' : note.alter < 0 ? '<accidental>flat</accidental>' : '<accidental>natural</accidental>';
 }
 
 /** One note. `tieIn` is true when the note before it was tied to this one. */
-function noteXml(note: ParsedNote, staff: number, fifths: number, tieIn: boolean): string {
+function noteXml(note: ParsedNote, staff: number, inForce: number, tieIn: boolean): string {
   const dot = note.dotted ? '<dot/>' : '';
   if (note.rest) return `<note><rest/><duration>${note.duration}</duration><type>${note.type}</type>${dot}<staff>${staff}</staff></note>`;
   const alter = note.alter !== 0 ? `<alter>${note.alter}</alter>` : '';
   const ties = (tieIn ? '<tie type="stop"/>' : '') + (note.tie ? '<tie type="start"/>' : '');
   const tied = (tieIn ? '<tied type="stop"/>' : '') + (note.tie ? '<tied type="start"/>' : '');
   const notations = tied ? `<notations>${tied}</notations>` : '';
-  return `<note><pitch><step>${note.step}</step>${alter}<octave>${note.octave}</octave></pitch><duration>${note.duration}</duration>${ties}<type>${note.type}</type>${dot}${accidentalXml(note, fifths)}<staff>${staff}</staff>${notations}</note>`;
+  return `<note><pitch><step>${note.step}</step>${alter}<octave>${note.octave}</octave></pitch><duration>${note.duration}</duration>${ties}<type>${note.type}</type>${dot}${accidentalXml(note, inForce)}<staff>${staff}</staff>${notations}</note>`;
 }
 
 /** The notes of one staff as XML, tracking ties from one note (or measure) to the next. */
 function staffXml(measures: ParsedNote[][], staff: number, fifths: number): string[] {
   let tieIn = false;
-  return measures.map((notes) =>
-    notes
+  return measures.map((notes) => {
+    const changed = new Map<string, number>(); // step + octave -> the alteration in force, for this measure
+    return notes
       .map((note) => {
-        const xml = noteXml(note, staff, fifths, tieIn && !note.rest);
+        const id = `${note.step}${note.octave}`;
+        const inForce = changed.get(id) ?? keyAlter(note.step, fifths);
+        const xml = noteXml(note, staff, inForce, tieIn && !note.rest);
+        if (!note.rest) changed.set(id, note.alter);
         tieIn = note.tie;
         return xml;
       })
-      .join('')
-  );
+      .join('');
+  });
 }
 
 function measureLength(notes: ParsedNote[]): number {
@@ -98,10 +105,8 @@ export function buildExampleXml(spec: StaffExample): string {
 /** The written pitches of an example in the order Verovio draws the notes (upper staff first), for labelling. */
 export function exampleNoteNames(spec: StaffExample): string[] {
   const beats = spec.beats ?? 4;
-  const names = (text: string) =>
-    parseMelody(text, beats, 4, !spec.free)
-      .flat()
-      .filter((n) => !n.rest)
-      .map((n) => n.pitch);
-  return [...names(spec.notes), ...(spec.clef === 'grand' && spec.lower ? names(spec.lower) : [])];
+  const pitches = (measure: ParsedNote[] | undefined) => (measure ?? []).filter((n) => !n.rest).map((n) => n.pitch);
+  const upper = parseMelody(spec.notes, beats, 4, !spec.free);
+  const lower = spec.clef === 'grand' && spec.lower ? parseMelody(spec.lower, beats, 4, !spec.free) : [];
+  return upper.flatMap((measure, index) => [...pitches(measure), ...pitches(lower[index])]);
 }

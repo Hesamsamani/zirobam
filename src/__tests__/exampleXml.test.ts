@@ -84,8 +84,23 @@ describe('ties and accidentals', () => {
   });
 
   it('shows a sharp or flat that the key signature does not have', () => {
-    const d = doc(buildExampleXml({ clef: 'treble', notes: 'F4q F#4q Bb4q B4q' }));
+    const d = doc(buildExampleXml({ clef: 'treble', notes: 'F4q F#4q Bb4q C5q' }));
     expect(Array.from(d.getElementsByTagName('accidental')).map((a) => a.textContent)).toEqual(['sharp', 'flat']);
+  });
+
+  it('cancels an accidental that is still in force later in the same measure', () => {
+    const d = doc(buildExampleXml({ clef: 'treble', notes: 'F#4q F#4q F4q F4q' }));
+    expect(Array.from(d.getElementsByTagName('accidental')).map((a) => a.textContent)).toEqual(['sharp', 'natural']);
+  });
+
+  it('starts every measure again from the key signature', () => {
+    const d = doc(buildExampleXml({ clef: 'treble', notes: 'F#4q F#4q F#4q F#4q | F4w' }));
+    expect(Array.from(d.getElementsByTagName('accidental')).map((a) => a.textContent)).toEqual(['sharp']);
+  });
+
+  it('keeps accidentals of different octaves apart', () => {
+    const d = doc(buildExampleXml({ clef: 'treble', notes: 'F#4q F5q F#5q F4q' }));
+    expect(Array.from(d.getElementsByTagName('accidental')).map((a) => a.textContent)).toEqual(['sharp', 'sharp', 'natural']);
   });
 
   it('does not repeat an accidental that is in the key signature', () => {
@@ -106,5 +121,13 @@ describe('exampleNoteNames', () => {
 
   it('puts the upper staff first and then the lower one', () => {
     expect(exampleNoteNames({ clef: 'grand', notes: 'C4w', lower: 'C3w' })).toEqual(['C4', 'C3']);
+  });
+
+  it('goes measure by measure, the way the notes are drawn', () => {
+    expect(exampleNoteNames({ clef: 'grand', notes: 'C4w | D4w', lower: 'C3w | D3w' })).toEqual(['C4', 'C3', 'D4', 'D3']);
+  });
+
+  it('writes a natural sign without changing the pitch name', () => {
+    expect(exampleNoteNames({ clef: 'treble', notes: 'Fn4q F#4q Bb4q rq' })).toEqual(['F4', 'F#4', 'Bb4']);
   });
 });
