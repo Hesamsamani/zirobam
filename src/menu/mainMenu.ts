@@ -1,7 +1,7 @@
 import { t, type MessageKey } from '../i18n';
 import type { View } from '../app/router';
 
-export type TileId = 'learn' | 'levels' | 'songs' | 'settings';
+export type TileId = 'learn' | 'levels' | 'songs' | 'xylophone' | 'settings';
 
 export interface MenuTile {
   id: TileId;
@@ -17,6 +17,7 @@ export const MENU_TILES: readonly MenuTile[] = [
   { id: 'learn', icon: '📖', title: 'menu.learn.title', desc: 'menu.learn.desc', target: { view: 'learn' } },
   { id: 'levels', icon: '🎼', title: 'menu.levels.title', desc: 'menu.levels.desc', target: { view: 'levels' } },
   { id: 'songs', icon: '🎵', title: 'menu.songs.title', desc: 'menu.songs.desc', target: { view: 'songs' } },
+  { id: 'xylophone', icon: '🎶', title: 'menu.xylophone.title', desc: 'menu.xylophone.desc', target: { view: 'xylophone' } },
   { id: 'settings', icon: '⚙️', title: 'menu.settings.title', desc: 'menu.settings.desc', target: { action: 'settings' } },
 ];
 

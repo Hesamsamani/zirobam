@@ -54,6 +54,18 @@ describe('NoteStats', () => {
     expect(stats.getMaxStage()).toBe(2);
   });
 
+  it('keeps separate statistics under a different storage key', () => {
+    const storage = fakeStorage();
+    const quiz = new NoteStats(storage);
+    const xylophone = new NoteStats(storage, 'xyloStats.v1');
+    quiz.record('C4', 1, true);
+    xylophone.record('D4', 1, false);
+    expect(Object.keys(storage.data).sort()).toEqual(['noteStats.v1', 'xyloStats.v1']);
+    expect(new NoteStats(storage).get('D4')).toBeUndefined();
+    expect(new NoteStats(storage, 'xyloStats.v1').get('D4')).toMatchObject({ seen: 1, correct: 0 });
+    expect(new NoteStats(storage, 'xyloStats.v1').get('C4')).toBeUndefined();
+  });
+
   it('reset clears everything', () => {
     const stats = new NoteStats(fakeStorage());
     stats.record('C4', 1, true);

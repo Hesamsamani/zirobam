@@ -13,7 +13,7 @@ interface StatsData {
 
 type StorageLike = Pick<Storage, 'getItem' | 'setItem'>;
 
-const STORAGE_KEY = 'noteStats.v1';
+const DEFAULT_STORAGE_KEY = 'noteStats.v1';
 export const RECENT_LIMIT = 20;
 export const MAX_STAGE = 5;
 
@@ -43,15 +43,17 @@ function isValid(data: unknown): data is StatsData {
 export class NoteStats {
   private data: StatsData;
   private readonly storage: StorageLike | null;
+  private readonly storageKey: string;
 
-  constructor(storage: StorageLike | null = defaultStorage()) {
+  constructor(storage: StorageLike | null = defaultStorage(), storageKey: string = DEFAULT_STORAGE_KEY) {
     this.storage = storage;
+    this.storageKey = storageKey;
     this.data = this.load();
   }
 
   private load(): StatsData {
     try {
-      const raw = this.storage?.getItem(STORAGE_KEY);
+      const raw = this.storage?.getItem(this.storageKey);
       if (!raw) return emptyData();
       const parsed: unknown = JSON.parse(raw);
       return isValid(parsed) ? parsed : emptyData();
@@ -62,7 +64,7 @@ export class NoteStats {
 
   private save(): void {
     try {
-      this.storage?.setItem(STORAGE_KEY, JSON.stringify(this.data));
+      this.storage?.setItem(this.storageKey, JSON.stringify(this.data));
     } catch {
       // storage full or unavailable: progress just isn't kept
     }

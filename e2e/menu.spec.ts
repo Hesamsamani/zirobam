@@ -16,7 +16,7 @@ test.describe('Main menu', () => {
   test('is the first screen and hides the exercise', async ({ page }) => {
     await openMenu(page);
     await expect(page.locator('#mainMenu h1')).toHaveText('Music Notes Trainer');
-    await expect(page.locator('#mainMenu .menu-tile')).toHaveCount(4);
+    await expect(page.locator('#mainMenu .menu-tile')).toHaveCount(5);
     await expect(page.locator('#musicStand')).toBeHidden();
     await expect(page.locator('#controlBar')).toBeHidden();
     await expect(page.locator('body')).toHaveAttribute('data-view', 'home');

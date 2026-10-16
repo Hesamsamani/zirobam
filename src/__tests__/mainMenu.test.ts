@@ -42,7 +42,7 @@ describe('MainMenu', () => {
 
   it('offers learning, levels, songs and settings', () => {
     const ids = MENU_TILES.map((tileDef) => tileDef.id);
-    expect(ids).toEqual(expect.arrayContaining(['learn', 'levels', 'songs', 'settings']));
+    expect(ids).toEqual(expect.arrayContaining(['learn', 'levels', 'songs', 'xylophone', 'settings']));
   });
 
   it('tells which level the player is on', () => {
@@ -55,7 +55,8 @@ describe('MainMenu', () => {
     tile('learn').click();
     tile('levels').click();
     tile('songs').click();
-    expect(navigate.mock.calls.map(([view]) => view)).toEqual(['learn', 'levels', 'songs']);
+    tile('xylophone').click();
+    expect(navigate.mock.calls.map(([view]) => view)).toEqual(['learn', 'levels', 'songs', 'xylophone']);
   });
 
   it('opens the settings instead of a screen for the settings tile', () => {

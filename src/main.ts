@@ -40,6 +40,8 @@ import { Router, VIEWS, type View } from './app/router';
 import { AppShell } from './app/shell';
 import { MainMenu } from './menu/mainMenu';
 import { SongsView } from './menu/songsView';
+import { XylophoneView } from './xylophone/xylophoneView';
+import { XyloSound } from './xylophone/xyloSound';
 import {
   t, initLocale, setLocale, getLocale, onLocaleChange, applyTranslations,
   formatNumber, setPersianDigits, isLocale,
@@ -134,6 +136,7 @@ let currentMode: AppMode = 'levels';
 let shell: AppShell | null = null;
 let mainMenu: MainMenu | null = null;
 let songsView: SongsView | null = null;
+let xylophoneView: XylophoneView | null = null;
 let pianoKeyboard: ComputerKeyboard | null = null;
 let learnReturnView: View = 'home';
 /** The screens that show the music stand, the control bar and the exercise. */
@@ -955,9 +958,23 @@ function setupNavigation(learn: LearnHandle) {
     },
     onBack: () => appShell.navigate('home'),
   });
+  // The xylophone draws its staff notes with its own notation engine, so the quiz keeps its settings
+  const xylophone = new XylophoneView({
+    hub: noteInput,
+    sound: new XyloSound(),
+    stats: new NoteStats(undefined, 'xyloStats.v1'),
+    songs: BUILT_IN_SONGS,
+    renderNote: createNoteCardRenderer(new VerovioToolkit(verovioModule) as unknown as NotationToolkit, {
+      scale: 90,
+      pageWidth: 300,
+    }),
+    formatName: (name) => formatNoteName(name, getNoteNameSystem()),
+    onBack: () => appShell.navigate('home'),
+  });
   mainMenu = menu;
   songsView = songs;
-  document.getElementById('app')!.prepend(menu.element, songs.element);
+  xylophoneView = xylophone;
+  document.getElementById('app')!.prepend(menu.element, songs.element, xylophone.element);
 
   document.getElementById('homeButton')!.addEventListener('click', () => appShell.navigate('home'));
 
@@ -971,6 +988,7 @@ function setupNavigation(learn: LearnHandle) {
     leave: (view) => {
       if (STAND_VIEWS.includes(view) && (isPlaying || isStarting)) stop();
       if (view === 'learn') learn.close();
+      if (view === 'xylophone') xylophone.deactivate();
     },
     enter: (view, previous) => {
       if (STAND_VIEWS.includes(view)) pianoKeyboard?.attach();
@@ -995,6 +1013,9 @@ function setupNavigation(learn: LearnHandle) {
           learnReturnView = previous && previous !== 'learn' ? previous : 'home';
           showStand();
           learn.open();
+          break;
+        case 'xylophone':
+          xylophone.activate();
           break;
       }
     },
@@ -1037,7 +1058,7 @@ function setupPiano() {
 
 // A MIDI keyboard makes its own sound; the on-screen piano and the computer keyboard use the app's piano.
 function playUserNote(noteName: string, source: NoteSource) {
-  if (source === 'midi') return;
+  if (source === 'midi' || source === 'xylophone') return;
   if (!sampler) {
     void initAudio();
     return;
@@ -1046,7 +1067,7 @@ function playUserNote(noteName: string, source: NoteSource) {
 }
 
 function stopUserNote(noteName: string, source: NoteSource) {
-  if (source === 'midi' || !sampler || !sampler.loaded) return;
+  if (source === 'midi' || source === 'xylophone' || !sampler || !sampler.loaded) return;
   sampler.triggerRelease(noteName);
 }
 
@@ -1462,6 +1483,7 @@ function setupControls() {
     applyTranslations();
     mainMenu?.refresh();
     songsView?.refresh();
+    xylophoneView?.refresh();
     populateLevelJump();
     populateKeySelect();
     // Practice mode shows the song's own title and key; only levels mode uses translated headings

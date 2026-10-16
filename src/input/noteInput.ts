@@ -1,6 +1,6 @@
 import { EventEmitter } from '../core/events';
 
-export type NoteSource = 'midi' | 'screen' | 'computer' | 'microphone';
+export type NoteSource = 'midi' | 'screen' | 'computer' | 'xylophone' | 'microphone';
 
 export interface NoteInputEvent {
   noteName: string;
