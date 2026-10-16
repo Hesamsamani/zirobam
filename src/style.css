@@ -1401,7 +1401,8 @@ html[dir='rtl'] .fingering-panel {
 /* ============================================
    ON-SCREEN PIANO
    ============================================ */
-.piano-btn {
+.piano-btn,
+.learn-btn {
   width: 36px;
   height: 36px;
   padding: 0;
@@ -1416,19 +1417,22 @@ html[dir='rtl'] .fingering-panel {
   transition: all var(--transition-fast);
 }
 
-.piano-btn:hover {
+.piano-btn:hover,
+.learn-btn:hover {
   background: rgba(255, 255, 255, 0.08);
   color: var(--text);
   border-color: rgba(255, 255, 255, 0.25);
 }
 
-.piano-btn.active {
+.piano-btn.active,
+.learn-btn.active {
   background: var(--accent);
   border-color: var(--accent);
   color: white;
 }
 
-.piano-btn svg {
+.piano-btn svg,
+.learn-btn svg {
   width: 20px;
   height: 20px;
 }
@@ -1539,4 +1543,206 @@ body.piano-open #musicStand {
   stroke-width: 60px;
   stroke-linejoin: round;
   pointer-events: none;
+}
+
+/* ============================================
+   LEARN THE NOTES
+   ============================================ */
+.learn-view {
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.learn-view[hidden] {
+  display: none;
+}
+
+body.learn-open #scoreHeader,
+body.learn-open #scoreContainer,
+body.learn-open .practice-info {
+  display: none;
+}
+
+.learn-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.learn-title {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  margin: 0;
+}
+
+.learn-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.learn-stage-select,
+.learn-text-btn {
+  padding: var(--space-xs) var(--space-md);
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.learn-text-btn:hover:not(:disabled),
+.learn-stage-select:hover {
+  border-color: var(--accent);
+}
+
+.learn-text-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.learn-card {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-md);
+  background: var(--paper);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px var(--paper-shadow);
+}
+
+.learn-note svg {
+  display: block;
+  width: 100%;
+  max-width: 360px;
+  height: auto;
+}
+
+.learn-stats,
+.learn-hint,
+.learn-prompt,
+.learn-feedback {
+  margin: 0;
+  text-align: center;
+}
+
+.learn-stats,
+.learn-hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.learn-prompt {
+  font-size: 1.1rem;
+}
+
+.learn-answers {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--space-sm);
+}
+
+.learn-answer {
+  padding: var(--space-md) 0;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.learn-answer:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.learn-answer.correct {
+  background: var(--correct);
+  border-color: var(--correct);
+  color: white;
+}
+
+.learn-answer.wrong {
+  background: var(--wrong);
+  border-color: var(--wrong);
+  color: white;
+}
+
+.learn-feedback {
+  min-height: 1.5em;
+}
+
+.learn-view[data-result='correct'] .learn-feedback {
+  color: var(--correct);
+}
+
+.learn-view[data-result='wrong'] .learn-feedback {
+  color: var(--wrong);
+}
+
+.learn-next {
+  align-self: center;
+}
+
+.learn-lessons[hidden],
+.learn-quiz[hidden] {
+  display: none;
+}
+
+.learn-examples {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.learn-example {
+  background: var(--paper);
+  border-radius: 4px;
+  padding: var(--space-sm);
+}
+
+.learn-example svg {
+  display: block;
+  width: 220px;
+  height: auto;
+}
+
+.learn-lesson-title {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  text-align: center;
+}
+
+.learn-lesson-body {
+  line-height: 1.8;
+}
+
+.learn-lesson-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.learn-lesson-count {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+@media (max-width: 520px) {
+  .learn-answer {
+    font-size: 0.95rem;
+  }
 }

@@ -136,6 +136,47 @@ export const en = {
   'lesson.key.1': '{key} — whole notes (LH)',
   'lesson.key.2': '{key} — quarter notes (RH)',
   'lesson.key.3': '{key} — both hands',
+
+  // Learn mode
+  'control.learn': 'Learn the notes',
+  'learn.title': 'Name the note',
+  'learn.stageLabel': 'Stage',
+  'learn.stage': 'Stage {n}: {name}',
+  'learn.stageLocked': 'Stage {n}: {name} (locked)',
+  'learn.stageName.1': 'Treble clef: five notes',
+  'learn.stageName.2': 'Treble clef: the whole staff',
+  'learn.stageName.3': 'Bass clef: the whole staff',
+  'learn.stageName.4': 'Both clefs',
+  'learn.stageName.5': 'Ledger lines',
+  'learn.prompt': 'Which note is this?',
+  'learn.hint': 'You can also play the note on the piano.',
+  'learn.correct': 'Correct!',
+  'learn.wrong': 'Not quite. This note is {name}.',
+  'learn.next': 'Next note',
+  'learn.stats': '{pct}% correct over the last {n} answers',
+  'learn.noStats': 'Answer 20 notes to see your accuracy.',
+  'learn.unlocked': 'Stage {n} unlocked!',
+  'learn.lessons': 'Lessons',
+  'learn.close': 'Back to practice',
+  'lessons.count': 'Lesson {n} of {total}',
+  'lessons.prev': 'Previous',
+  'lessons.next': 'Next',
+  'lessons.start': 'Start practising',
+  'lessons.staff.title': 'The staff',
+  'lessons.staff.body':
+    'Music is written on a staff: five horizontal lines and the four spaces between them. Notes sit on the lines or in the spaces. The higher a note sits, the higher it sounds.',
+  'lessons.clefs.title': 'Treble and bass clef',
+  'lessons.clefs.body':
+    'The treble clef (the curly sign) is for higher notes, usually played by the right hand. The bass clef is for lower notes, usually played by the left hand. Piano music uses both together.',
+  'lessons.middleC.title': 'Middle C',
+  'lessons.middleC.body':
+    'Middle C is the note in the middle of the piano, between the two hands. In treble clef it sits on a short line below the staff; in bass clef, on a short line above it. Every other note can be found by counting up or down from it.',
+  'lessons.ledger.title': 'Ledger lines',
+  'lessons.ledger.body':
+    'When a note is too high or too low for the staff, short extra lines called ledger lines are added above or below it. Count them just like the lines of the staff.',
+  'lessons.names.title': 'Note names and the keyboard',
+  'lessons.names.body':
+    'There are seven note names, repeating up the keyboard: C D E F G A B, or in solfège Do Re Mi Fa Sol La Si. In Persian they are دو ر می فا سل لا سی. The white keys are these seven notes; the black keys are sharps (♯) and flats (♭).',
 } as const;
 
 export type MessageKey = keyof typeof en;

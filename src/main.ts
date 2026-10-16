@@ -50,9 +50,14 @@ import { ComputerKeyboard, keyHints } from './input/computerKeyboard';
 import { OnScreenPiano } from './input/onScreenPiano';
 import { addNoteLabels, removeNoteLabels } from './rendering/noteLabels';
 import { spellFromMidi } from './core/noteUtils';
+import { LearnView } from './learn/learnView';
+import { NameTheNoteQuiz } from './learn/nameTheNote';
+import { NoteStats } from './learn/noteStats';
+import { createNoteCardRenderer, type NotationToolkit } from './learn/noteCard';
 
 // State
 let toolkit: VerovioToolkit;
+let verovioModule: Awaited<ReturnType<typeof createVerovioModule>>;
 let isPlaying = false;
 let currentBeatIndex = 0;
 let sampler: Tone.Sampler | null = null;
@@ -147,6 +152,7 @@ async function init() {
 
   // Initialize Verovio
   const VerovioModule = await createVerovioModule();
+  verovioModule = VerovioModule;
   toolkit = new VerovioToolkit(VerovioModule);
 
   // Detect initial mobile state
@@ -175,6 +181,7 @@ async function init() {
     stopUserNote(noteName, source);
   });
   setupPiano();
+  setupLearnMode();
 
   // Handle window resize - re-render existing music, don't generate new
   window.addEventListener('resize', () => {
@@ -867,6 +874,40 @@ function handleNoteOn(noteName: string) {
 
 function handleNoteOff(noteName: string) {
   activeNotes.delete(noteName);
+}
+
+function setupLearnMode() {
+  // The quiz draws single notes with its own Verovio toolkit so the main score's options stay untouched
+  const quizToolkit = new VerovioToolkit(verovioModule) as unknown as NotationToolkit;
+  const toggle = document.getElementById('learnToggle')!;
+
+  const setLearnOpen = (open: boolean) => {
+    document.body.classList.toggle('learn-open', open);
+    toggle.classList.toggle('active', open);
+    toggle.setAttribute('aria-pressed', String(open));
+  };
+
+  const view = new LearnView({
+    quiz: new NameTheNoteQuiz(new NoteStats()),
+    hub: noteInput,
+    renderNote: createNoteCardRenderer(quizToolkit, { scale: 100, pageWidth: 340 }),
+    formatLetter: (letter) => formatNoteName(letter, getNoteNameSystem()),
+    onClose: () => setLearnOpen(false),
+  });
+  document.getElementById('musicStand')!.appendChild(view.element);
+
+  toggle.addEventListener('click', () => {
+    if (view.isOpen()) {
+      view.close();
+      return;
+    }
+    if (isPlaying) stop();
+    setLearnOpen(true);
+    view.open();
+  });
+
+  onLocaleChange(() => view.refresh());
+  onNoteNamesChange(() => view.refresh());
 }
 
 function setupPiano() {
