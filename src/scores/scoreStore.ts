@@ -10,6 +10,8 @@ export interface NewScore {
   kind: ScoreKind;
   /** MusicXML text, or the bytes of a MIDI file. */
   data: string | ArrayBuffer;
+  /** When the score was added, for a score that comes back from a backup. Now, when left out. */
+  addedAt?: number;
 }
 
 export interface ScoreSummary {
@@ -141,7 +143,7 @@ export class ScoreStore {
     const replaced = this.index.get(score.id)?.size ?? 0;
     if (this.totalSize() - replaced + size > this.maxBytes) return { ok: false, reason: 'full' };
 
-    const summary: ScoreSummary = { id: score.id, title: score.title, artist: score.artist, kind: score.kind, size, addedAt: Date.now() };
+    const summary: ScoreSummary = { id: score.id, title: score.title, artist: score.artist, kind: score.kind, size, addedAt: score.addedAt ?? Date.now() };
     if (this.db) {
       const tx = this.db.transaction([META, BLOBS], 'readwrite');
       tx.objectStore(META).put(summary);

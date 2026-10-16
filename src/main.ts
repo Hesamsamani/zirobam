@@ -40,6 +40,9 @@ import { AppShell } from './app/shell';
 import { MainMenu } from './menu/mainMenu';
 import { SongsView } from './menu/songsView';
 import { SongMakerView } from './songs/songMakerView';
+import { applyBackup, backupFileName, browserStorage, createBackup } from './backup/backup';
+import { BackupPanel, type BackupPanelDeps } from './backup/backupView';
+import { downloadTextFile } from './backup/download';
 import { newMakerId } from './songs/songMaker';
 import { XylophoneView } from './xylophone/xylophoneView';
 import { PracticePanel } from './practice/practicePanel';
@@ -1218,7 +1221,24 @@ function setupNavigation(learn: LearnHandle) {
   });
   onLocaleChange(() => maker.refresh());
   onNoteNamesChange(() => maker.refresh());
-  const progress = new ProgressView({ store: gameStore, onBack: () => appShell.navigate('home') });
+  // Saving and restoring the progress, the settings and the scores: in the options and under the progress
+  const backupDeps: BackupPanelDeps = {
+    create: () => createBackup(browserStorage, scoreStore),
+    restore: (backup) => applyBackup(backup, browserStorage, scoreStore),
+    download: downloadTextFile,
+    fileName: () => backupFileName(),
+    // a moment to read the message; the page then starts again with the restored data
+    reload: () => void setTimeout(() => window.location.reload(), 900),
+  };
+  const optionsBackup = new BackupPanel(backupDeps, true);
+  document.querySelector('#optionsPanel .options-footer')?.before(optionsBackup.element);
+  const progressBackup = new BackupPanel(backupDeps);
+  progressBackup.element.classList.add('pv-backup');
+  onLocaleChange(() => {
+    optionsBackup.refresh();
+    progressBackup.refresh();
+  });
+  const progress = new ProgressView({ store: gameStore, onBack: () => appShell.navigate('home'), footer: progressBackup.element });
   // The xylophone draws its staff notes with its own notation engine, so the quiz keeps its settings
   const xylophone = new XylophoneView({
     hub: noteInput,

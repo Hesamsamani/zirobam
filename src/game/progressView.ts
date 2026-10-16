@@ -8,6 +8,8 @@ import { GOALS, type GameStore } from './gameStore';
 export interface ProgressViewDeps {
   store: GameStore;
   onBack(): void;
+  /** Something to show under the progress, such as the backup panel. */
+  footer?: HTMLElement;
 }
 
 const STATS: ReadonlyArray<{ id: string; label: MessageKey; value: (s: ReturnType<GameStore['stats']>) => number }> = [
@@ -60,6 +62,7 @@ export class ProgressView {
     this.hud = new GameHud(deps.store);
     this.body = make('div', 'pv-body');
     this.element.append(header, this.hud.element, this.body);
+    if (deps.footer) this.element.appendChild(deps.footer);
 
     this.unsubscribe = deps.store.onChange(() => this.render());
     this.render();

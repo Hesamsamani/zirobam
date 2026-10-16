@@ -22,6 +22,15 @@ describe('ScoreStore', () => {
     expect(store.count()).toBe(0);
   });
 
+  it('keeps the date a score was added when it is given one, as a restored backup does', async () => {
+    const { store } = await open();
+    await store.put(score({ id: 'old', addedAt: 1234 }));
+    await store.put(score({ id: 'new' }));
+    const list = await store.list();
+    expect(list.find((s) => s.id === 'old')!.addedAt).toBe(1234);
+    expect(list[0].id).toBe('new');
+  });
+
   it('keeps a MusicXML score and gives it back', async () => {
     const { store } = await open();
     expect(await store.put(score())).toEqual({ ok: true });
