@@ -76,6 +76,20 @@ describe('OnScreenPiano', () => {
     expect(keyEl('C#4').querySelector('.piano-key-label')).toBeNull();
   });
 
+  it('gives every key, black ones included, an accessible name with its octave', () => {
+    for (const key of piano.element.querySelectorAll<HTMLElement>('.piano-key')) {
+      expect(key.getAttribute('aria-label'), key.dataset.note).toBeTruthy();
+    }
+    expect(keyEl('C#4').getAttribute('aria-label')).toBe('C#4');
+  });
+
+  it('names the keys in the chosen note-name system', () => {
+    piano.setLabelFormatter((n) => formatNoteName(n, 'solfege-fa'));
+    expect(keyEl('C4').getAttribute('aria-label')).toBe('دو 4');
+    expect(keyEl('C#4').getAttribute('aria-label')).toBe('دو دیز 4');
+    expect(keyEl('E3').getAttribute('aria-label')).toBe('می 3');
+  });
+
   it('shows and clears computer-key hints', () => {
     piano.setHints({ C4: 'A', 'C#4': 'W' });
     expect(keyEl('C4').dataset.hint).toBe('A');

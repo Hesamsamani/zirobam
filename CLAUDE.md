@@ -105,7 +105,7 @@ The timing system uses the music generator as the single source of truth:
 - Countoff shows 4-3-2-1 on each beat (not before first beat)
 - Level progress is saved to localStorage
 - `visualGroups` is for SVG highlighting only, not timing
-- Level cap is 23 (10 C major levels + 13 key levels)
+- Level cap is 20 (`MAX_LEVEL`: 10 C major levels + 10 key levels, G through Db)
 
 ## Fork notes (music-notes-trainer, bilingual)
 
@@ -132,12 +132,19 @@ This is the owner's personal fork. Design: `docs/superpowers/specs/2026-10-16-bi
 | `src/input/computerKeyboard.ts`, `onScreenPiano.ts` | Keyboard by physical key, clickable piano |
 | `src/rendering/noteLabels.ts` | Names under noteheads (spelling comes from Verovio's sounding pitch via `spellFromMidi`) |
 | `src/learn/` | `noteStats`, `noteScheduler`, `nameTheNote` (pure logic); `noteCard`, `learnView`, `lessons` (screens) |
+| `src/core/safeStorage.ts` | `storageGet/Set/Remove`: localStorage that never throws. Use it instead of `localStorage` in app code |
+| `src/core/tempo.ts`, `volume.ts`, `passRules.ts` | `clampBpm`, slider-to-dB mapping, `didPassPiece` (a piece only counts if it was played) |
+| `src/input/shortcuts.ts` | `isSpaceReserved`: where the global Space shortcut must stay out of the way |
+| `src/metronome/clickVoice.ts` | The metronome click: one reusable synth, scheduled at the Transport time |
+| `src/ui/notice.ts` | `showNotice(text)`: a polite status message (replaces `alert()`; never use blocking dialogs) |
 
 `main.ts` only wires these together (`setupPiano`, `setupLearnMode`, the language block at the end of `setupControls`).
 
 ### Test hooks and commands
 
 - `#learnView` carries `data-panel` (`quiz` or `lessons`), `data-pitch` (the note asked) and `data-result` (`correct` or `wrong`, absent between questions).
-- Unit: `npm test` (300+ tests). End to end: `npx playwright test` (needs `npm run dev` or lets Playwright start it).
-- Upstream baseline in this environment: 13 of its own end-to-end tests fail the same way on the original code (2 desktop playback tests, 11 on the phone profiles). Don't treat those as regressions; compare against `05158c5` if in doubt.
+- `document` fires a `trainer:beat` CustomEvent for every beat that is played and highlighted. `detail` = `{ beatIndex, time, pitches, noteIds, audioTime }` (`audioTime` is on the audio clock, immune to a busy main thread). The end-to-end playback tests use it instead of console logs, which the app no longer prints.
+- `#playPause` has `aria-busy="true"` while the piano sounds load; `#notice` is the status message element.
+- Unit: `npm test` (340+ tests). End to end: `npx playwright test` (needs `npm run dev` or lets Playwright start it). All end-to-end tests pass on all three projects; the 13 failures seen at the start of the fork were stale tests (see `docs/bug-hunt-2026-10-16.md`).
+- Close the options panel in tests with `#optionsClose`, not by clicking the score: on phones the panel covers it.
 - Mobile control bar: at 820px and below it wraps onto two rows (end of `style.css`).

@@ -21,6 +21,7 @@ import {
   getBpmMasteryRemaining,
   setIncludeFingering,
   setKeyOverride,
+  MAX_LEVEL,
 } from './musicGenerator';
 import type { NoteData } from './musicGenerator';
 import {
@@ -48,6 +49,13 @@ import { describeLesson, keyIdForLevel } from './lessonText';
 import { noteInput, type NoteSource } from './input/noteInput';
 import { ComputerKeyboard, keyHints } from './input/computerKeyboard';
 import { OnScreenPiano } from './input/onScreenPiano';
+import { ClickVoice } from './metronome/clickVoice';
+import { storageGet, storageRemove, storageSet } from './core/safeStorage';
+import { clampBpm } from './core/tempo';
+import { didPassPiece } from './core/passRules';
+import { sliderToDb } from './core/volume';
+import { isSpaceReserved } from './input/shortcuts';
+import { showNotice } from './ui/notice';
 import { addNoteLabels, removeNoteLabels } from './rendering/noteLabels';
 import { spellFromMidi } from './core/noteUtils';
 import { LearnView } from './learn/learnView';
@@ -88,13 +96,13 @@ let activeNotes: Set<string> = new Set();
 
 // MIDI devices
 let midiInputs: Map<string, MIDIInput> = new Map();
-let selectedMidiInput: string | null = localStorage.getItem('midiDeviceId');
+let selectedMidiInput: string | null = storageGet('midiDeviceId');
 
 // Settings
 let bpm = 30;
 let metronomeEnabled = true;
-let metronomeVolume = -20; // dB base for metronome (quieter default)
-let masterVolume = -4; // dB for master output (default 80% = -4dB)
+let metronomeVolume = sliderToDb(50); // dB base for metronome; the slider starts at 50
+let masterVolume = sliderToDb(80, true); // dB for master output; the slider starts at 80
 
 // Store the current piece's XML
 let currentPieceXml: string = '';
@@ -283,7 +291,16 @@ function regenerateCurrentMusicXML() {
 // Pressing two keys quickly must not load the piano samples twice
 let audioInit: Promise<void> | null = null;
 function initAudio(): Promise<void> {
-  if (!audioInit) audioInit = loadAudio();
+  if (!audioInit) {
+    audioInit = loadAudio().catch((error) => {
+      // Offline or blocked: the exercise still works without the piano, and the next press tries again
+      console.warn('The piano sounds could not be loaded', error);
+      sampler?.dispose();
+      sampler = null;
+      audioInit = null;
+      showNotice(t('audio.loadFailed'));
+    });
+  }
   return audioInit;
 }
 
@@ -335,7 +352,10 @@ async function loadAudio() {
   Tone.getDestination().volume.value = masterVolume;
 }
 
-function playMetronomeClick(subdivisionInBeat: number) {
+const clickVoice = new ClickVoice();
+
+/** `time` is the audio time Tone.js passes to the Transport callback. */
+function playMetronomeClick(subdivisionInBeat: number, time: number) {
   if (!metronomeEnabled) return;
 
   // Debounce to prevent double clicks from overlapping schedules
@@ -345,30 +365,7 @@ function playMetronomeClick(subdivisionInBeat: number) {
   }
   lastMetronomeTime = now;
 
-  // Create a fresh synth each time to avoid timing conflicts
-  const synth = new Tone.Synth({
-    oscillator: { type: 'sine' },
-    envelope: { attack: 0.001, decay: 0.05, sustain: 0, release: 0.05 },
-  }).toDestination();
-
-  let volume: number;
-  let pitch: string;
-
-  if (subdivisionInBeat === 0) {
-    // Main beat - start quieter (was metronomeVolume, now -6dB quieter)
-    volume = metronomeVolume - 6;
-    pitch = 'G5';
-  } else {
-    // Subdivisions are 18dB quieter than main beat (much quieter)
-    volume = metronomeVolume - 24;
-    pitch = 'C5';
-  }
-
-  synth.volume.value = volume;
-  synth.triggerAttackRelease(pitch, '32n');
-
-  // Dispose after playing
-  setTimeout(() => synth.dispose(), 500);
+  clickVoice.play(subdivisionInBeat, metronomeVolume, time);
 }
 
 function generateAndRender() {
@@ -645,7 +642,7 @@ function buildTimingEvents() {
   }
 }
 
-let showNoteNames = localStorage.getItem('ui.showNoteNames') === '1';
+let showNoteNames = storageGet('ui.showNoteNames') === '1';
 
 function noteNameForElement(el: Element): string | null {
   const id = el.getAttribute('id');
@@ -679,14 +676,14 @@ function describeCurrentLesson(): string {
   return describeLesson(Number(match[1]), 'abcd'.indexOf(match[2]));
 }
 
-const KEY_IDS = ['C', 'G', 'F', 'D', 'Bb', 'A', 'Eb', 'E', 'Ab'];
+const KEY_IDS = ['C', 'G', 'F', 'D', 'Bb', 'A', 'Eb', 'E', 'Ab', 'B', 'Db'];
 
 function populateLevelJump() {
   const select = document.getElementById('levelJump') as HTMLSelectElement | null;
   if (!select) return;
   const previous = select.value || String(getLevel());
   select.replaceChildren();
-  for (let level = 1; level <= 18; level++) {
+  for (let level = 1; level <= MAX_LEVEL; level++) {
     const option = document.createElement('option');
     option.value = String(level);
     option.textContent =
@@ -821,7 +818,7 @@ function updateMidiDevices(midiAccess: MIDIAccess) {
     }
 
     // Prefer saved device, then current selection, then first available
-    const savedDevice = localStorage.getItem('midiDeviceId');
+    const savedDevice = storageGet('midiDeviceId');
     if (savedDevice && midiInputs.has(savedDevice)) {
       midiSelect.value = savedDevice;
     } else if (currentValue && midiInputs.has(currentValue)) {
@@ -932,13 +929,13 @@ function setupPiano() {
     toggle.setAttribute('aria-pressed', String(open));
     document.body.classList.toggle('piano-open', open);
     try {
-      localStorage.setItem('ui.pianoOpen', open ? '1' : '0');
+      storageSet('ui.pianoOpen', open ? '1' : '0');
     } catch {
       // storage unavailable
     }
   };
   toggle.addEventListener('click', () => setOpen(dock.hidden));
-  setOpen(localStorage.getItem('ui.pianoOpen') === '1');
+  setOpen(storageGet('ui.pianoOpen') === '1');
 }
 
 // A MIDI keyboard makes its own sound; the on-screen piano and the computer keyboard use the app's piano.
@@ -1101,7 +1098,8 @@ function setupControls() {
   }
 
   bpmInput.addEventListener('change', () => {
-    bpm = parseInt(bpmInput.value) || 30;
+    bpm = clampBpm(bpmInput.value);
+    bpmInput.value = String(bpm); // show the tempo that is actually used
     setBpm(bpm); // Sync with musicGenerator's tempo tracking
   });
 
@@ -1136,7 +1134,7 @@ function setupControls() {
     metronomeVolumeSlider.addEventListener('input', () => {
       // Slider is 0-100, map to -40dB to 0dB
       const sliderValue = parseInt(metronomeVolumeSlider.value);
-      metronomeVolume = (sliderValue / 100) * 40 - 40; // 0 -> -40dB, 100 -> 0dB
+      metronomeVolume = sliderToDb(sliderValue);
     });
   }
 
@@ -1150,11 +1148,7 @@ function setupControls() {
     masterVolumeSlider.addEventListener('input', () => {
       // Slider is 0-100, map to -60dB to 0dB (0 = mute, 100 = full)
       const sliderValue = parseInt(masterVolumeSlider.value);
-      if (sliderValue === 0) {
-        masterVolume = -Infinity;
-      } else {
-        masterVolume = (sliderValue / 100) * 40 - 40; // 0 -> -40dB, 100 -> 0dB
-      }
+      masterVolume = sliderToDb(sliderValue, true);
       // Apply to Tone.js destination
       Tone.getDestination().volume.value = masterVolume;
     });
@@ -1228,9 +1222,9 @@ function setupControls() {
   midiSelect.addEventListener('change', () => {
     selectedMidiInput = midiSelect.value || null;
     if (selectedMidiInput) {
-      localStorage.setItem('midiDeviceId', selectedMidiInput);
+      storageSet('midiDeviceId', selectedMidiInput);
     } else {
-      localStorage.removeItem('midiDeviceId');
+      storageRemove('midiDeviceId');
     }
   });
 
@@ -1325,26 +1319,23 @@ function setupControls() {
   });
 
   playPauseBtn.addEventListener('click', async () => {
-    if (isPlaying) {
+    if (isPlaying || isStarting) {
       stop();
     } else {
       await start();
     }
   });
 
-  // Spacebar to toggle play/pause
+  // Spacebar to toggle play/pause, except where Space already means something (buttons, fields) or
+  // while another screen such as Learn is open
   document.addEventListener('keydown', async (e) => {
-    // Ignore if user is typing in an input field
-    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) {
-      return;
-    }
-    if (e.code === 'Space') {
-      e.preventDefault();
-      if (isPlaying) {
-        stop();
-      } else {
-        await start();
-      }
+    if (e.code !== 'Space' || e.repeat) return;
+    if (isSpaceReserved(e.target) || document.body.classList.contains('learn-open')) return;
+    e.preventDefault();
+    if (isPlaying || isStarting) {
+      stop();
+    } else {
+      await start();
     }
   });
 
@@ -1354,7 +1345,7 @@ function setupControls() {
   const persianDigitsRow = document.getElementById('persianDigitsRow') as HTMLElement;
   const noteSystemSelect = document.getElementById('noteNameSystem') as HTMLSelectElement;
 
-  persianDigitsInput.checked = localStorage.getItem('ui.persianDigits') !== '0';
+  persianDigitsInput.checked = storageGet('ui.persianDigits') !== '0';
 
   const syncLanguageControls = () => {
     languageSelect.value = getLocale();
@@ -1389,7 +1380,7 @@ function setupControls() {
   showNoteNamesInput.addEventListener('change', () => {
     showNoteNames = showNoteNamesInput.checked;
     try {
-      localStorage.setItem('ui.showNoteNames', showNoteNames ? '1' : '0');
+      storageSet('ui.showNoteNames', showNoteNames ? '1' : '0');
     } catch {
       // storage unavailable
     }
@@ -1401,8 +1392,28 @@ function setupControls() {
   refreshTexts();
 }
 
+/** Number of notes the player has to play in the current piece (rests have no pitches). */
+function countRequiredNotes(): number {
+  return timingEvents.reduce((sum, evt) => sum + evt.pitches.length, 0);
+}
+
+/** Bumped by every start and by stop(), so a start that is still waiting for the sounds can be cancelled. */
+let startToken = 0;
+let isStarting = false;
+
+function setStarting(starting: boolean) {
+  isStarting = starting;
+  const playPauseBtn = document.getElementById('playPause');
+  playPauseBtn?.setAttribute('aria-busy', String(starting));
+  playPauseBtn?.classList.toggle('loading', starting);
+}
+
 async function start() {
+  const token = ++startToken;
+  setStarting(true);
   await initAudio();
+  if (token !== startToken) return; // Stop was pressed while the sounds were loading
+  setStarting(false);
 
   isPlaying = true;
   const playPauseBtn = document.getElementById('playPause')!;
@@ -1412,8 +1423,7 @@ async function start() {
   currentBeatIndex = 0;
   hadMistake = false;
   notesPlayed = 0;
-  // Calculate required notes (count non-rest pitches in timing events)
-  notesRequired = timingEvents.reduce((sum, evt) => sum + evt.pitches.length, 0);
+  notesRequired = countRequiredNotes();
 
   // Fully reset Tone.js Transport before scheduling
   const transport = Tone.getTransport();
@@ -1460,8 +1470,8 @@ function scheduleMusic(countoffTotal: number) {
     const subInBeat = sub % 4;
     const time = `0:${beatNumber}:${subInBeat}`;
 
-    const eventId = Tone.getTransport().schedule(() => {
-      playMetronomeClick(subInBeat);
+    const eventId = Tone.getTransport().schedule((time) => {
+      playMetronomeClick(subInBeat, time);
 
       // Handle countoff display updates
       // Show 4, 3, 2, 1 on each beat (beatNumber 0, 1, 2, 3)
@@ -1486,8 +1496,8 @@ function scheduleMusic(countoffTotal: number) {
     const timeInSeconds = beatsToSeconds(timeInBeats, bpm);
 
     // Schedule the note/rest to become current
-    const noteEventId = Tone.getTransport().schedule(() => {
-      advanceBeat();
+    const noteEventId = Tone.getTransport().schedule((time) => {
+      advanceBeat(time);
     }, timeInSeconds);
     scheduledEvents.push(noteEventId);
   }
@@ -1534,11 +1544,8 @@ function onPieceComplete() {
     lastMetronomeTime = 0;
     lastAdvanceBeatTime = 0;
 
-    // Auto-advance if:
-    // 1. No mistakes AND
-    // 2. User actually played at least 80% of notes (prevents advancing without playing)
-    const playedEnough = notesRequired === 0 || notesPlayed >= notesRequired * 0.8;
-    if (!hadMistake && playedEnough) {
+    // Auto-advance only if the segment was played (see didPassPiece), not merely allowed to run out
+    if (didPassPiece({ hadMistake, notesPlayed, notesRequired })) {
       // Advance to next step
       const hasMore = practiceSession.nextStep();
 
@@ -1552,7 +1559,7 @@ function onPieceComplete() {
         hadMistake = false;
         notesPlayed = 0;
         // Recalculate required notes for the new segment
-        notesRequired = timingEvents.reduce((sum, evt) => sum + evt.pitches.length, 0);
+        notesRequired = countRequiredNotes();
         currentBeatIndex = 0;
         isCountingOff = true;
         countoffBeats = 0;
@@ -1581,8 +1588,8 @@ function onPieceComplete() {
       Tone.getTransport().start();
     }
   } else {
-    // Level mode: advance level if no mistakes
-    if (!hadMistake) {
+    // Level mode: the piece must have been played, not merely allowed to run to the end
+    if (didPassPiece({ hadMistake, notesPlayed, notesRequired })) {
       incrementLevel();
     }
 
@@ -1592,6 +1599,8 @@ function onPieceComplete() {
 
     // Generate new piece
     generateAndRender();
+    notesPlayed = 0;
+    notesRequired = countRequiredNotes();
 
     // Fully reset Tone.js Transport before scheduling new piece
     Tone.getTransport().stop();
@@ -1626,6 +1635,8 @@ function updateCountoffDisplay(remaining: number) {
 }
 
 function stop() {
+  startToken++;
+  setStarting(false);
   isPlaying = false;
   isCountingOff = false;
   const playPauseBtn = document.getElementById('playPause')!;
@@ -1651,7 +1662,8 @@ function stop() {
 // Track last beat advance time to prevent double-firing
 let lastAdvanceBeatTime = 0;
 
-function advanceBeat() {
+/** `time` is the audio time Tone.js passes to the Transport callback. */
+function advanceBeat(time: number) {
   // Debounce to prevent double-firing from Tone.js lookahead
   const now = performance.now();
   if (now - lastAdvanceBeatTime < 50) {
@@ -1724,12 +1736,17 @@ function advanceBeat() {
 
   if (sampler && sampler.loaded && pitchesToPlay.length > 0) {
     for (const pitch of pitchesToPlay) {
-      sampler.triggerAttackRelease(pitch, '2n');
+      sampler.triggerAttackRelease(pitch, '2n', time);
     }
   }
 
   // Update scroll position if in scrolling mode
   updateScrollPosition(timingEvent.time);
+
+  // Test hook (see CLAUDE.md): lets the end-to-end tests see which notes were played and highlighted
+  document.dispatchEvent(new CustomEvent('trainer:beat', {
+    detail: { beatIndex: currentBeatIndex, time: timingEvent.time, pitches: allPitches, noteIds, audioTime: time },
+  }));
 
   currentBeatIndex++;
 }
@@ -1963,7 +1980,7 @@ async function handleFileUpload(file: File) {
     }
 
     if (parsed.measures.length === 0) {
-      alert(t('error.noMeasures'));
+      showNotice(t('error.noMeasures'), 8000);
       return;
     }
 
@@ -1997,7 +2014,7 @@ async function handleFileUpload(file: File) {
   } catch (error) {
     console.error('Error parsing file:', error);
     const fileTypes = isMidiFile(file.name) ? 'MIDI' : 'MusicXML or MXL';
-    alert(t('error.parse', { type: fileTypes }));
+    showNotice(t('error.parse', { type: fileTypes }), 8000);
   }
 }
 
@@ -2465,7 +2482,7 @@ interface PracticeStateData {
  */
 function savePracticeState() {
   if (!practiceSession || currentMode !== 'practice') {
-    localStorage.removeItem(PRACTICE_STATE_KEY);
+    storageRemove(PRACTICE_STATE_KEY);
     return;
   }
 
@@ -2476,21 +2493,21 @@ function savePracticeState() {
     bpm: bpm,
   };
 
-  localStorage.setItem(PRACTICE_STATE_KEY, JSON.stringify(state));
+  storageSet(PRACTICE_STATE_KEY, JSON.stringify(state));
 }
 
 /**
  * Save uploaded MusicXML content to localStorage.
  */
 function savePracticeMusic(xmlContent: string) {
-  localStorage.setItem(PRACTICE_MUSIC_KEY, xmlContent);
+  storageSet(PRACTICE_MUSIC_KEY, xmlContent);
 }
 
 /**
  * Load saved practice state on startup.
  */
 function loadPracticeState(): boolean {
-  const stateJson = localStorage.getItem(PRACTICE_STATE_KEY);
+  const stateJson = storageGet(PRACTICE_STATE_KEY);
   if (!stateJson) return false;
 
   try {
@@ -2508,7 +2525,7 @@ function loadPracticeState(): boolean {
       currentPracticeSongId = state.songId;
     } else if (state.type === 'upload') {
       // Load cached uploaded music
-      const cachedXml = localStorage.getItem(PRACTICE_MUSIC_KEY);
+      const cachedXml = storageGet(PRACTICE_MUSIC_KEY);
       if (!cachedXml) return false;
 
       const parsed = parseMusicXML(cachedXml);
@@ -2536,7 +2553,7 @@ function loadPracticeState(): boolean {
     return true;
   } catch (e) {
     console.error('Error loading practice state:', e);
-    localStorage.removeItem(PRACTICE_STATE_KEY);
+    storageRemove(PRACTICE_STATE_KEY);
     return false;
   }
 }
@@ -2545,8 +2562,8 @@ function loadPracticeState(): boolean {
  * Clear saved practice state.
  */
 function clearPracticeState() {
-  localStorage.removeItem(PRACTICE_STATE_KEY);
-  localStorage.removeItem(PRACTICE_MUSIC_KEY);
+  storageRemove(PRACTICE_STATE_KEY);
+  storageRemove(PRACTICE_MUSIC_KEY);
 }
 
 // Track current song ID for persistence

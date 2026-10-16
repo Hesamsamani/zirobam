@@ -61,18 +61,28 @@ interface LevelProgress {
 
 const STORAGE_KEY = 'sightreading-progress';
 
+/** 10 levels in C major, then one new key per level through the circle of fifths. */
+export const MAX_LEVEL = 20;
+
+/** A whole number from saved data, kept inside min..max. Anything that is not a usable number gives the fallback. */
+function boundedInt(value: unknown, min: number, max: number, fallback: number): number {
+  const n = typeof value === 'number' || typeof value === 'string' ? Number(value) : Number.NaN;
+  if (value === '' || !Number.isFinite(n)) return fallback;
+  return Math.max(min, Math.min(max, Math.round(n)));
+}
+
 function loadProgress(): LevelProgress {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
-      // Validate and return saved progress
+      // Saved data can be damaged or edited by hand: every number is checked, nothing is trusted
       return {
-        level: Math.max(1, Math.min(20, parsed.level || 1)),
-        subLevel: Math.max(0, Math.min(3, parsed.subLevel || 0)),
-        repetitions: parsed.repetitions || 0,
-        currentBpm: Math.max(20, Math.min(200, parsed.currentBpm || 30)),
-        bpmMastery: parsed.bpmMastery || 0,
+        level: boundedInt(parsed.level, 1, MAX_LEVEL, 1),
+        subLevel: boundedInt(parsed.subLevel, 0, 3, 0),
+        repetitions: boundedInt(parsed.repetitions, 0, 2, 0),
+        currentBpm: boundedInt(parsed.currentBpm, 20, 200, 30),
+        bpmMastery: boundedInt(parsed.bpmMastery, 0, 1000, 0),
       };
     }
   } catch {
@@ -157,7 +167,7 @@ export function getSuggestedBpm(level: number): number {
 }
 
 export function setLevel(level: number): void {
-  progress.level = Math.max(1, Math.min(23, level)); // Expanded to 23 levels
+  progress.level = Math.max(1, Math.min(MAX_LEVEL, level));
   progress.subLevel = 0;
   progress.repetitions = 0;
   progress.currentBpm = getSuggestedBpm(progress.level);
@@ -190,7 +200,7 @@ export function incrementLevel(): void {
     // If we've completed all sub-levels, advance to next level
     if (progress.subLevel >= 4) {
       progress.subLevel = 0;
-      progress.level = Math.min(20, progress.level + 1);
+      progress.level = Math.min(MAX_LEVEL, progress.level + 1);
       // Reset BPM to suggested for new level
       progress.currentBpm = getSuggestedBpm(progress.level);
       progress.bpmMastery = 0;

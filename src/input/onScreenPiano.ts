@@ -67,6 +67,7 @@ export class OnScreenPiano {
     el.tabIndex = -1;
     el.className = `piano-key ${key.isBlack ? 'black' : 'white'}`;
     el.dataset.note = key.noteName;
+    el.setAttribute('aria-label', key.noteName); // every key needs a name, the black ones have no visible label
 
     if (key.isBlack) {
       const width = (0.6 / whiteCount) * 100;
@@ -114,6 +115,10 @@ export class OnScreenPiano {
 
   setLabelFormatter(fn: (noteName: string) => string): void {
     for (const [noteName, label] of this.labelEls) label.textContent = fn(noteName);
+    for (const [noteName, el] of this.keyEls) {
+      const octave = /-?\d+$/.exec(noteName)?.[0] ?? '';
+      el.setAttribute('aria-label', `${fn(noteName)} ${octave}`.trim());
+    }
   }
 
   setAriaLabel(text: string): void {

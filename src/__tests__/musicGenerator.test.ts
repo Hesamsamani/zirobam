@@ -46,12 +46,12 @@ describe('musicGenerator', () => {
       expect(getFullLevelString()).toBe('1d');
     });
 
-    it('should clamp level to valid range (1-23)', () => {
+    it('should clamp level to valid range (1-20)', () => {
       setLevel(0);
       expect(getLevel()).toBe(1);
 
       setLevel(30);
-      expect(getLevel()).toBe(23);
+      expect(getLevel()).toBe(20);
     });
 
     it('should require 3 successful plays to advance sub-level', () => {

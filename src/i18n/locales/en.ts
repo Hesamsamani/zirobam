@@ -8,6 +8,8 @@ export const en = {
   // Control bar
   'control.start': 'Start',
   'control.stop': 'Stop',
+  'audio.loadFailed':
+    'The piano sounds could not be loaded, so the exercise runs without sound. Check your internet connection, then press Start to try again.',
   'control.tempo': 'Tempo',
   'control.bpm': 'BPM',
   'control.prevLevel': 'Previous level',

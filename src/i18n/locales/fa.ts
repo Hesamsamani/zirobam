@@ -10,6 +10,8 @@ export const fa: Record<MessageKey, string> = {
   // Control bar
   'control.start': 'شروع',
   'control.stop': 'توقف',
+  'audio.loadFailed':
+    'صدای پیانو بارگذاری نشد و تمرین بدون صدا اجرا می‌شود. اتصال اینترنت را بررسی کنید و دوباره «شروع» را بزنید.',
   'control.tempo': 'سرعت',
   'control.bpm': 'BPM',
   'control.prevLevel': 'سطح قبلی',

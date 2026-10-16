@@ -1,5 +1,11 @@
 import { test, expect, Page } from '@playwright/test';
 
+/** Closes the options panel through its own close button, which works at every screen size. */
+async function closeOptionsPanel(page: Page): Promise<void> {
+  await page.locator('#optionsClose').click();
+  await expect(page.locator('#optionsPanel')).toBeHidden();
+}
+
 test.describe('Sight Reading App', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
@@ -86,8 +92,8 @@ test.describe('Sight Reading App', () => {
       await page.waitForSelector('#optionsPanel:not([hidden])', { timeout: 5000 });
       await page.locator('#levelJump').selectOption('2');
       await page.waitForTimeout(100);
-      // Close options panel by clicking outside it
-      await page.locator('#notation').click();
+      // Close the options panel with its close button (on phones the panel covers the notation)
+      await closeOptionsPanel(page);
       await page.waitForTimeout(100);
 
       await expect(page.locator('#levelDisplay')).toContainText('2');
@@ -115,8 +121,8 @@ test.describe('Sight Reading App', () => {
       await page.locator('#levelJump').selectOption('10');
       await page.waitForTimeout(100);
 
-      // Close options panel by clicking outside it
-      await page.locator('#notation').click();
+      // Close the options panel with its close button (on phones the panel covers the notation)
+      await closeOptionsPanel(page);
       await page.waitForTimeout(100);
 
       // Verify we're at level 10
@@ -132,8 +138,8 @@ test.describe('Sight Reading App', () => {
       await page.waitForSelector('#optionsPanel:not([hidden])', { timeout: 5000 });
       await page.locator('#levelJump').selectOption('2');
       await page.waitForTimeout(100);
-      // Close options panel by clicking outside it
-      await page.locator('#notation').click();
+      // Close the options panel with its close button (on phones the panel covers the notation)
+      await closeOptionsPanel(page);
       await page.waitForTimeout(100);
 
       // Get new SVG content (should be different since new piece is generated)
@@ -315,138 +321,111 @@ test.describe('Sub-level Progression', () => {
   });
 });
 
-test.describe('Playback Timing', () => {
-  test('should not fire duplicate note events', async ({ page }) => {
-    // Collect console logs
-    const consoleLogs: string[] = [];
-    page.on('console', (msg) => {
-      if (msg.type() === 'log') {
-        consoleLogs.push(msg.text());
-      }
-    });
+interface BeatEvent {
+  beatIndex: number;
+  time: number;
+  pitches: string[];
+  noteIds: string[];
+  /** When the beat is scheduled to sound, in seconds on the audio clock (immune to a busy main thread). */
+  audioTime: number;
+}
 
+/** Records the app's `trainer:beat` events: one per beat that is played and highlighted. */
+async function recordBeats(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const w = window as unknown as { __beats: unknown[] };
+    w.__beats = [];
+    document.addEventListener('trainer:beat', (e) => w.__beats.push((e as CustomEvent).detail));
+  });
+}
+
+async function readBeats(page: Page): Promise<BeatEvent[]> {
+  return page.evaluate(() => (window as unknown as { __beats: BeatEvent[] }).__beats);
+}
+
+/** Waits until `enough(beats)` is true. Playback needs the piano samples first, so allow a generous time. */
+async function waitForBeats(page: Page, enough: (beats: BeatEvent[]) => boolean): Promise<BeatEvent[]> {
+  await expect
+    .poll(async () => enough(await readBeats(page)), { timeout: 45000, intervals: [250] })
+    .toBe(true);
+  return readBeats(page);
+}
+
+async function chooseLevel(page: Page, level: string, bpm: string): Promise<void> {
+  await page.locator('#optionsToggle').click();
+  await page.waitForSelector('#optionsPanel:not([hidden])', { timeout: 5000 });
+  await page.locator('#levelJump').selectOption(level);
+  await page.waitForTimeout(300);
+  await closeOptionsPanel(page);
+  await page.locator('#bpm').fill(bpm);
+}
+
+async function chooseSong(page: Page, songId: string, bpm: string): Promise<void> {
+  await page.locator('#optionsToggle').click();
+  await page.waitForSelector('#optionsPanel:not([hidden])', { timeout: 5000 });
+  // Use evaluate because the select sits in a fixed panel that may be outside the viewport
+  await page.evaluate((id) => {
+    const select = document.getElementById('songSelect') as HTMLSelectElement;
+    select.value = id;
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+  }, songId);
+  await page.waitForSelector('#notation svg .note', { timeout: 5000 });
+  await page.locator('#bpm').fill(bpm);
+}
+
+test.describe('Playback Timing', () => {
+  test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await page.waitForSelector('#notation svg', { timeout: 10000 });
+    await recordBeats(page);
+  });
 
-    // Open options panel and set to level 5 which has dotted notes (where the bug occurs)
-    await page.locator('#optionsToggle').click();
-    await page.waitForTimeout(200);
-    await page.locator('#levelJump').selectOption('5');
-    await page.waitForTimeout(500);
-
-    // Set a faster BPM for quicker test
-    await page.locator('#bpm').fill('120');
-
-    // Close options panel by clicking outside it
-    await page.locator('#notation').click();
-    await page.waitForTimeout(100);
-
-    // Start playback
+  test('should not fire duplicate note events', async ({ page }) => {
+    // Level 5 has dotted notes, which is where double firing used to happen
+    await chooseLevel(page, '5', '120');
+    await page.locator('#playPause').click();
+    const beats = await waitForBeats(page, (b) => b.length >= 5);
     await page.locator('#playPause').click();
 
-    // Wait for some notes to play (at 120 BPM, 4 beat countoff + a few notes)
-    await page.waitForTimeout(5000);
-
-    // Stop playback
-    await page.locator('#playPause').click();
-
-    // Check for duplicate note firings
-    const noteFiredLogs = consoleLogs.filter((log) => log.includes('-> Note'));
-    const noteIndices = noteFiredLogs.map((log) => {
-      const match = log.match(/Note (\d+)/);
-      return match ? parseInt(match[1]) : -1;
-    });
-
-    // Count occurrences of each note index
-    const noteCounts = new Map<number, number>();
-    for (const idx of noteIndices) {
-      noteCounts.set(idx, (noteCounts.get(idx) || 0) + 1);
+    // Within one pass the beat index counts up by one; a new pass starts again at 0
+    const problems: string[] = [];
+    for (let i = 1; i < beats.length; i++) {
+      const prev = beats[i - 1].beatIndex;
+      const cur = beats[i].beatIndex;
+      if (cur !== prev + 1 && cur !== 0) problems.push(`beat ${prev} was followed by beat ${cur}`);
     }
-
-    // Check for duplicates
-    const duplicates: number[] = [];
-    for (const [noteIdx, count] of noteCounts) {
-      if (count > 1) {
-        duplicates.push(noteIdx);
-      }
-    }
-
-    // Log for debugging
-    console.log('Note fired logs:', noteFiredLogs);
-    console.log('Note counts:', Object.fromEntries(noteCounts));
-
-    expect(duplicates, `Notes ${duplicates.join(', ')} fired multiple times`).toHaveLength(0);
+    expect(problems, problems.join('\n')).toHaveLength(0);
   });
 
   test('should fire notes with proper spacing (no instant skips)', async ({ page }) => {
-    // Collect console logs
-    const consoleLogs: string[] = [];
+    // 60 BPM: one beat is one second, so no two beats of a pass can be closer than an eighth note
+    await chooseLevel(page, '5', '60');
+    await page.locator('#playPause').click();
+    const beats = await waitForBeats(page, (b) => b.length >= 4);
+    await page.locator('#playPause').click();
+
+    const minSpacingSeconds = 0.2;
+    const errors: string[] = [];
+    for (let i = 1; i < beats.length; i++) {
+      if (beats[i].beatIndex === 0) continue; // a new pass
+      const gap = beats[i].audioTime - beats[i - 1].audioTime;
+      if (gap < minSpacingSeconds) {
+        errors.push(`beats ${beats[i - 1].beatIndex} and ${beats[i].beatIndex} are scheduled only ${(gap * 1000).toFixed(0)} ms apart`);
+      }
+    }
+    expect(errors, errors.join('\n')).toHaveLength(0);
+  });
+
+  test('should schedule audio at the Transport time (no Tone.js timing warning)', async ({ page }) => {
+    const warnings: string[] = [];
     page.on('console', (msg) => {
-      if (msg.type() === 'log') {
-        consoleLogs.push(msg.text());
-      }
+      if (msg.text().includes('should use the passed in scheduling time')) warnings.push(msg.text());
     });
-
-    await page.goto('/');
-    await page.waitForSelector('#notation svg', { timeout: 10000 });
-
-    // Open options panel and set to level 5 for varied note durations
-    await page.locator('#optionsToggle').click();
-    await page.waitForTimeout(200);
-    await page.locator('#levelJump').selectOption('5');
-    await page.waitForTimeout(500);
-
-    // Use 60 BPM for easy math (1 beat = 1 second)
-    await page.locator('#bpm').fill('60');
-
-    // Close options panel by clicking outside it
-    await page.locator('#notation').click();
-    await page.waitForTimeout(100);
-
-    // Start playback
+    await chooseLevel(page, '1', '120');
     await page.locator('#playPause').click();
-
-    // Wait for playback (4 beat countoff + ~16 beats of music at 60 BPM = 20 seconds)
-    await page.waitForTimeout(22000);
-
-    // Stop playback
+    await waitForBeats(page, (b) => b.length >= 2);
     await page.locator('#playPause').click();
-
-    // Get note firing times
-    const firedLogs = consoleLogs.filter((log) => log.includes('-> Note') && log.includes('fired'));
-
-    // Parse actual times from fired logs (only first firing of each note)
-    const firingTimes: number[] = [];
-    const seenNotes = new Set<number>();
-
-    for (const log of firedLogs) {
-      const noteMatch = log.match(/Note (\d+)/);
-      const transportMatch = log.match(/transport=([\d.]+)s/);
-      if (noteMatch && transportMatch) {
-        const noteIdx = parseInt(noteMatch[1]);
-        if (!seenNotes.has(noteIdx)) {
-          seenNotes.add(noteIdx);
-          firingTimes.push(parseFloat(transportMatch[1]));
-        }
-      }
-    }
-
-    // Check that consecutive notes have reasonable spacing (at least 0.2 seconds at 60 BPM)
-    // Minimum note value is typically eighth note = 0.5 beats = 0.5 seconds at 60 BPM
-    const minSpacing = 0.2; // 200ms minimum between any two notes
-    const spacingErrors: string[] = [];
-
-    for (let i = 1; i < firingTimes.length; i++) {
-      const spacing = firingTimes[i] - firingTimes[i - 1];
-      if (spacing < minSpacing) {
-        spacingErrors.push(`Notes ${i - 1} and ${i} fired only ${(spacing * 1000).toFixed(0)}ms apart (at ${firingTimes[i - 1].toFixed(3)}s and ${firingTimes[i].toFixed(3)}s)`);
-      }
-    }
-
-    console.log('Note firing times:', firingTimes);
-    console.log('Spacings:', firingTimes.slice(1).map((t, i) => (t - firingTimes[i]).toFixed(3)));
-
-    expect(spacingErrors, spacingErrors.join('\n')).toHaveLength(0);
+    expect(warnings, warnings.join('\n')).toHaveLength(0);
   });
 });
 
@@ -454,189 +433,45 @@ test.describe('Audio/Visual Alignment', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await page.waitForSelector('#notation svg', { timeout: 10000 });
+    await recordBeats(page);
   });
 
   test('audio playback should align with visual highlighting', async ({ page }) => {
-    // Collect console logs to track timing events
-    const beatLogs: { beatIndex: number; pitches: string[]; noteIds: string; time: number }[] = [];
-
-    page.on('console', (msg) => {
-      const text = msg.text();
-      // Match: "Beat 0: playing [C4, E4] | time: 0.00 | Verovio notes: [note-123, note-456]"
-      const match = text.match(/Beat (\d+): playing \[(.*?)\] \| time: ([\d.]+) \| Verovio notes: \[(.*?)\]/);
-      if (match) {
-        beatLogs.push({
-          beatIndex: parseInt(match[1]),
-          pitches: match[2].split(', ').filter(Boolean),
-          time: parseFloat(match[3]),
-          noteIds: match[4]
-        });
-      }
-    });
-
-    // Load a simple built-in song via options panel
-    await page.locator('#optionsToggle').click();
-    await page.waitForSelector('#optionsPanel:not([hidden])', { timeout: 5000 });
-    // Use evaluate because select is in a fixed panel that may be outside viewport
-    await page.evaluate(() => {
-      const select = document.getElementById('songSelect') as HTMLSelectElement;
-      if (select) {
-        select.value = 'mary-lamb';
-        select.dispatchEvent(new Event('change', { bubbles: true }));
-      }
-    });
-    await page.waitForTimeout(500);
-    await page.waitForSelector('#notation svg .note', { timeout: 5000 });
-
-    // Set tempo via BPM input in control bar (visible without panel)
-    await page.locator('#bpm').fill('120');
-    await page.waitForTimeout(100);
-
-    // Start playback
+    await chooseSong(page, 'mary-lamb', '120');
+    await page.locator('#playPause').click();
+    const beats = await waitForBeats(page, (b) => b.length >= 4);
     await page.locator('#playPause').click();
 
-    // Wait for countoff (4 beats) + some notes (at 120 BPM: 4 beats = 2 sec, wait for ~4 more seconds)
-    await page.waitForTimeout(6000);
-
-    // Stop playback
-    await page.locator('#playPause').click();
-
-    // Verify we captured beat events
-    expect(beatLogs.length).toBeGreaterThan(0);
-
-    // Check alignment for each beat:
-    // 1. When pitches exist, noteIds should also exist (visual matches audio)
-    // Note: In practice mode without MIDI input, the segment loops when no notes are played
-    // So we can't check for sequential beat indices across the whole session
-    const errors: string[] = [];
-
-    for (let i = 0; i < beatLogs.length; i++) {
-      const beat = beatLogs[i];
-
-      // Note: We no longer check sequential beat indices or time ordering because practice mode
-      // loops back to beat 0 when no notes are played (which Playwright can't simulate)
-      // Time also resets when looping, so we can only check within a single pass
-
-      // Check audio/visual alignment: if there are pitches, there should be note IDs
-      if (beat.pitches.length > 0 && beat.noteIds === 'none') {
-        errors.push(`Beat ${i}: has ${beat.pitches.length} pitches [${beat.pitches.join(', ')}] but no visual notes highlighted`);
-      }
-    }
-
-    console.log('Beat logs:', beatLogs);
-    console.log('Errors:', errors);
-
+    // Every beat that makes a sound must also highlight a note on the staff
+    const errors = beats
+      .filter((b) => b.pitches.length > 0 && b.noteIds.length === 0)
+      .map((b) => `Beat ${b.beatIndex}: plays [${b.pitches.join(', ')}] but no note is highlighted`);
     expect(errors, errors.join('\n')).toHaveLength(0);
   });
 
   test('level mode: every note across all measures should highlight', async ({ page }) => {
-    // This test specifically checks for the bug where first note of subsequent measures
-    // doesn't highlight. Tests level mode (generated exercises), not practice mode.
-
-    // Collect beat events
-    const beatLogs: { beatIndex: number; pitches: string[]; noteIds: string; time: number }[] = [];
-
-    page.on('console', (msg) => {
-      const text = msg.text();
-      const match = text.match(/Beat (\d+): playing \[(.*?)\] \| time: ([\d.]+) \| Verovio notes: \[(.*?)\]/);
-      if (match) {
-        beatLogs.push({
-          beatIndex: parseInt(match[1]),
-          pitches: match[2].split(', ').filter(Boolean),
-          time: parseFloat(match[3]),
-          noteIds: match[4]
-        });
-      }
-    });
-
-    // Stay in level mode (default) - level 1 has whole notes
-    // Set fast BPM for quick test
+    // Level 1 (whole notes). Wait until a later measure has been reached, not only the first one.
     await page.locator('#bpm').fill('180');
-    await page.waitForTimeout(100);
-
-    // Start playback
+    await page.locator('#playPause').click();
+    const beats = await waitForBeats(page, (b) => b.some((x) => x.time >= 4));
     await page.locator('#playPause').click();
 
-    // Wait for 4-beat countoff + 16 beats of music at 180 BPM = ~6.7 seconds
-    // Wait a bit longer to ensure we capture all notes
-    await page.waitForTimeout(9000);
-
-    // Stop playback
-    await page.locator('#playPause').click();
-
-    console.log('Beat logs (level mode):', beatLogs.map(b =>
-      `beat ${b.beatIndex}: t=${b.time.toFixed(1)} pitches=[${b.pitches.join(',')}] notes=[${b.noteIds}]`
-    ));
-
-    // Check that every beat with pitches has note IDs
-    const errors: string[] = [];
-    for (const beat of beatLogs) {
-      if (beat.pitches.length > 0 && (beat.noteIds === 'none' || beat.noteIds === '')) {
-        errors.push(`Beat ${beat.beatIndex} at time ${beat.time}: pitches [${beat.pitches.join(', ')}] but no notes highlighted`);
-      }
-    }
-
-    // Also check for beats at time 4, 8, 12 (measure boundaries)
-    const measureBoundaryBeats = beatLogs.filter(b =>
-      b.time === 4 || b.time === 8 || b.time === 12
-    );
-    console.log('Measure boundary beats:', measureBoundaryBeats);
-
+    const errors = beats
+      .filter((b) => b.pitches.length > 0 && b.noteIds.length === 0)
+      .map((b) => `Beat ${b.beatIndex} at time ${b.time}: plays [${b.pitches.join(', ')}] but no note is highlighted`);
     expect(errors, errors.join('\n')).toHaveLength(0);
   });
 
   test('first note after segment advance should be highlighted', async ({ page }) => {
-    // This test specifically checks for the first-note highlighting bug after advancing
-
-    // Collect highlighting events
-    const highlightEvents: { beatIndex: number; noteIds: string }[] = [];
-
-    page.on('console', (msg) => {
-      const text = msg.text();
-      const match = text.match(/Beat (\d+):.*\| Verovio notes: \[(.*?)\]/);
-      if (match) {
-        highlightEvents.push({
-          beatIndex: parseInt(match[1]),
-          noteIds: match[2]
-        });
-      }
-    });
-
-    // Load Mary Had a Little Lamb via options panel
-    await page.locator('#optionsToggle').click();
-    await page.waitForSelector('#optionsPanel:not([hidden])', { timeout: 5000 });
-    await page.locator('#songSelect').selectOption('mary-lamb');
-    await page.waitForTimeout(500);
-    await page.waitForSelector('#notation svg .note', { timeout: 5000 });
-
-    // Set fast tempo via BPM input in control bar
-    await page.locator('#bpm').fill('200');
-    await page.waitForTimeout(100);
-
-    // Start playback
+    // A song segment repeats until it is played; the first note of every repeat must highlight
+    await chooseSong(page, 'mary-lamb', '200');
+    await page.locator('#playPause').click();
+    const beats = await waitForBeats(page, (b) => b.filter((x) => x.beatIndex === 0).length >= 2);
     await page.locator('#playPause').click();
 
-    // Wait for piece to complete and auto-advance (first segment is measure 1)
-    // At 200 BPM: 4 beat countoff = 1.2 sec, ~4 beats of music = 1.2 sec per segment
-    // Wait long enough for at least 2 segments
-    await page.waitForTimeout(8000);
-
-    // Stop playback
-    await page.locator('#playPause').click();
-
-    // Filter to only first beats (beatIndex === 0) from each segment
-    // Each segment should have its beat 0 with proper note highlighting
-    const firstBeats = highlightEvents.filter(e => e.beatIndex === 0);
-
-    // We should have multiple first beats (one per segment that played)
-    expect(firstBeats.length).toBeGreaterThan(1);
-
-    // All first beats should have note IDs (not 'none')
-    const missingFirstNotes = firstBeats.filter(e => e.noteIds === 'none' || e.noteIds === '');
-    console.log('First beat events:', firstBeats);
-    console.log('Missing first notes:', missingFirstNotes);
-
-    expect(missingFirstNotes, `${missingFirstNotes.length} segments had no first note highlighted`).toHaveLength(0);
+    const firstBeats = beats.filter((b) => b.beatIndex === 0);
+    const missing = firstBeats.filter((b) => b.noteIds.length === 0);
+    expect(missing, `${missing.length} segments had no first note highlighted`).toHaveLength(0);
   });
 });
 
