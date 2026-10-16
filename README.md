@@ -19,6 +19,10 @@ A personal study fork of [ftrain/sightreading](https://github.com/ftrain/sightre
 
 ## Run it
 
+On Windows, double-click the Desktop shortcut **Music Notes Trainer**. It starts the app and opens your browser; close its window to stop. (Double-clicking `Start-Trainer.ps1` itself only opens it in an editor.) The shortcut runs `powershell.exe -NoProfile -ExecutionPolicy Bypass -File "<this folder>\Start-Trainer.ps1"` and uses the icon `Start-Trainer.ico`, so it can be recreated by hand. From a terminal: `powershell -ExecutionPolicy Bypass -File Start-Trainer.ps1`.
+
+By hand:
+
 ```bash
 npm ci
 npm run dev      # http://localhost:5173/sightreading/
