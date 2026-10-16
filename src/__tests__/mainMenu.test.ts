@@ -52,7 +52,7 @@ describe('MainMenu', () => {
 
   it('offers lessons, the quiz, levels, songs and the tools', () => {
     const ids = MENU_TILES.map((tileDef) => tileDef.id);
-    expect(ids).toEqual(expect.arrayContaining(['lessons', 'learn', 'levels', 'songs', 'xylophone', 'metronome', 'progress', 'settings']));
+    expect(ids).toEqual(expect.arrayContaining(['lessons', 'learn', 'levels', 'songs', 'catalog', 'xylophone', 'metronome', 'progress', 'settings']));
   });
 
   it('keeps the lessons apart from the quiz', () => {
@@ -77,9 +77,10 @@ describe('MainMenu', () => {
     tile('learn').click();
     tile('levels').click();
     tile('songs').click();
+    tile('catalog').click();
     tile('xylophone').click();
     tile('progress').click();
-    expect(navigate.mock.calls.map(([view]) => view)).toEqual(['lessons', 'learn', 'levels', 'songs', 'xylophone', 'progress']);
+    expect(navigate.mock.calls.map(([view]) => view)).toEqual(['lessons', 'learn', 'levels', 'songs', 'catalog', 'xylophone', 'progress']);
   });
 
   it('opens the settings instead of a screen for the settings tile', () => {
@@ -141,7 +142,7 @@ describe('MainMenu', () => {
     const paths = Array.from(menu.element.querySelectorAll<HTMLElement>('.menu-paths [data-tile]')).map((b) => b.dataset.tile);
     const tools = Array.from(menu.element.querySelectorAll<HTMLElement>('.menu-tools [data-tile]')).map((b) => b.dataset.tile);
     expect(paths).toEqual(['lessons', 'learn', 'levels', 'songs']);
-    expect(tools).toEqual(['xylophone', 'metronome', 'progress', 'settings']);
+    expect(tools).toEqual(['catalog', 'xylophone', 'metronome', 'progress', 'settings']);
   });
 
   it('continues into a song when that is where you were', () => {

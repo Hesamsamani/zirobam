@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { Router, parseRoute, parseLocation, formatRoute, isView, VIEWS, type View } from '../app/router';
+import { Router, hashQuery, parseRoute, parseLocation, formatRoute, isView, VIEWS, type View } from '../app/router';
 
 /** The smallest window the router needs: a hash, and hashchange listeners. */
 function fakeWindow(initialHash = '') {
@@ -61,6 +61,19 @@ describe('parseLocation', () => {
 
   it('keeps parseRoute as the view alone', () => {
     expect(parseRoute('#/lessons/staff')).toBe('lessons');
+  });
+});
+
+describe('hashQuery', () => {
+  it('returns what follows the question mark', () => {
+    expect(hashQuery('#/catalog?artist=Queen&level=2')).toBe('artist=Queen&level=2');
+    expect(hashQuery('#/catalog?q=a?b')).toBe('q=a?b');
+  });
+
+  it('is empty without one', () => {
+    expect(hashQuery('#/catalog')).toBe('');
+    expect(hashQuery('')).toBe('');
+    expect(hashQuery('#/catalog?')).toBe('');
   });
 });
 

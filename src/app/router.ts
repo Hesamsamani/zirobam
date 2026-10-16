@@ -29,6 +29,12 @@ export function parseLocation(hash: string): RouteLocation {
   return { view: name, param };
 }
 
+/** The filter in an address like `#/catalog?artist=Queen`: everything after the first question mark. */
+export function hashQuery(hash: string): string {
+  const at = hash.indexOf('?');
+  return at < 0 ? '' : hash.slice(at + 1);
+}
+
 export function parseRoute(hash: string): View {
   return parseLocation(hash).view;
 }

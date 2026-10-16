@@ -36,7 +36,7 @@ import {
 } from './upload';
 import { buildMusicXML, type NoteIdMapping } from './music/xml/builder';
 import { BUILT_IN_SONGS, getSongById } from './songs';
-import { Router, VIEWS, type View } from './app/router';
+import { hashQuery, Router, VIEWS, type View } from './app/router';
 import { AppShell } from './app/shell';
 import { MainMenu } from './menu/mainMenu';
 import { SongsView } from './menu/songsView';
@@ -80,6 +80,8 @@ import { LearnView } from './learn/learnView';
 import { NameTheNoteQuiz } from './learn/nameTheNote';
 import { NoteStats } from './learn/noteStats';
 import { createNoteCardRenderer, type NotationToolkit } from './learn/noteCard';
+import { CatalogView } from './catalog/catalogView';
+import { loadCatalog } from './catalog';
 import { ALL_LESSONS } from './lessons/curriculum';
 import { LessonPlayer } from './lessons/lessonPlayer';
 import { LessonProgress } from './lessons/lessonProgress';
@@ -1222,11 +1224,25 @@ function setupNavigation(learn: LearnHandle) {
   });
   onLocaleChange(() => lessons.refresh());
   onNoteNamesChange(() => lessons.refresh());
+
+  const catalog = new CatalogView({
+    load: loadCatalog,
+    getQuery: () => hashQuery(window.location.hash),
+    // the filter lives in the address so it can be shared, but it does not add a step to the Back button
+    setQuery: (query) => history.replaceState(null, '', query ? `#/catalog?${query}` : '#/catalog'),
+    onBack: () => appShell.navigate('home'),
+    playBuiltIn: (songId) => {
+      loadBuiltInSong(songId);
+      if (currentMode === 'practice') appShell.navigate('practice');
+    },
+    chooseFile: () => document.getElementById('xmlUpload')?.click(),
+  });
+  onLocaleChange(() => catalog.refresh());
   mainMenu = menu;
   songsView = songs;
   xylophoneView = xylophone;
   progressView = progress;
-  document.getElementById('app')!.prepend(menu.element, lessons.element, songs.element, xylophone.element, progress.element);
+  document.getElementById('app')!.prepend(menu.element, lessons.element, songs.element, catalog.element, xylophone.element, progress.element);
 
   document.getElementById('homeButton')!.addEventListener('click', () => appShell.navigate('home'));
 
@@ -1259,6 +1275,9 @@ function setupNavigation(learn: LearnHandle) {
           break;
         case 'songs':
           songs.refresh();
+          break;
+        case 'catalog':
+          void catalog.activate();
           break;
         case 'levels':
           if (currentMode === 'practice') exitPracticeMode();
