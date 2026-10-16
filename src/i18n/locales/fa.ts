@@ -185,6 +185,7 @@ export const fa: Record<MessageKey, string> = {
   'nav.home': 'منوی اصلی',
   'menu.title': 'مربی نت‌خوانی',
   'menu.subtitle': 'امروز چه چیزی را تمرین کنیم؟',
+  'menu.resume.go': 'ادامه',
   'menu.back': 'بازگشت به منو',
   'menu.learn.title': 'یادگیری نت‌ها',
   'menu.learn.desc': 'درس‌های کوتاه و آزمون «نام نت را پیدا کنید»',

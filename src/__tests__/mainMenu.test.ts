@@ -7,10 +7,11 @@ function setup(level = '3b') {
   const navigate = vi.fn<(view: View) => void>();
   const openSettings = vi.fn();
   const openMetronome = vi.fn();
-  const menu = new MainMenu({ navigate, openSettings, openMetronome, levelLabel: () => level });
+  const resume = { view: 'levels' as View, title: 'Level 3b', detail: 'Quarter notes (RH)' };
+  const menu = new MainMenu({ navigate, openSettings, openMetronome, levelLabel: () => level, resume: () => resume });
   document.body.replaceChildren(menu.element);
   const tile = (id: string) => menu.element.querySelector<HTMLButtonElement>(`[data-tile="${id}"]`)!;
-  return { menu, navigate, openSettings, openMetronome, tile };
+  return { menu, navigate, openSettings, openMetronome, tile, resume };
 }
 
 describe('MainMenu', () => {
@@ -38,6 +39,7 @@ describe('MainMenu', () => {
       expect(tile(def.id).querySelector('.menu-tile-title')!.textContent).toBe(t(def.title));
       expect(tile(def.id).querySelector('.menu-tile-desc')!.textContent).not.toBe('');
       expect(tile(def.id).querySelector('.menu-tile-icon')!.getAttribute('aria-hidden')).toBe('true');
+      expect(tile(def.id).querySelector('.menu-tile-icon')!.getElementsByTagName('path')[0].getAttribute('d')).toBeTruthy();
     }
   });
 
@@ -85,9 +87,51 @@ describe('MainMenu', () => {
     expect(outside).toHaveBeenCalledTimes(1); // only the levels tile bubbled
   });
 
+  it('shows where you left off on a sheet of its own, and continues there', () => {
+    const { menu, navigate } = setup();
+    const card = menu.element.querySelector<HTMLButtonElement>('.menu-resume')!;
+    expect(card.querySelector('.menu-resume-title')!.textContent).toBe('Level 3b');
+    expect(card.querySelector('.menu-resume-detail')!.textContent).toBe('Quarter notes (RH)');
+    expect(card.querySelector('.menu-resume-go')!.textContent).toBe('Continue');
+    card.click();
+    expect(navigate).toHaveBeenCalledWith('levels');
+  });
+
+  it('is not counted among the tiles', () => {
+    const { menu } = setup();
+    expect(menu.element.querySelectorAll('.menu-tile')).toHaveLength(MENU_TILES.length);
+  });
+
+  it('puts the three ways to practise apart from the tools', () => {
+    const { menu } = setup();
+    const paths = Array.from(menu.element.querySelectorAll<HTMLElement>('.menu-paths [data-tile]')).map((b) => b.dataset.tile);
+    const tools = Array.from(menu.element.querySelectorAll<HTMLElement>('.menu-tools [data-tile]')).map((b) => b.dataset.tile);
+    expect(paths).toEqual(['learn', 'levels', 'songs']);
+    expect(tools).toEqual(['xylophone', 'metronome', 'settings']);
+  });
+
+  it('continues into a song when that is where you were', () => {
+    const navigate = vi.fn<(view: View) => void>();
+    const menu = new MainMenu({
+      navigate,
+      openSettings: () => {},
+      openMetronome: () => {},
+      levelLabel: () => '1a',
+      resume: () => ({ view: 'practice', title: 'Frère Jacques', detail: 'Step 3 of 19' }),
+    });
+    menu.element.querySelector<HTMLButtonElement>('.menu-resume')!.click();
+    expect(navigate).toHaveBeenCalledWith('practice');
+  });
+
   it('writes the texts again in the new language and level on refresh()', () => {
     let level = '1a';
-    const menu = new MainMenu({ navigate: () => {}, openSettings: () => {}, openMetronome: () => {}, levelLabel: () => level });
+    const menu = new MainMenu({
+      navigate: () => {},
+      openSettings: () => {},
+      openMetronome: () => {},
+      levelLabel: () => level,
+      resume: () => ({ view: 'practice', title: 'مری', detail: 'مرحله ۲' }),
+    });
     document.body.replaceChildren(menu.element);
     setLocale('fa');
     level = '۴c';
@@ -95,5 +139,7 @@ describe('MainMenu', () => {
     expect(menu.element.querySelector('h1')!.textContent).toBe('مربی نت‌خوانی');
     expect(menu.element.querySelector('[data-tile="songs"] .menu-tile-title')!.textContent).toBe('آهنگ‌ها');
     expect(menu.element.querySelector('[data-tile="levels"] .menu-tile-desc')!.textContent).toContain('۴c');
+    expect(menu.element.querySelector('.menu-resume-go')!.textContent).toBe('ادامه');
+    expect(menu.element.querySelector('.menu-resume-title')!.textContent).toBe('مری');
   });
 });

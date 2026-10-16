@@ -184,6 +184,7 @@ export const en = {
   'nav.home': 'Main menu',
   'menu.title': 'Music Notes Trainer',
   'menu.subtitle': 'What would you like to practise?',
+  'menu.resume.go': 'Continue',
   'menu.back': 'Back to menu',
   'menu.learn.title': 'Learn the notes',
   'menu.learn.desc': 'Short lessons and the "Name the note" quiz',

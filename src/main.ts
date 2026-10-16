@@ -1050,6 +1050,22 @@ function setupNavigation(learn: LearnHandle) {
       void metronomeWindow?.open();
     },
     levelLabel: () => localizeLevel(getFullLevelString()),
+    resume: () => {
+      if (currentMode === 'practice' && practiceSession) {
+        const { currentStep, totalSteps } = practiceSession.getProgress();
+        const step = t('practice.stepOf', { current: formatNumber(currentStep), total: formatNumber(totalSteps) });
+        return {
+          view: 'practice',
+          title: practiceTitle(),
+          detail: `${step}: ${describeMeasures(practiceSession.getCurrentStep().measures)}`,
+        };
+      }
+      return {
+        view: 'levels',
+        title: t('control.level', { level: localizeLevel(getFullLevelString()) }),
+        detail: describeCurrentLesson(),
+      };
+    },
   });
   const songs = new SongsView({
     songs: BUILT_IN_SONGS,

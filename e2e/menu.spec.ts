@@ -54,6 +54,28 @@ test.describe('Main menu', () => {
     await expect(page.locator('#mainMenu')).toBeVisible();
   });
 
+  test('the Continue card says where you left off and opens it', async ({ page }) => {
+    await openMenu(page);
+    await expect(page.locator('.menu-resume-title')).toHaveText('Level 1a');
+    await expect(page.locator('.menu-resume-detail')).not.toBeEmpty();
+    await page.locator('.menu-resume').click();
+    await expect(page).toHaveURL(/#\/levels$/);
+    await expect(page.locator('#controlBar')).toBeVisible();
+  });
+
+  test('after starting a song, Continue opens that song at its step', async ({ page }) => {
+    await openMenu(page);
+    await tile(page, 'songs').click();
+    await page.locator('#songsView [data-song="frere-jacques"]').click();
+    await page.locator('.pp-measure[data-measure="3"]').click();
+    await page.locator('#homeButton').click();
+    await expect(page.locator('.menu-resume-title')).toHaveText('Frère Jacques');
+    await expect(page.locator('.menu-resume-detail')).toContainText('Measure 3');
+    await page.locator('.menu-resume').click();
+    await expect(page).toHaveURL(/#\/practice$/);
+    await expect(page.locator('.pp-where')).toHaveText('Measure 3');
+  });
+
   test('the levels tile shows the current level', async ({ page }) => {
     await openMenu(page);
     await expect(tile(page, 'levels')).toContainText('1a');
