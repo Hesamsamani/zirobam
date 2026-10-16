@@ -556,7 +556,7 @@ body {
 }
 
 .practice-panel {
-  padding: 14px 18px 12px;
+  padding: 10px 16px 10px;
   background: linear-gradient(#272420, #211f1c);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
@@ -655,8 +655,8 @@ body {
 .pp-map {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-top: 14px;
+  gap: 6px;
+  margin-top: 10px;
 }
 
 .pp-measures {
@@ -668,7 +668,7 @@ body {
 /* One measure: five faint staff lines, the barline on its right, its number like a rehearsal mark */
 .pp-measure {
   position: relative;
-  height: 36px;
+  height: 30px;
   padding: 0 0 2px 7px;
   display: flex;
   align-items: flex-end;
@@ -752,11 +752,82 @@ body {
 }
 
 .pp-status {
+  flex: 1 1 220px;
   min-height: 1.45em;
-  margin: 12px 0 0;
+  margin: 0;
   color: var(--text-muted);
   font-size: 0.92rem;
   line-height: 1.45;
+}
+
+.pp-song {
+  display: none;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 6px;
+  min-width: 0;
+}
+
+.practice-panel.has-song .pp-song {
+  display: flex;
+}
+
+.pp-song-title {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.pp-song-key {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.pp-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-top: 10px;
+}
+
+.pp-jumps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pp-jump {
+  min-height: 34px;
+  padding: 4px 14px;
+  background: transparent;
+  border: 1px solid rgba(201, 162, 39, 0.5);
+  border-radius: 18px;
+  color: var(--current);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.pp-jump:hover:not(:disabled) {
+  background: rgba(201, 162, 39, 0.14);
+}
+
+.pp-jump:focus-visible {
+  outline: 2px solid var(--current);
+  outline-offset: 2px;
+}
+
+.pp-jump:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.pp-jump[hidden] {
+  display: none;
 }
 
 .pp-status[data-tone='good'] {
@@ -3377,4 +3448,13 @@ body.metro-pip {
   .hud-ring-arc {
     transition: none;
   }
+}
+
+/* While practising a song the piece's name is in the step panel, so the page header makes room for the score */
+body.practice-mode #scoreHeader {
+  display: none;
+}
+
+body.practice-mode #musicStand {
+  padding-top: var(--space-md);
 }

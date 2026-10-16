@@ -176,6 +176,66 @@ describe('heading', () => {
   });
 });
 
+describe('shortcuts to the longer steps', () => {
+  const steps = generateSteps(8);
+  const firstPhrase = steps.findIndex((s) => s.type === 'consolidate');
+
+  it('jumps to the next put-it-together step in one press', () => {
+    panel.update(viewOf(8, 0));
+    q<HTMLButtonElement>('.pp-jump-together').click();
+    expect(onJump).toHaveBeenCalledWith(firstPhrase);
+  });
+
+  it('jumps on to the following phrase when already on one', () => {
+    panel.update(viewOf(8, firstPhrase));
+    q<HTMLButtonElement>('.pp-jump-together').click();
+    const next = steps.findIndex((s, i) => i > firstPhrase && s.type === 'consolidate');
+    expect(onJump).toHaveBeenCalledWith(next);
+    expect(next).toBeGreaterThan(firstPhrase);
+  });
+
+  it('jumps to the whole piece, the last step', () => {
+    panel.update(viewOf(8, 0));
+    q<HTMLButtonElement>('.pp-jump-whole').click();
+    expect(onJump).toHaveBeenCalledWith(steps.length - 1);
+  });
+
+  it('turns both off on the last step', () => {
+    panel.update(viewOf(8, steps.length - 1));
+    expect(q<HTMLButtonElement>('.pp-jump-together').disabled).toBe(true);
+    expect(q<HTMLButtonElement>('.pp-jump-whole').disabled).toBe(true);
+  });
+
+  it('has no shortcuts for a piece too short to have a phrase', () => {
+    panel.update(viewOf(3, 0));
+    expect(q<HTMLButtonElement>('.pp-jump-together').hidden).toBe(true);
+    expect(q<HTMLButtonElement>('.pp-jump-whole').hidden).toBe(true);
+  });
+
+  it('names the buttons for screen readers and writes them in Persian', () => {
+    panel.update(viewOf(8, 0));
+    expect(q('.pp-jump-together').getAttribute('aria-label')).toBe('Jump to the next put-it-together step');
+    setLocale('fa');
+    panel.refresh();
+    expect(q('.pp-jump-together').textContent).toBe('کنار هم گذاشتن');
+    expect(q('.pp-jump-whole').textContent).toBe('کل قطعه');
+  });
+});
+
+describe('song title', () => {
+  it('shows the name and key of the piece at the top', () => {
+    panel.update({ ...viewOf(8, 0), title: 'Ode to Joy', subtitle: 'C major' });
+    expect(q('.pp-song-title').textContent).toBe('Ode to Joy');
+    expect(q('.pp-song-key').textContent).toBe('C major');
+    expect(panel.element.classList.contains('has-song')).toBe(true);
+  });
+
+  it('leaves the line out when there is no title', () => {
+    panel.update(viewOf(8, 0));
+    expect(panel.element.classList.contains('has-song')).toBe(false);
+  });
+});
+
 describe('moving between steps', () => {
   it('has previous and next buttons that call the app', () => {
     panel.update(viewOf(8, 5));

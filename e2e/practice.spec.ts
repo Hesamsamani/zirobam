@@ -106,6 +106,52 @@ test.describe('Practice steps', () => {
   });
 });
 
+test.describe('Practice layout and shortcuts', () => {
+  test('the page header makes room: the song name is in the step panel', async ({ page }) => {
+    await openSong(page, 'ode-to-joy');
+    await expect(page.locator('#scoreHeader')).toBeHidden();
+    await expect(page.locator('.pp-song-title')).toHaveText('Ode to Joy (Beethoven)');
+    await expect(page.locator('.pp-song-key')).toHaveText('C major');
+  });
+
+  test('"Put it together" jumps straight to a phrase, and "Whole piece" to the end', async ({ page }) => {
+    await openSong(page, 'ode-to-joy');
+    await page.locator('.pp-jump-together').click();
+    await expect(page.locator('.pp-type')).toHaveText('Putting it together');
+    await expect(page.locator('.pp-where')).toHaveText('Measures 1-4');
+    await expect(page.locator('.pp-measure[data-state="current"]')).toHaveCount(4);
+    await page.locator('.pp-jump-whole').click();
+    await expect(page.locator('.pp-where')).toHaveText('Measures 1-8');
+    await expect(page.locator('.pp-next')).toBeDisabled();
+    await expect(page.locator('.pp-jump-whole')).toBeDisabled();
+    await expect(page.locator('.pp-jump-together')).toBeDisabled();
+  });
+
+  test('on a computer the whole score stays above the piano and the control bar', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium', 'phones scroll instead of shrinking the score');
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await openSong(page, 'ode-to-joy');
+    await page.locator('.pp-jump-together').click();
+    await page.locator('#pianoToggle').click();
+    await expect(page.locator('#pianoDock')).toBeVisible();
+    await expect
+      .poll(async () =>
+        page.evaluate(() => {
+          const score = document.querySelector('#notation svg')!.getBoundingClientRect();
+          const dock = document.getElementById('pianoDock')!.getBoundingClientRect();
+          return Math.round(score.bottom - dock.top);
+        })
+      )
+      .toBeLessThanOrEqual(6);
+    // closing the piano gives the room back
+    const small = await page.evaluate(() => document.querySelector('#notation svg')!.getBoundingClientRect().height);
+    await page.locator('#pianoToggle').click();
+    await expect
+      .poll(async () => page.evaluate(() => document.querySelector('#notation svg')!.getBoundingClientRect().height))
+      .toBeGreaterThan(small);
+  });
+});
+
 test.describe('The song library', () => {
   test('a new song opens in practice mode like the older ones', async ({ page }) => {
     await openSong(page, 'frere-jacques');

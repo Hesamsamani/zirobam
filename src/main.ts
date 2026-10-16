@@ -152,6 +152,9 @@ let mainMenu: MainMenu | null = null;
 let songsView: SongsView | null = null;
 let xylophoneView: XylophoneView | null = null;
 let practicePanel: PracticePanel | null = null;
+/** 1 shows the score at the full width of its area; below 1 it is narrower (and so shorter) so the whole piece fits the window. */
+let fitFactor = 1;
+const MIN_FIT = 0.55;
 /** Rewards: XP, rank, the daily goal, badges and song stars. */
 const gameStore = new GameStore({
   beginnerSongIds: BUILT_IN_SONGS.filter((s) => s.difficulty === 'beginner' && s.category !== 'exercise').map((s) => s.id),
@@ -303,6 +306,49 @@ function updateVerovioOptions(forScrolling = false) {
 }
 
 // Re-render the current piece without generating new music
+/**
+ * On a computer the whole piece should be visible without scrolling. The score is drawn as wide as its
+ * container (the height follows), so when it is taller than the room above the piano and the control
+ * bar, it is shown narrower (down to 55 percent). Phones scroll instead. Nothing is drawn again, so the
+ * highlighting of the playing notes is not disturbed.
+ */
+function fitScoreToScreen() {
+  const notation = document.getElementById('notation');
+  const svg = notation?.querySelector<SVGSVGElement>('svg');
+  if (!notation || !svg) return;
+  if (isMobileMode() || isScrollingMode || notation.offsetParent === null) {
+    svg.style.width = '';
+    return;
+  }
+  svg.style.display = 'block';
+  svg.style.margin = '0 auto';
+  svg.style.alignSelf = 'flex-start'; // the score box has a minimum height; do not stretch the page to it
+
+  const bar = document.getElementById('controlBar');
+  const dock = document.getElementById('pianoDock');
+  const reserve = (bar?.offsetHeight ?? 0) + (dock && !dock.hidden ? dock.offsetHeight : 0) + 32;
+  const available = window.innerHeight - reserve - (svg.getBoundingClientRect().top + window.scrollY);
+  if (available <= 120) return;
+
+  // The height is not simply proportional to the width (the score has margins), so measure it at two
+  // widths and solve for the width that leaves exactly the room that is available.
+  const heightAt = (factor: number) => {
+    svg.style.width = `${factor * 100}%`;
+    return svg.getBoundingClientRect().height;
+  };
+  const first = fitFactor;
+  const firstHeight = heightAt(first);
+  const second = first > 0.75 ? first - 0.2 : first + 0.2;
+  const secondHeight = heightAt(second);
+  const slope = (firstHeight - secondHeight) / (first - second);
+  if (!(slope > 0)) {
+    svg.style.width = `${first * 100}%`;
+    return;
+  }
+  fitFactor = Math.max(MIN_FIT, Math.min(1, first + (available - firstHeight) / slope));
+  svg.style.width = `${fitFactor * 100}%`;
+}
+
 function rerenderCurrentMusic() {
   if (!currentPieceXml) return;
   toolkit.loadData(currentPieceXml);
@@ -318,6 +364,7 @@ function rerenderCurrentMusic() {
   // Rebuild timing events to ensure they match the new IDs
   buildTimingEvents();
   refreshNoteLabels();
+  fitScoreToScreen();
 }
 
 // Regenerate XML from current notes (for fingering toggle)
@@ -474,6 +521,7 @@ function renderCurrentMusic() {
   // Build timing events from the source note data (not from SVG)
   buildTimingEvents();
   refreshNoteLabels();
+  fitScoreToScreen();
 }
 
 // Note ID mapping: maps time (in beats) to SVG element IDs
@@ -1200,6 +1248,7 @@ function setupPiano() {
     } catch {
       // storage unavailable
     }
+    fitScoreToScreen();
   };
   toggle.addEventListener('click', () => setOpen(dock.hidden));
   setOpen(storageGet('ui.pianoOpen') === '1');
@@ -2393,6 +2442,7 @@ function enterPracticeMode() {
   practiceAttempt = 1;
   practiceRetries = 0;
   mistakeCount = 0;
+  document.body.classList.add('practice-mode');
 
   // Update header
   const scoreTitle = document.querySelector('.score-title h1');
@@ -2430,6 +2480,7 @@ function enterPracticeMode() {
  * Exit practice mode and return to levels.
  */
 function exitPracticeMode() {
+  document.body.classList.remove('practice-mode');
   currentMode = 'levels';
   practiceSession = null;
   currentPracticeSongId = null;
@@ -2477,6 +2528,8 @@ function updatePracticeDisplay() {
     currentIndex: practiceSession.getCurrentStepIndex(),
     measureCount: practiceSession.getMeasureCount(),
     attempt: practiceAttempt,
+    title: practiceTitle(),
+    subtitle: practiceKeyLine(),
   });
 }
 
@@ -2498,8 +2551,17 @@ function setupPracticePanel() {
     onNext: () => practiceSession && jumpToPracticeStep(practiceSession.getCurrentStepIndex() + 1),
   });
   practicePanel = panel;
-  document.getElementById('practiceInfo')!.appendChild(panel.element);
+  const info = document.getElementById('practiceInfo')!;
+  info.appendChild(panel.element);
   updatePracticeDisplay(); // a session restored at start-up was set up before the panel existed
+
+  // The panel, the piano and the control bar take room from the score; refit it whenever one of them changes size
+  if (typeof ResizeObserver !== 'undefined') {
+    const refit = new ResizeObserver(() => fitScoreToScreen());
+    for (const el of [info, document.getElementById('pianoDock'), document.getElementById('controlBar')]) {
+      if (el) refit.observe(el);
+    }
+  }
 }
 
 /**

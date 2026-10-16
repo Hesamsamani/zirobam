@@ -13,6 +13,9 @@ export interface PracticeView {
   measureCount: number;
   /** 1 for the first try at a step. */
   attempt: number;
+  /** The piece's name and key, shown at the top of the panel. */
+  title?: string;
+  subtitle?: string;
 }
 
 export interface PracticePanelDeps {
@@ -92,6 +95,10 @@ export class PracticePanel {
   private readonly nextButton: HTMLButtonElement;
   private readonly mapEl: HTMLElement;
   private readonly statusEl: HTMLElement;
+  private readonly songTitle: HTMLElement;
+  private readonly songKey: HTMLElement;
+  private readonly jumpTogether: HTMLButtonElement;
+  private readonly jumpWhole: HTMLButtonElement;
   private view: PracticeView | null = null;
   private builtFor = 0;
   private buttons: HTMLButtonElement[] = [];
@@ -100,6 +107,11 @@ export class PracticePanel {
   constructor(deps: PracticePanelDeps) {
     this.deps = deps;
     this.element = make('div', 'practice-panel');
+
+    const song = make('div', 'pp-song');
+    this.songTitle = make('span', 'pp-song-title');
+    this.songKey = make('span', 'pp-song-key');
+    song.append(this.songTitle, this.songKey);
 
     const head = make('div', 'pp-head');
     this.glyphHolder = make('span', 'pp-glyph-holder');
@@ -131,7 +143,20 @@ export class PracticePanel {
     this.statusEl.setAttribute('aria-live', 'polite');
     this.statusEl.dataset.tone = 'hint';
 
-    this.element.append(head, this.mapEl, this.statusEl);
+    // Shortcuts to the longer steps, so they are one press away instead of many presses of "next"
+    const jumps = make('div', 'pp-jumps');
+    this.jumpTogether = make('button', 'pp-jump pp-jump-together');
+    this.jumpTogether.type = 'button';
+    this.jumpTogether.addEventListener('click', () => this.jump('phrase'));
+    this.jumpWhole = make('button', 'pp-jump pp-jump-whole');
+    this.jumpWhole.type = 'button';
+    this.jumpWhole.addEventListener('click', () => this.jump('whole'));
+    jumps.append(this.jumpTogether, this.jumpWhole);
+
+    const foot = make('div', 'pp-foot');
+    foot.append(this.statusEl, jumps);
+
+    this.element.append(song, head, this.mapEl, foot);
   }
 
   private stepButton(className: string, glyphChar: string, onClick: () => void): HTMLButtonElement {
@@ -149,6 +174,9 @@ export class PracticePanel {
     if (!step) return;
 
     this.element.dataset.type = step.type;
+    this.songTitle.textContent = view.title ?? '';
+    this.songKey.textContent = view.subtitle ?? '';
+    this.element.classList.toggle('has-song', Boolean(view.title));
     this.glyphHolder.replaceChildren(glyph(step.type));
     this.typeEl.textContent = t(TYPE_LABELS[step.type]);
     this.whereEl.textContent = this.describe(step.measures);
@@ -160,10 +188,35 @@ export class PracticePanel {
     this.prevButton.setAttribute('aria-label', t('practice.prev'));
     this.nextButton.setAttribute('aria-label', t('practice.next'));
     this.mapEl.setAttribute('aria-label', t('practice.map'));
+    this.updateJumps(view);
 
     if (this.builtFor !== view.measureCount) this.buildMap(view.measureCount);
     this.paintMap(view, step);
     this.setStatus(t(TYPE_HINTS[step.type]), 'hint');
+  }
+
+  private jumpIndex(kind: 'phrase' | 'whole'): number {
+    const view = this.view;
+    if (!view) return -1;
+    if (kind === 'whole') return view.steps.length - 1;
+    return view.steps.findIndex((s, i) => i > view.currentIndex && s.type === 'consolidate');
+  }
+
+  private jump(kind: 'phrase' | 'whole'): void {
+    const index = this.jumpIndex(kind);
+    if (index >= 0 && index !== this.view?.currentIndex) this.deps.onJump(index);
+  }
+
+  private updateJumps(view: PracticeView): void {
+    const hasPhrases = view.steps.some((s) => s.type === 'consolidate');
+    this.jumpTogether.hidden = !hasPhrases;
+    this.jumpWhole.hidden = !hasPhrases;
+    this.jumpTogether.textContent = t('practice.jumpTogether');
+    this.jumpTogether.setAttribute('aria-label', t('practice.jumpTogetherAria'));
+    this.jumpTogether.disabled = this.jumpIndex('phrase') < 0;
+    this.jumpWhole.textContent = t('practice.jumpWhole');
+    this.jumpWhole.setAttribute('aria-label', t('practice.jumpWholeAria'));
+    this.jumpWhole.disabled = view.currentIndex >= view.steps.length - 1;
   }
 
   /** Say how the last try went. Shown until the step changes. */
