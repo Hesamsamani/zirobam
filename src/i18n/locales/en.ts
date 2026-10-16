@@ -420,6 +420,26 @@ export const en = {
   'catalog.listenTo': 'Listen to {title} (opens in a new tab)',
   'catalog.playFor': 'Play {title} in the app',
   'catalog.onlyArtist': 'Show only songs by {artist}',
+  // My scores
+  'scores.mine': 'My score',
+  'scores.practise': 'Practise',
+  'scores.practiseFor': 'Practise {title} from your score',
+  'scores.add': 'Add my score',
+  'scores.addFor': 'Add your own score for {title}',
+  'scores.remove': 'Remove',
+  'scores.removeFor': 'Remove your score of {title}',
+  'scores.removeAsk': 'Remove your score of {title}?',
+  'scores.removeYes': 'Remove it',
+  'scores.removeNo': 'Keep it',
+  'scores.free': 'Free scores',
+  'scores.freeFor': 'Free scores of {title} (opens in a new tab)',
+  'scores.group': 'My scores',
+  'scores.groupHint': 'Files you added. They stay in this browser.',
+  'scores.full': 'There is no room left for more scores (30 MB). Remove some first.',
+  'scores.notSaved': 'The score could not be saved, but you can practise it now.',
+  'scores.memoryOnly': 'This browser does not keep files, so your scores last only until you close the page.',
+  'scores.notFound': 'That score is not here any more.',
+  'catalog.cat.mine': 'My scores',
 } as const;
 
 export type MessageKey = keyof typeof en;

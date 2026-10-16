@@ -80,6 +80,13 @@ describe('filterSongs', () => {
     expect(titles(filterSongs(SONGS, { ...DEFAULT_FILTER, category: 'classical' }))).toEqual(['Für Elise']);
   });
 
+  it('shows only the songs that have a score of the student, when asked for "mine"', () => {
+    const mine = (s: CatalogSong) => s.title === 'Imagine' || s.title === 'Pol';
+    expect(titles(filterSongs(SONGS, { ...DEFAULT_FILTER, category: 'mine' }, mine)).sort()).toEqual(['Imagine', 'Pol']);
+    expect(filterSongs(SONGS, { ...DEFAULT_FILTER, category: 'mine' })).toHaveLength(0);
+    expect(titles(filterSongs(SONGS, { ...DEFAULT_FILTER, category: 'mine', levels: [1] }, mine))).toEqual(['Imagine']);
+  });
+
   it('combines the filters', () => {
     expect(titles(filterSongs(SONGS, { ...DEFAULT_FILTER, text: 'let it', levels: [2], category: 'pop' }))).toEqual(['Let It Be']);
     expect(filterSongs(SONGS, { ...DEFAULT_FILTER, text: 'beatles', levels: [4] })).toHaveLength(0);
@@ -148,6 +155,11 @@ describe('the address of a filter', () => {
   it('survives Persian text', () => {
     const filter = { ...DEFAULT_FILTER, text: 'گوگوش' };
     expect(queryToFilter(filterToQuery(filter)).text).toBe('گوگوش');
+  });
+
+  it('knows the kind "mine"', () => {
+    expect(filterToQuery({ ...DEFAULT_FILTER, category: 'mine' })).toBe('cat=mine');
+    expect(queryToFilter('cat=mine').category).toBe('mine');
   });
 
   it('ignores what it does not know', () => {

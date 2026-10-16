@@ -30,7 +30,8 @@ export interface CatalogFilter {
   artist: string;
   /** Empty means every level. */
   levels: Level[];
-  category: Category | 'all';
+  /** `mine` shows the songs the student has attached a score to. */
+  category: Category | 'all' | 'mine';
   sort: SortKey;
 }
 

@@ -2,7 +2,6 @@ import './style.css';
 import createVerovioModule from 'verovio/wasm';
 import { VerovioToolkit } from 'verovio/esm';
 import * as Tone from 'tone';
-import JSZip from 'jszip';
 import {
   generateMusicXML,
   regenerateXMLFromNotes,
@@ -30,9 +29,9 @@ import {
 } from './scheduler';
 import {
   parseMusicXML,
-  parseMidi,
   isMidiFile,
   ProgressivePracticeSession,
+  type ParsedMusicXML,
 } from './upload';
 import { buildMusicXML, type NoteIdMapping } from './music/xml/builder';
 import { BUILT_IN_SONGS, getSongById } from './songs';
@@ -82,6 +81,8 @@ import { NoteStats } from './learn/noteStats';
 import { createNoteCardRenderer, type NotationToolkit } from './learn/noteCard';
 import { CatalogView } from './catalog/catalogView';
 import { loadCatalog } from './catalog';
+import { ScoreStore } from './scores/scoreStore';
+import { parseStoredScore, readScoreFile, scoreIdForData } from './scores/scoreImport';
 import { ALL_LESSONS } from './lessons/curriculum';
 import { LessonPlayer } from './lessons/lessonPlayer';
 import { LessonProgress } from './lessons/lessonProgress';
@@ -169,6 +170,10 @@ const gameStore = new GameStore({
 const game = new GameController({ store: gameStore, toasts: new ToastCenter() });
 let gameHud: GameHud | null = null;
 let progressView: ProgressView | null = null;
+const scoreStore = new ScoreStore();
+/** The stored score being practised, and the name it is shown with (a library song's name, or the file's). */
+let currentScoreId: string | null = null;
+let currentScoreTitle: string | null = null;
 const lessonProgress = new LessonProgress(ALL_LESSONS.map((lesson) => lesson.id));
 /** Steps repeated since the song was started, for its stars. */
 let practiceRetries = 0;
@@ -223,7 +228,8 @@ async function init() {
   updateVerovioOptions();
 
   // Try to restore previous practice session, or generate new music
-  if (!loadPracticeState()) {
+  await Promise.race([scoreStore.ready(), new Promise((resolve) => setTimeout(resolve, 2000))]);
+  if (!(await loadPracticeState())) {
     generateAndRender();
   }
 
@@ -1169,7 +1175,16 @@ function setupNavigation(learn: LearnHandle) {
       };
     },
   });
+  const scoreShelf = {
+    has: (songId: string) => scoreStore.has(songId),
+    count: () => scoreStore.count(),
+    add: (target: ScoreTarget) => pickScoreFile(target),
+    practise: (scoreId: string) => void practiseStoredScore(scoreId),
+    remove: (scoreId: string) => scoreStore.remove(scoreId),
+    onChange: (listener: () => void) => scoreStore.onChange(listener),
+  };
   const songs = new SongsView({
+    scores: { ...scoreShelf, list: () => scoreStore.list(), persistent: () => scoreStore.persistent() },
     songs: BUILT_IN_SONGS,
     onChoose: (songId) => {
       loadBuiltInSong(songId);
@@ -1235,7 +1250,8 @@ function setupNavigation(learn: LearnHandle) {
       loadBuiltInSong(songId);
       if (currentMode === 'practice') appShell.navigate('practice');
     },
-    chooseFile: () => document.getElementById('xmlUpload')?.click(),
+    chooseFile: () => pickScoreFile(),
+    scores: scoreShelf,
   });
   onLocaleChange(() => catalog.refresh());
   mainMenu = menu;
@@ -1996,8 +2012,9 @@ function onPieceComplete() {
         stop();
         updatePracticeDisplay();
         practicePanel?.setStatus(t('practice.status.finished'), 'good');
-        if (currentPracticeSongId) {
-          game.songFinished(currentPracticeSongId, practiceStars(practiceSession.getAllSteps().length, practiceRetries));
+        const finishedId = currentPracticeSongId ?? currentScoreId;
+        if (finishedId) {
+          game.songFinished(finishedId, practiceStars(practiceSession.getAllSteps().length, practiceRetries));
         }
         showCelebration();
         const progressInfo = document.getElementById('progressInfo');
@@ -2356,101 +2373,79 @@ function updateScrollPosition(time: number) {
 // PRACTICE MODE (UPLOADED FILES)
 // ============================================
 
-/**
- * Extract MusicXML content from an MXL (compressed) file.
- * MXL files are ZIP archives containing the XML and a manifest.
- */
-async function extractMxlContent(file: File): Promise<string> {
-  const zip = await JSZip.loadAsync(file);
-
-  // MXL files contain a META-INF/container.xml that points to the main XML file
-  // Or we can look for common names like *.xml files
-  const containerFile = zip.file('META-INF/container.xml');
-
-  if (containerFile) {
-    // Parse container.xml to find the rootfile
-    const containerXml = await containerFile.async('string');
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(containerXml, 'text/xml');
-    const rootfileEl = doc.querySelector('rootfile');
-    const fullPath = rootfileEl?.getAttribute('full-path');
-
-    if (fullPath) {
-      const mainFile = zip.file(fullPath);
-      if (mainFile) {
-        return await mainFile.async('string');
-      }
-    }
-  }
-
-  // Fallback: look for any .xml file that's not in META-INF
-  for (const [path, zipEntry] of Object.entries(zip.files)) {
-    if (path.endsWith('.xml') && !path.startsWith('META-INF/') && !zipEntry.dir) {
-      return await zipEntry.async('string');
-    }
-  }
-
-  throw new Error('No MusicXML content found in MXL file');
+/** A library song the student attaches a file to. */
+interface ScoreTarget {
+  id: string;
+  title: string;
+  artist?: string;
 }
 
 /**
- * Handle file upload and enter practice mode.
- * Supports MusicXML (.xml, .musicxml), compressed MXL (.mxl), and MIDI (.mid, .midi) files.
+ * Opens a file picker of its own, so a cancelled choice leaves nothing behind, and practises the chosen
+ * file. With a target the file is kept under that library song; without one it is kept under its own id.
  */
-async function handleFileUpload(file: File) {
+function pickScoreFile(target?: ScoreTarget) {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.xml,.musicxml,.mxl,.mid,.midi';
+  input.addEventListener('change', () => {
+    const file = input.files?.[0];
+    if (!file) return;
+    if (isPlaying) stop();
+    void handleFileUpload(file, target);
+  });
+  input.click();
+}
+
+/**
+ * Reads a MusicXML, MXL or MIDI file, keeps it in the student's scores and starts practising it.
+ */
+async function handleFileUpload(file: File, target?: ScoreTarget) {
   try {
-    let parsed;
-
-    // Check file type and parse accordingly
-    if (isMidiFile(file.name)) {
-      // Parse MIDI file
-      const arrayBuffer = await file.arrayBuffer();
-      parsed = parseMidi(arrayBuffer);
-    } else if (file.name.toLowerCase().endsWith('.mxl')) {
-      // Parse compressed MusicXML
-      const xmlString = await extractMxlContent(file);
-      parsed = parseMusicXML(xmlString);
-    } else {
-      // Parse plain MusicXML
-      const xmlString = await file.text();
-      parsed = parseMusicXML(xmlString);
-    }
-
-    if (parsed.measures.length === 0) {
-      showNotice(t('error.noMeasures'), 8000);
-      return;
-    }
-
-    // Create practice session
-    practiceSession = new ProgressivePracticeSession(parsed);
-    currentMode = 'practice';
-    currentPracticeSongId = null; // Not a built-in song
-
-    // For MIDI files, we can't save as MusicXML for persistence
-    // (we'd need to regenerate it which loses info)
-    if (!isMidiFile(file.name)) {
-      const xmlString = file.name.toLowerCase().endsWith('.mxl')
-        ? await extractMxlContent(file)
-        : await file.text();
-      savePracticeMusic(xmlString);
-    }
-
-    // Update BPM to something reasonable for practice
-    setExerciseBpm(60);
-
-    // Update UI for practice mode
-    enterPracticeMode();
-
-    // Render first step
-    renderPracticeStep();
-
-    // Save practice state
-    savePracticeState();
+    const score = await readScoreFile(file);
+    const id = target?.id ?? scoreIdForData(score.data);
+    const title = target?.title ?? score.title;
+    const saved = await scoreStore.put({ id, title, artist: target?.artist, kind: score.kind, data: score.data });
+    if (!saved.ok) showNotice(t(saved.reason === 'full' ? 'scores.full' : 'scores.notSaved'), 8000);
+    else if (!scoreStore.persistent()) showNotice(t('scores.memoryOnly'), 8000);
+    startScore(score.parsed, { scoreId: saved.ok ? id : null, title });
   } catch (error) {
     console.error('Error parsing file:', error);
-    const fileTypes = isMidiFile(file.name) ? 'MIDI' : 'MusicXML or MXL';
-    showNotice(t('error.parse', { type: fileTypes }), 8000);
+    showNotice(t('error.parse', { type: isMidiFile(file.name) ? 'MIDI' : 'MusicXML or MXL' }), 8000);
   }
+}
+
+/** Practises a score that was kept earlier. */
+async function practiseStoredScore(scoreId: string) {
+  const stored = await scoreStore.get(scoreId);
+  if (!stored) {
+    showNotice(t('scores.notFound'), 6000);
+    return;
+  }
+  try {
+    const parsed = parseStoredScore(stored);
+    if (isPlaying) stop();
+    startScore(parsed, { scoreId, title: stored.title });
+  } catch (error) {
+    console.error('Error reading a stored score:', error);
+    showNotice(t('error.parse', { type: stored.kind === 'midi' ? 'MIDI' : 'MusicXML or MXL' }), 8000);
+  }
+}
+
+/** Starts the step-by-step practice of a score the student supplied. */
+function startScore(parsed: ParsedMusicXML, meta: { scoreId: string | null; title: string }) {
+  practiceSession = new ProgressivePracticeSession(parsed);
+  currentMode = 'practice';
+  currentPracticeSongId = null; // not a built-in song
+  currentScoreId = meta.scoreId;
+  currentScoreTitle = meta.title;
+  setExerciseBpm(60);
+  enterPracticeMode();
+  renderPracticeStep();
+  savePracticeState();
+  // from the library or the song list the music stand opens; the exercise screens are already there
+  const view = shell?.current();
+  if (shell && view !== 'practice' && view !== 'levels') shell.navigate('practice');
 }
 
 /**
@@ -2475,6 +2470,8 @@ function loadBuiltInSong(songId: string) {
     practiceSession = new ProgressivePracticeSession(parsed);
     currentMode = 'practice';
     currentPracticeSongId = songId; // Track which song for persistence
+    currentScoreId = null;
+    currentScoreTitle = null;
 
     // Set appropriate BPM based on difficulty
     const difficultyBpm = {
@@ -2511,7 +2508,7 @@ function loadBuiltInSong(songId: string) {
 /** The piece's name in the current language (built-in songs are translated; uploads keep their own title). */
 function practiceTitle(): string {
   const song = currentPracticeSongId ? getSongById(currentPracticeSongId) : undefined;
-  return song ? songTitle(song) : practiceSession?.getTitle() ?? '';
+  return song ? songTitle(song) : currentScoreTitle ?? practiceSession?.getTitle() ?? '';
 }
 
 /** "G major" in the chosen note-name system and language. */
@@ -2568,6 +2565,8 @@ function exitPracticeMode() {
   currentMode = 'levels';
   practiceSession = null;
   currentPracticeSongId = null;
+  currentScoreId = null;
+  currentScoreTitle = null;
 
   // Clear saved practice state
   clearPracticeState();
@@ -2759,8 +2758,10 @@ const PRACTICE_STATE_KEY = 'practiceState';
 const PRACTICE_MUSIC_KEY = 'practiceMusic';
 
 interface PracticeStateData {
-  type: 'song' | 'upload';
+  /** `upload` is what older versions saved; the music itself was kept in `practiceMusic`. */
+  type: 'song' | 'score' | 'upload';
   songId?: string;
+  scoreId?: string;
   stepIndex: number;
   bpm: number;
 }
@@ -2769,14 +2770,15 @@ interface PracticeStateData {
  * Save current practice state to localStorage.
  */
 function savePracticeState() {
-  if (!practiceSession || currentMode !== 'practice') {
+  if (!practiceSession || currentMode !== 'practice' || (!currentPracticeSongId && !currentScoreId)) {
     storageRemove(PRACTICE_STATE_KEY);
     return;
   }
 
   const state: PracticeStateData = {
-    type: currentPracticeSongId ? 'song' : 'upload',
+    type: currentPracticeSongId ? 'song' : 'score',
     songId: currentPracticeSongId || undefined,
+    scoreId: currentScoreId || undefined,
     stepIndex: practiceSession.getCurrentStepIndex(),
     bpm: bpm,
   };
@@ -2785,16 +2787,9 @@ function savePracticeState() {
 }
 
 /**
- * Save uploaded MusicXML content to localStorage.
- */
-function savePracticeMusic(xmlContent: string) {
-  storageSet(PRACTICE_MUSIC_KEY, xmlContent);
-}
-
-/**
  * Load saved practice state on startup.
  */
-function loadPracticeState(): boolean {
+async function loadPracticeState(): Promise<boolean> {
   const stateJson = storageGet(PRACTICE_STATE_KEY);
   if (!stateJson) return false;
 
@@ -2811,6 +2806,18 @@ function loadPracticeState(): boolean {
 
       practiceSession = new ProgressivePracticeSession(parsed);
       currentPracticeSongId = state.songId;
+      currentScoreId = null;
+      currentScoreTitle = null;
+    } else if (state.type === 'score' && state.scoreId) {
+      // The student's own score, kept in the browser
+      const stored = await scoreStore.get(state.scoreId);
+      if (!stored) return false;
+
+      const parsed = parseStoredScore(stored);
+      practiceSession = new ProgressivePracticeSession(parsed);
+      currentPracticeSongId = null;
+      currentScoreId = state.scoreId;
+      currentScoreTitle = stored.title;
     } else if (state.type === 'upload') {
       // Load cached uploaded music
       const cachedXml = storageGet(PRACTICE_MUSIC_KEY);
@@ -2821,6 +2828,8 @@ function loadPracticeState(): boolean {
 
       practiceSession = new ProgressivePracticeSession(parsed);
       currentPracticeSongId = null;
+      currentScoreId = null;
+      currentScoreTitle = null;
     } else {
       return false;
     }

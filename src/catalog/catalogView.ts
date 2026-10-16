@@ -2,7 +2,7 @@ import { storageGet, storageSet } from '../core/safeStorage';
 import { formatNumber, getLocale, t, usesPersianDigits, type MessageKey } from '../i18n';
 import { createBackButton } from '../menu/backButton';
 import { artistList, filterSongs, filterToQuery, queryToFilter, sortSongs } from './filter';
-import { listenUrl, sheetMusicUrl } from './links';
+import { freeScoresUrl, listenUrl, sheetMusicUrl } from './links';
 import {
   CATEGORIES,
   DEFAULT_FILTER,
@@ -14,6 +14,17 @@ import {
   type Level,
   type SortKey,
 } from './types';
+
+/** The student's own scores, as far as the library needs to know. */
+export interface ScoreShelf {
+  has(songId: string): boolean;
+  count(): number;
+  /** Opens a file picker; the host stores the file under this song and starts practising it. */
+  add(target: { id: string; title: string; artist: string }): void;
+  practise(songId: string): void;
+  remove(songId: string): Promise<void>;
+  onChange(listener: () => void): () => void;
+}
 
 export interface CatalogViewDeps {
   /** The whole library; the lists load the first time and are kept. */
@@ -29,6 +40,8 @@ export interface CatalogViewDeps {
   chooseFile(): void;
   /** How many songs one page shows. */
   pageSize?: number;
+  /** Without it the library has no score buttons. */
+  scores?: ScoreShelf;
 }
 
 const NOTE_KEY = 'ui.catalogNote';
@@ -91,6 +104,8 @@ export class CatalogView {
   private list: HTMLElement | null = null;
   /** What the artist suggestions were built for, so typing does not rebuild them. */
   private artistsFor = '';
+  /** The song whose score the student is being asked about removing. */
+  private removing: string | null = null;
 
   constructor(deps: CatalogViewDeps) {
     this.deps = deps;
@@ -151,7 +166,8 @@ export class CatalogView {
     this.kindsLabel = make('span', 'catalog-group-label');
     this.kinds = make('div', 'catalog-chips');
     this.kinds.setAttribute('role', 'group');
-    for (const cat of ['all', ...CATEGORIES] as const) {
+    const kinds: Array<Category | 'all' | 'mine'> = deps.scores ? ['all', ...CATEGORIES, 'mine'] : ['all', ...CATEGORIES];
+    for (const cat of kinds) {
       const chip = make('button', 'chip');
       chip.type = 'button';
       chip.dataset.cat = cat;
@@ -185,6 +201,7 @@ export class CatalogView {
     this.results = make('div', 'catalog-results');
 
     this.element.append(header, this.note, form, this.status, this.results);
+    deps.scores?.onChange(() => this.refresh());
     this.refresh();
   }
 
@@ -238,8 +255,9 @@ export class CatalogView {
     this.syncControls();
 
     for (const chip of Array.from(this.kinds.querySelectorAll<HTMLButtonElement>('.chip'))) {
-      const cat = chip.dataset.cat as Category | 'all';
-      chip.textContent = t(`catalog.cat.${cat}` as MessageKey);
+      const cat = chip.dataset.cat as Category | 'all' | 'mine';
+      const name = t(`catalog.cat.${cat}` as MessageKey);
+      chip.textContent = cat === 'mine' ? `${name} (${formatCount(this.deps.scores?.count() ?? 0)})` : name;
       chip.setAttribute('aria-pressed', String(this.filter.category === cat));
     }
     for (const chip of Array.from(this.levels.querySelectorAll<HTMLButtonElement>('.chip'))) {
@@ -321,7 +339,8 @@ export class CatalogView {
       return;
     }
 
-    this.matches = sortSongs(filterSongs(this.songs, this.filter), this.filter.sort, getLocale());
+    const isMine = (song: CatalogSong) => this.deps.scores?.has(song.id) ?? false;
+    this.matches = sortSongs(filterSongs(this.songs, this.filter, isMine), this.filter.sort, getLocale());
     const n = this.matches.length;
     this.count.textContent = n === 1 ? t('catalog.countOne') : t('catalog.count', { n: formatCount(n) });
     this.status.appendChild(this.count);
@@ -423,6 +442,21 @@ export class CatalogView {
     level.setAttribute('title', t('catalog.levelOf', { level: t(`catalog.level.${song.level}` as MessageKey) }));
 
     const actions = make('div', 'catalog-actions');
+    const scores = this.deps.scores;
+    const hasScore = Boolean(scores && !song.builtIn && scores.has(song.id));
+    if (hasScore && this.removing === song.id) {
+      actions.appendChild(this.confirmRemoval(song, name));
+      row.append(level, main, actions);
+      return row;
+    }
+    if (hasScore && scores) {
+      actions.appendChild(make('span', 'catalog-mine', t('scores.mine')));
+      const practise = make('button', 'catalog-practise', t('scores.practise'));
+      practise.type = 'button';
+      practise.setAttribute('aria-label', t('scores.practiseFor', { title: name }));
+      practise.addEventListener('click', () => scores.practise(song.id));
+      actions.appendChild(practise);
+    }
     if (song.builtIn) {
       const builtIn = song.builtIn;
       actions.appendChild(make('span', 'catalog-inapp', t('catalog.inApp')));
@@ -436,9 +470,54 @@ export class CatalogView {
       this.link('catalog-sheet', t('catalog.sheet'), sheetMusicUrl(song), t('catalog.sheetFor', { title: name })),
       this.link('catalog-listen', t('catalog.listen'), listenUrl(song), t('catalog.listenTo', { title: name }))
     );
+    const free = freeScoresUrl(song);
+    if (free) actions.appendChild(this.link('catalog-free', t('scores.free'), free, t('scores.freeFor', { title: name })));
+
+    if (scores && !song.builtIn) {
+      if (hasScore) {
+        const remove = make('button', 'catalog-remove', t('scores.remove'));
+        remove.type = 'button';
+        remove.setAttribute('aria-label', t('scores.removeFor', { title: name }));
+        remove.addEventListener('click', () => this.askRemove(song.id));
+        actions.appendChild(remove);
+      } else {
+        const add = make('button', 'catalog-add', t('scores.add'));
+        add.type = 'button';
+        add.setAttribute('aria-label', t('scores.addFor', { title: name }));
+        add.addEventListener('click', () => scores.add({ id: song.id, title: song.title, artist: song.artist }));
+        actions.appendChild(add);
+      }
+    }
 
     row.append(level, main, actions);
     return row;
+  }
+
+  /** "Remove your score of X?" with two buttons, in the row, so no dialog is needed. */
+  private confirmRemoval(song: CatalogSong, name: string): HTMLElement {
+    const box = make('div', 'catalog-confirm');
+    box.setAttribute('role', 'group');
+    box.appendChild(make('span', 'catalog-confirm-text', t('scores.removeAsk', { title: name })));
+    const yes = make('button', 'catalog-confirm-yes', t('scores.removeYes'));
+    yes.type = 'button';
+    yes.addEventListener('click', () => {
+      this.removing = null;
+      void this.deps.scores?.remove(song.id);
+    });
+    const keep = make('button', 'catalog-keep', t('scores.removeNo'));
+    keep.type = 'button';
+    keep.addEventListener('click', () => {
+      this.removing = null;
+      this.renderResults();
+    });
+    box.append(yes, keep);
+    return box;
+  }
+
+  private askRemove(songId: string): void {
+    this.removing = songId;
+    this.renderResults();
+    this.list?.querySelector<HTMLElement>(`[data-song="${songId}"] .catalog-keep`)?.focus();
   }
 
   private link(className: string, text: string, href: string, label: string): HTMLAnchorElement {

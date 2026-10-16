@@ -47,11 +47,18 @@ function artistText(song: CatalogSong): string {
   return text;
 }
 
-export function filterSongs(songs: readonly CatalogSong[], filter: CatalogFilter): CatalogSong[] {
+export function filterSongs(
+  songs: readonly CatalogSong[],
+  filter: CatalogFilter,
+  /** Which songs have a score of the student's own; needed for the kind "mine". */
+  isMine: (song: CatalogSong) => boolean = () => false
+): CatalogSong[] {
   const words = normalize(filter.text).split(' ').filter(Boolean);
   const artist = normalize(filter.artist);
   return songs.filter((song) => {
-    if (filter.category !== 'all' && song.category !== filter.category) return false;
+    if (filter.category === 'mine') {
+      if (!isMine(song)) return false;
+    } else if (filter.category !== 'all' && song.category !== filter.category) return false;
     if (filter.levels.length > 0 && !filter.levels.includes(song.level)) return false;
     if (artist && !artistText(song).includes(artist)) return false;
     if (words.length > 0) {
@@ -117,7 +124,7 @@ export function queryToFilter(query: string): CatalogFilter {
     text: params.get('q') ?? '',
     artist: params.get('artist') ?? '',
     levels: [...new Set(levels)].sort(),
-    category: (CATEGORIES as readonly string[]).includes(category) ? (category as Category) : 'all',
+    category: (CATEGORIES as readonly string[]).includes(category) ? (category as Category) : category === 'mine' ? 'mine' : 'all',
     sort: (SORT_KEYS as readonly string[]).includes(sort) ? (sort as SortKey) : DEFAULT_FILTER.sort,
   };
 }

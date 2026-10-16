@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { listenUrl, sheetMusicUrl } from '../catalog/links';
+import { freeScoresUrl, listenUrl, sheetMusicUrl } from '../catalog/links';
 import type { CatalogSong } from '../catalog/types';
 
 const pop: CatalogSong = { id: 'a', title: "Don't Stop Me Now", artist: 'Queen', level: 4, category: 'pop' };
@@ -25,6 +25,14 @@ describe('catalog links', () => {
     expect(url.searchParams.get('search_query')).toBe("Don't Stop Me Now Queen");
   });
 
+  it('searches Mutopia for free scores of classical works, and only for those', () => {
+    const url = new URL(freeScoresUrl(classical)!);
+    expect(url.origin).toBe('https://www.mutopiaproject.org');
+    expect(url.searchParams.get('searchingfor')).toBe('Für Elise Ludwig van Beethoven');
+    expect(freeScoresUrl(pop)).toBeNull();
+    expect(freeScoresUrl({ ...pop, category: 'persian' })).toBeNull();
+  });
+
   it('is safe for any title', () => {
     const odd = { ...pop, title: 'A&B=C #1 ?', artist: 'X/Y' };
     for (const url of [sheetMusicUrl(odd), listenUrl(odd)]) {
@@ -34,8 +42,8 @@ describe('catalog links', () => {
     expect(new URL(listenUrl(odd)).searchParams.get('search_query')).toBe('A&B=C #1 ? X/Y');
   });
 
-  it('only ever points at these three sites', () => {
-    const hosts = [sheetMusicUrl(pop), sheetMusicUrl(classical), listenUrl(pop)].map((u) => new URL(u).hostname);
-    expect(hosts).toEqual(['musescore.com', 'imslp.org', 'www.youtube.com']);
+  it('only ever points at these four sites', () => {
+    const hosts = [sheetMusicUrl(pop), sheetMusicUrl(classical), listenUrl(pop), freeScoresUrl(classical)!].map((u) => new URL(u).hostname);
+    expect(hosts).toEqual(['musescore.com', 'imslp.org', 'www.youtube.com', 'www.mutopiaproject.org']);
   });
 });

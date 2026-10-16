@@ -20,6 +20,16 @@ export function sheetMusicUrl(song: CatalogSong): string {
   return `https://musescore.com/sheetmusic?${search.toString()}`;
 }
 
+/**
+ * Free scores (MIDI and PDF) of classical works on the Mutopia Project, which collects public-domain and
+ * freely licensed editions. Other songs have none, so there is no link.
+ */
+export function freeScoresUrl(song: CatalogSong): string | null {
+  if (song.category !== 'classical') return null;
+  const search = new URLSearchParams({ searchingfor: query(song) });
+  return `https://www.mutopiaproject.org/cgibin/make-table.cgi?${search.toString()}`;
+}
+
 /** A YouTube search, to hear the song before learning it. */
 export function listenUrl(song: CatalogSong): string {
   const search = new URLSearchParams({ search_query: query(song) });

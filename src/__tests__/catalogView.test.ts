@@ -381,3 +381,152 @@ describe('CatalogView', () => {
     expect(titles(view)).toEqual(['Bohemian Rhapsody']);
   });
 });
+
+describe('CatalogView with scores of the student', () => {
+  function makeShelf(ids: string[] = []) {
+    const set = new Set(ids);
+    const listeners = new Set<() => void>();
+    const notify = () => listeners.forEach((fn) => fn());
+    return {
+      has: (id: string) => set.has(id),
+      count: () => set.size,
+      add: vi.fn(),
+      practise: vi.fn(),
+      remove: vi.fn(async (id: string) => {
+        set.delete(id);
+        notify();
+      }),
+      onChange: (fn: () => void) => {
+        listeners.add(fn);
+        return () => listeners.delete(fn);
+      },
+      give: (id: string) => {
+        set.add(id);
+        notify();
+      },
+    };
+  }
+
+  const letItBe = 'the-beatles-let-it-be';
+  const idOf = (view: CatalogView, suffix: string) => (view.element.querySelector(`[data-song$="${suffix}"]`) as HTMLElement).dataset.song!;
+
+  beforeEach(() => {
+    localStorage.clear();
+    document.body.replaceChildren();
+    setLocale('en');
+  });
+
+  it('offers to add a score to a song that has none, and tells the host which song', async () => {
+    const scores = makeShelf();
+    const { view } = setup({ scores });
+    await view.activate();
+    const row = q<HTMLElement>(view, `[data-song$="${letItBe}"]`);
+    const add = row.querySelector<HTMLButtonElement>('.catalog-add')!;
+    expect(add.textContent).toBe('Add my score');
+    expect(add.getAttribute('aria-label')).toBe('Add your own score for Let It Be');
+    add.click();
+    expect(scores.add).toHaveBeenCalledWith({ id: idOf(view, letItBe), title: 'Let It Be', artist: 'The Beatles' });
+  });
+
+  it('does not offer it where the notes are already in the app', async () => {
+    const { view } = setup({ scores: makeShelf() });
+    await view.activate();
+    expect(q(view, '[data-song$="ode-to-joy"] .catalog-add')).toBeNull();
+    expect(q(view, '[data-song$="ode-to-joy"] .catalog-play')).not.toBeNull();
+  });
+
+  it('does not offer it at all when the host has no score shelf', async () => {
+    const { view } = setup();
+    await view.activate();
+    expect(view.element.querySelector('.catalog-add')).toBeNull();
+    expect(view.element.querySelector('.chip[data-cat="mine"]')).toBeNull();
+  });
+
+  it('shows a score that was added: a badge and a Practise button instead of Add', async () => {
+    const scores = makeShelf();
+    const { view } = setup({ scores });
+    await view.activate();
+    scores.give(idOf(view, letItBe));
+    const row = q<HTMLElement>(view, `[data-song$="${letItBe}"]`);
+    expect(row.querySelector('.catalog-mine')!.textContent).toBe('My score');
+    expect(row.querySelector('.catalog-add')).toBeNull();
+    const practise = row.querySelector<HTMLButtonElement>('.catalog-practise')!;
+    expect(practise.textContent).toBe('Practise');
+    expect(practise.getAttribute('aria-label')).toBe('Practise Let It Be from your score');
+    practise.click();
+    expect(scores.practise).toHaveBeenCalledWith(idOf(view, letItBe));
+  });
+
+  it('asks before removing a score, in the row, and keeps it when told to', async () => {
+    const scores = makeShelf();
+    const { view } = setup({ scores });
+    await view.activate();
+    const id = idOf(view, letItBe);
+    scores.give(id);
+    q<HTMLButtonElement>(view, `[data-song$="${letItBe}"] .catalog-remove`).click();
+    const row = q<HTMLElement>(view, `[data-song$="${letItBe}"]`);
+    expect(row.querySelector('.catalog-confirm')!.textContent).toContain('Remove your score of Let It Be?');
+    expect(scores.remove).not.toHaveBeenCalled();
+    expect(document.activeElement).toBe(row.querySelector('.catalog-keep'));
+    row.querySelector<HTMLButtonElement>('.catalog-keep')!.click();
+    expect(q(view, `[data-song$="${letItBe}"] .catalog-confirm`)).toBeNull();
+    expect(q(view, `[data-song$="${letItBe}"] .catalog-practise`)).not.toBeNull();
+  });
+
+  it('removes the score when the student confirms', async () => {
+    const scores = makeShelf();
+    const { view } = setup({ scores });
+    await view.activate();
+    const id = idOf(view, letItBe);
+    scores.give(id);
+    q<HTMLButtonElement>(view, `[data-song$="${letItBe}"] .catalog-remove`).click();
+    q<HTMLButtonElement>(view, `[data-song$="${letItBe}"] .catalog-confirm-yes`).click();
+    await flush();
+    expect(scores.remove).toHaveBeenCalledWith(id);
+    expect(q(view, `[data-song$="${letItBe}"] .catalog-mine`)).toBeNull();
+    expect(q(view, `[data-song$="${letItBe}"] .catalog-add`)).not.toBeNull();
+  });
+
+  it('has a "My scores" chip with the number of scores, which shows only those songs', async () => {
+    const scores = makeShelf();
+    const { view, deps } = setup({ scores });
+    await view.activate();
+    const chip = () => q<HTMLButtonElement>(view, '.chip[data-cat="mine"]');
+    expect(chip().textContent).toBe('My scores (0)');
+    scores.give(idOf(view, letItBe));
+    scores.give(idOf(view, 'imagine'));
+    expect(chip().textContent).toBe('My scores (2)');
+    chip().click();
+    expect(titles(view).sort()).toEqual(['Imagine', 'Let It Be']);
+    expect(deps.setQuery).toHaveBeenLastCalledWith('cat=mine');
+  });
+
+  it('says there are no scores yet when the chip is chosen and nothing was added', async () => {
+    const { view } = setup({ scores: makeShelf() }, 'cat=mine');
+    await view.activate();
+    expect(q(view, '.catalog-empty')).not.toBeNull();
+  });
+
+  it('links to free scores for classical works only', async () => {
+    const { view } = setup();
+    await view.activate();
+    const link = q<HTMLAnchorElement>(view, '[data-song$="elise"] .catalog-free');
+    expect(new URL(link.href).hostname).toBe('www.mutopiaproject.org');
+    expect(link.target).toBe('_blank');
+    expect(link.rel).toContain('noopener');
+    expect(link.textContent).toBe('Free scores');
+    expect(link.getAttribute('aria-label')).toBe('Free scores of Für Elise (opens in a new tab)');
+    expect(q(view, `[data-song$="${letItBe}"] .catalog-free`)).toBeNull();
+  });
+
+  it('writes the score buttons in Persian too', async () => {
+    setLocale('fa');
+    const scores = makeShelf();
+    const { view } = setup({ scores });
+    await view.activate();
+    expect(q(view, '.catalog-add').textContent).toBe('افزودن نت خودم');
+    scores.give(idOf(view, 'pol'));
+    expect(q(view, '[data-song$="pol"] .catalog-mine').textContent).toBe('نت من');
+    expect(q<HTMLButtonElement>(view, '.chip[data-cat="mine"]').textContent).toBe('نت‌های من (۱)');
+  });
+});
