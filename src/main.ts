@@ -45,6 +45,8 @@ import {
   formatKeyName, isNoteNameSystem,
 } from './i18n/noteNames';
 import { describeLesson, keyIdForLevel } from './lessonText';
+import { noteInput, type NoteSource } from './input/noteInput';
+import { ComputerKeyboard } from './input/computerKeyboard';
 
 // State
 let toolkit: VerovioToolkit;
@@ -160,6 +162,17 @@ async function init() {
   // Setup MIDI
   setupMIDI();
 
+  // Every input source (MIDI, computer keyboard, later the on-screen piano) arrives here
+  noteInput.onNoteOn.on(({ noteName, source }) => {
+    handleNoteOn(noteName);
+    playUserNote(noteName, source);
+  });
+  noteInput.onNoteOff.on(({ noteName, source }) => {
+    handleNoteOff(noteName);
+    stopUserNote(noteName, source);
+  });
+  new ComputerKeyboard(noteInput, document).attach();
+
   // Handle window resize - re-render existing music, don't generate new
   window.addEventListener('resize', () => {
     const wasMobile = isMobileMode();
@@ -256,7 +269,14 @@ function regenerateCurrentMusicXML() {
   currentNoteIdMapping = result.noteIdMapping;
 }
 
-async function initAudio() {
+// Pressing two keys quickly must not load the piano samples twice
+let audioInit: Promise<void> | null = null;
+function initAudio(): Promise<void> {
+  if (!audioInit) audioInit = loadAudio();
+  return audioInit;
+}
+
+async function loadAudio() {
   if (sampler) return;
 
   await Tone.start();
@@ -804,13 +824,35 @@ function handleMIDIMessage(event: MIDIMessageEvent) {
   const command = status & 0xf0;
 
   if (command === 0x90 && velocity > 0) {
-    const noteName = midiNoteToName(noteNum);
-    activeNotes.add(noteName);
-    checkNoteMatch(noteName);
+    noteInput.noteOn(midiNoteToName(noteNum), 'midi');
   } else if (command === 0x80 || (command === 0x90 && velocity === 0)) {
-    const noteName = midiNoteToName(noteNum);
-    activeNotes.delete(noteName);
+    noteInput.noteOff(midiNoteToName(noteNum), 'midi');
   }
+}
+
+// What used to happen inside handleMIDIMessage, now shared by every input source
+function handleNoteOn(noteName: string) {
+  activeNotes.add(noteName);
+  checkNoteMatch(noteName);
+}
+
+function handleNoteOff(noteName: string) {
+  activeNotes.delete(noteName);
+}
+
+// A MIDI keyboard makes its own sound; the on-screen piano and the computer keyboard use the app's piano.
+function playUserNote(noteName: string, source: NoteSource) {
+  if (source === 'midi') return;
+  if (!sampler) {
+    void initAudio();
+    return;
+  }
+  if (sampler.loaded) sampler.triggerAttack(noteName);
+}
+
+function stopUserNote(noteName: string, source: NoteSource) {
+  if (source === 'midi' || !sampler || !sampler.loaded) return;
+  sampler.triggerRelease(noteName);
 }
 
 function checkNoteMatch(playedNote: string) {
