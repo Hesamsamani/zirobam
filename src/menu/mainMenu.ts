@@ -1,7 +1,7 @@
 import { t, type MessageKey } from '../i18n';
 import type { View } from '../app/router';
 
-export type TileId = 'learn' | 'levels' | 'songs' | 'xylophone' | 'settings';
+export type TileId = 'learn' | 'levels' | 'songs' | 'xylophone' | 'metronome' | 'settings';
 
 export interface MenuTile {
   id: TileId;
@@ -9,7 +9,7 @@ export interface MenuTile {
   title: MessageKey;
   desc: MessageKey;
   /** A screen to open, or an action that opens a panel instead. */
-  target: { view: View } | { action: 'settings' };
+  target: { view: View } | { action: 'settings' | 'metronome' };
 }
 
 /** The tiles of the home screen, in reading order. */
@@ -18,12 +18,15 @@ export const MENU_TILES: readonly MenuTile[] = [
   { id: 'levels', icon: '🎼', title: 'menu.levels.title', desc: 'menu.levels.desc', target: { view: 'levels' } },
   { id: 'songs', icon: '🎵', title: 'menu.songs.title', desc: 'menu.songs.desc', target: { view: 'songs' } },
   { id: 'xylophone', icon: '🎶', title: 'menu.xylophone.title', desc: 'menu.xylophone.desc', target: { view: 'xylophone' } },
+  { id: 'metronome', icon: '⏱️', title: 'menu.metronome.title', desc: 'menu.metronome.desc', target: { action: 'metronome' } },
   { id: 'settings', icon: '⚙️', title: 'menu.settings.title', desc: 'menu.settings.desc', target: { action: 'settings' } },
 ];
 
 export interface MainMenuDeps {
   navigate(view: View): void;
   openSettings(): void;
+  /** Opens the floating metronome window. Runs straight from the click, as browsers require. */
+  openMetronome(): void;
   /** The player's current level as it should be shown, for example "3b" or "۳b". */
   levelLabel(): string;
 }
@@ -76,6 +79,8 @@ export class MainMenu {
     button.addEventListener('click', (event) => {
       if ('view' in def.target) {
         this.deps.navigate(def.target.view);
+      } else if (def.target.action === 'metronome') {
+        this.deps.openMetronome();
       } else {
         // The page closes the options panel on any click outside it; this click is the one that opens it
         event.stopPropagation();

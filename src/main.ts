@@ -42,6 +42,10 @@ import { MainMenu } from './menu/mainMenu';
 import { SongsView } from './menu/songsView';
 import { XylophoneView } from './xylophone/xylophoneView';
 import { XyloSound } from './xylophone/xyloSound';
+import { TempoStore } from './metronome/tempoStore';
+import { MetronomeEngine } from './metronome/metronomeEngine';
+import { MetronomePanel } from './metronome/metronomePanel';
+import { FloatingWindow } from './metronome/floatingWindow';
 import {
   t, initLocale, setLocale, getLocale, onLocaleChange, applyTranslations,
   formatNumber, setPersianDigits, isLocale,
@@ -108,6 +112,8 @@ let selectedMidiInput: string | null = storageGet('midiDeviceId');
 let bpm = 30;
 let metronomeEnabled = true;
 let metronomeVolume = sliderToDb(50); // dB base for metronome; the slider starts at 50
+/** Tempo, click on/off and volume are shared with the floating metronome window through this store. */
+const tempoStore = new TempoStore();
 let masterVolume = sliderToDb(80, true); // dB for master output; the slider starts at 80
 
 // Store the current piece's XML
@@ -370,6 +376,17 @@ async function loadAudio() {
 }
 
 const clickVoice = new ClickVoice();
+const metronomeEngine = new MetronomeEngine(tempoStore, clickVoice);
+let metronomePanel: MetronomePanel | null = null;
+let metronomeWindow: FloatingWindow | null = null;
+
+/** The one way to change the exercise tempo: keeps the field, the exercise and the metronome window in step. */
+function setExerciseBpm(value: number | string) {
+  bpm = clampBpm(value);
+  const input = document.getElementById('bpm') as HTMLInputElement | null;
+  if (input) input.value = String(bpm);
+  tempoStore.setBpm(bpm);
+}
 
 /** `time` is the audio time Tone.js passes to the Transport callback. */
 function playMetronomeClick(subdivisionInBeat: number, time: number) {
@@ -410,8 +427,7 @@ function generateAndRender() {
     const currentBpm = getCurrentBpm();
     // Only update if this is a new level (BPM resets)
     if (currentBpm === suggestedBpm) {
-      bpm = suggestedBpm;
-      bpmInput.value = String(suggestedBpm);
+      setExerciseBpm(suggestedBpm);
       setBpm(suggestedBpm);
     }
   }
@@ -940,7 +956,56 @@ function openOptionsPanel() {
 }
 
 /** Builds the home and song screens and decides what each screen needs when it opens or closes. */
+/** The floating metronome: its panel, the window it lives in, and the link to the exercise tempo. */
+function setupMetronomeWindow() {
+  const panel = new MetronomePanel({
+    store: tempoStore,
+    engine: metronomeEngine,
+    prepareAudio: () => void Tone.start(),
+  });
+  const floating = new FloatingWindow({
+    content: panel.element,
+    title: () => t('metro.title'),
+    closeLabel: () => t('metro.close'),
+    dragLabel: () => t('metro.drag'),
+  });
+  metronomePanel = panel;
+  metronomeWindow = floating;
+
+  // The window changes the tempo and volume; the exercise follows
+  tempoStore.onChange((state, key) => {
+    if (key === 'bpm' && state.bpm !== bpm) {
+      bpm = state.bpm;
+      const input = document.getElementById('bpm') as HTMLInputElement | null;
+      if (input) input.value = String(bpm);
+      setBpm(bpm);
+    }
+    if (key === 'volume') {
+      metronomeVolume = sliderToDb(state.volume);
+      const slider = document.getElementById('metronomeVolume') as HTMLInputElement | null;
+      if (slider) slider.value = String(state.volume);
+    }
+  });
+  tempoStore.setBpm(bpm); // the exercise tempo is the starting point
+
+  const popout = document.getElementById('metronomePopout');
+  popout?.addEventListener('click', () => {
+    void Tone.start();
+    void floating.toggle();
+  });
+  floating.onChange((open) => {
+    popout?.classList.toggle('active', open);
+    popout?.setAttribute('aria-pressed', String(open));
+  });
+  onLocaleChange(() => {
+    panel.refresh();
+    floating.refresh();
+  });
+  onNoteNamesChange(() => panel.refresh());
+}
+
 function setupNavigation(learn: LearnHandle) {
+  setupMetronomeWindow();
   const router = new Router();
   const appShell = new AppShell(router);
   shell = appShell;
@@ -948,6 +1013,10 @@ function setupNavigation(learn: LearnHandle) {
   const menu = new MainMenu({
     navigate: (view) => appShell.navigate(view),
     openSettings: openOptionsPanel,
+    openMetronome: () => {
+      void Tone.start(); // unlock audio now, while the click is fresh
+      void metronomeWindow?.open();
+    },
     levelLabel: () => localizeLevel(getFullLevelString()),
   });
   const songs = new SongsView({
@@ -1216,13 +1285,13 @@ function setupControls() {
   }
 
   bpmInput.addEventListener('change', () => {
-    bpm = clampBpm(bpmInput.value);
-    bpmInput.value = String(bpm); // show the tempo that is actually used
+    setExerciseBpm(bpmInput.value); // also shows the tempo that is actually used
     setBpm(bpm); // Sync with musicGenerator's tempo tracking
   });
 
   metronomeCheckbox.addEventListener('change', () => {
     metronomeEnabled = metronomeCheckbox.checked;
+    tempoStore.setEnabled(metronomeEnabled);
     // Sync the toolbar button state
     const metronomeBtn = document.getElementById('metronomeToggle');
     if (metronomeBtn) {
@@ -1238,6 +1307,7 @@ function setupControls() {
       const isActive = metronomeToggle.classList.toggle('active');
       metronomeToggle.setAttribute('aria-pressed', String(isActive));
       metronomeEnabled = isActive;
+      tempoStore.setEnabled(isActive);
       // Sync the options panel checkbox
       if (metronomeCheckbox) {
         metronomeCheckbox.checked = isActive;
@@ -1253,6 +1323,7 @@ function setupControls() {
       // Slider is 0-100, map to -40dB to 0dB
       const sliderValue = parseInt(metronomeVolumeSlider.value);
       metronomeVolume = sliderToDb(sliderValue);
+      tempoStore.setVolume(sliderValue);
     });
   }
 
@@ -1404,9 +1475,7 @@ function setupControls() {
       if (shouldIncreaseTempo()) {
         increaseTempo();
         const newBpm = getCurrentBpm();
-        bpm = newBpm;
-        const bpmInputEl = document.getElementById('bpm') as HTMLInputElement;
-        if (bpmInputEl) bpmInputEl.value = String(newBpm);
+        setExerciseBpm(newBpm);
         updateLevelDisplay();
       } else {
         if (isPlaying) stop();
@@ -1537,6 +1606,8 @@ async function start() {
   setStarting(false);
 
   isPlaying = true;
+  metronomeEngine.stop(); // the exercise has its own metronome
+  metronomePanel?.setExerciseRunning(true);
   const playPauseBtn = document.getElementById('playPause')!;
   playPauseBtn.classList.add('playing');
   playPauseBtn.setAttribute('aria-label', t('control.stop'));
@@ -1593,6 +1664,9 @@ function scheduleMusic(countoffTotal: number) {
 
     const eventId = Tone.getTransport().schedule((time) => {
       playMetronomeClick(subInBeat, time);
+      if (subInBeat === 0) {
+        metronomePanel?.pulse(beatNumber % currentTimeSig.beats, currentTimeSig.beats);
+      }
 
       // Handle countoff display updates
       // Show 4, 3, 2, 1 on each beat (beatNumber 0, 1, 2, 3)
@@ -1759,6 +1833,7 @@ function stop() {
   startToken++;
   setStarting(false);
   isPlaying = false;
+  metronomePanel?.setExerciseRunning(false);
   isCountingOff = false;
   const playPauseBtn = document.getElementById('playPause')!;
   playPauseBtn.classList.remove('playing');
@@ -2120,9 +2195,7 @@ async function handleFileUpload(file: File) {
     }
 
     // Update BPM to something reasonable for practice
-    bpm = 60;
-    const bpmInput = document.getElementById('bpm') as HTMLInputElement;
-    if (bpmInput) bpmInput.value = '60';
+    setExerciseBpm(60);
 
     // Update UI for practice mode
     enterPracticeMode();
@@ -2168,9 +2241,7 @@ function loadBuiltInSong(songId: string) {
       easy: 70,
       intermediate: 80,
     };
-    bpm = difficultyBpm[song.difficulty] || 60;
-    const bpmInput = document.getElementById('bpm') as HTMLInputElement;
-    if (bpmInput) bpmInput.value = String(bpm);
+    setExerciseBpm(difficultyBpm[song.difficulty] || 60);
 
     // Update UI for practice mode
     enterPracticeMode();
@@ -2666,9 +2737,7 @@ function loadPracticeState(): boolean {
     practiceSession.goToStep(state.stepIndex);
 
     // Restore BPM
-    bpm = state.bpm;
-    const bpmInput = document.getElementById('bpm') as HTMLInputElement;
-    if (bpmInput) bpmInput.value = String(bpm);
+    setExerciseBpm(state.bpm);
 
     // Enter practice mode
     currentMode = 'practice';

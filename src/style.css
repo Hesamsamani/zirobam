@@ -2342,3 +2342,292 @@ html[dir='rtl'] .back-btn {
     animation: none;
   }
 }
+
+/* ============================================
+   FLOATING METRONOME
+   ============================================ */
+.popout-btn {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.popout-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+}
+
+.popout-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.popout-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+body.metro-pip {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg-warm);
+}
+
+.metro-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px 16px;
+  color: var(--text);
+  font-family: var(--font-sans);
+}
+
+.metro-title {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.metro-tempo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.metro-reading {
+  line-height: 1;
+  text-align: center;
+}
+
+.metro-bpm {
+  font-size: 3rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.metro-unit {
+  display: block;
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.metro-step {
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 50%;
+  color: var(--text);
+  font: inherit;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.metro-step:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.metro-slider,
+.metro-volume {
+  width: 100%;
+  accent-color: var(--accent-light);
+}
+
+.metro-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.metro-toggle,
+.metro-tap {
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.metro-toggle {
+  flex: 1;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.metro-panel[data-running='true'] .metro-toggle {
+  background: var(--wrong);
+  border-color: var(--wrong);
+}
+
+.metro-panel button:disabled,
+.metro-panel input:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.metro-panel button:focus-visible,
+.metro-panel input:focus-visible {
+  outline: 2px solid var(--current);
+  outline-offset: 2px;
+}
+
+.metro-dots {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  min-height: 20px;
+}
+
+.metro-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  transition: transform 0.05s ease, background 0.05s ease;
+}
+
+.metro-dot.accent {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35);
+}
+
+.metro-dot[data-on='true'] {
+  background: var(--current);
+  transform: scale(1.35);
+}
+
+.metro-dot.accent[data-on='true'] {
+  background: var(--correct);
+}
+
+.metro-beats {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.metro-chip {
+  min-width: 40px;
+  padding: 5px 10px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  color: var(--text-muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.metro-chip[aria-pressed='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.metro-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.metro-volume-row .metro-volume {
+  flex: 1;
+}
+
+.metro-status {
+  min-height: 1.2em;
+  margin: 0;
+  color: var(--current);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.metro-float {
+  position: fixed;
+  z-index: 400;
+  width: 280px;
+  background: var(--surface);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.55);
+  max-height: calc(100vh - 16px);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.metro-float-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px 6px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+
+.metro-float-title {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.metro-float-close {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.metro-float-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text);
+}
+
+.metro-float .metro-title {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .metro-dot {
+    transition: none;
+  }
+}
+
+/* SVG text anchors mirror in right-to-left pages, which clipped the "123" icon */
+.fingering-btn svg {
+  direction: ltr;
+}
+
+/* Phones: seven buttons fit on the second row of the control bar */
+@media (max-width: 820px) {
+  #controlBar {
+    column-gap: 10px;
+  }
+}

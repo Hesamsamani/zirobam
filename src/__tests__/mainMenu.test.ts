@@ -6,10 +6,11 @@ import type { View } from '../app/router';
 function setup(level = '3b') {
   const navigate = vi.fn<(view: View) => void>();
   const openSettings = vi.fn();
-  const menu = new MainMenu({ navigate, openSettings, levelLabel: () => level });
+  const openMetronome = vi.fn();
+  const menu = new MainMenu({ navigate, openSettings, openMetronome, levelLabel: () => level });
   document.body.replaceChildren(menu.element);
   const tile = (id: string) => menu.element.querySelector<HTMLButtonElement>(`[data-tile="${id}"]`)!;
-  return { menu, navigate, openSettings, tile };
+  return { menu, navigate, openSettings, openMetronome, tile };
 }
 
 describe('MainMenu', () => {
@@ -42,7 +43,7 @@ describe('MainMenu', () => {
 
   it('offers learning, levels, songs and settings', () => {
     const ids = MENU_TILES.map((tileDef) => tileDef.id);
-    expect(ids).toEqual(expect.arrayContaining(['learn', 'levels', 'songs', 'xylophone', 'settings']));
+    expect(ids).toEqual(expect.arrayContaining(['learn', 'levels', 'songs', 'xylophone', 'metronome', 'settings']));
   });
 
   it('tells which level the player is on', () => {
@@ -66,6 +67,14 @@ describe('MainMenu', () => {
     expect(navigate).not.toHaveBeenCalled();
   });
 
+  it('opens the floating metronome instead of a screen for the metronome tile', () => {
+    const { tile, navigate, openMetronome, openSettings } = setup();
+    tile('metronome').click();
+    expect(openMetronome).toHaveBeenCalledTimes(1);
+    expect(openSettings).not.toHaveBeenCalled();
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
   it('does not let the settings click reach the page, which closes the panel on outside clicks', () => {
     const { tile } = setup();
     const outside = vi.fn();
@@ -78,7 +87,7 @@ describe('MainMenu', () => {
 
   it('writes the texts again in the new language and level on refresh()', () => {
     let level = '1a';
-    const menu = new MainMenu({ navigate: () => {}, openSettings: () => {}, levelLabel: () => level });
+    const menu = new MainMenu({ navigate: () => {}, openSettings: () => {}, openMetronome: () => {}, levelLabel: () => level });
     document.body.replaceChildren(menu.element);
     setLocale('fa');
     level = '۴c';

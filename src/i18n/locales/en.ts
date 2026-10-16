@@ -195,6 +195,8 @@ export const en = {
   'menu.settings.desc': 'Language, note names, sound and MIDI',
   'menu.xylophone.title': 'Xylophone',
   'menu.xylophone.desc': 'Play the bars with one row of your keyboard',
+  'menu.metronome.title': 'Metronome',
+  'menu.metronome.desc': 'A small floating window that stays on top',
   'songs.title': 'Songs',
   'songs.subtitle': 'Choose a melody. You practise it a few bars at a time.',
   'options.songsIntermediate': 'Intermediate',
@@ -228,6 +230,23 @@ export const en = {
   'xylo.mistakes': 'Wrong keys: {n}',
   'xylo.stars': '{n} of 3 stars',
   'xylo.bar': 'Bar {name}, key {key}',
+
+  // Metronome window
+  'metro.title': 'Metronome',
+  'metro.bpm': 'BPM',
+  'metro.slower': 'Slower',
+  'metro.faster': 'Faster',
+  'metro.tempo': 'Tempo',
+  'metro.tap': 'Tap',
+  'metro.start': 'Start',
+  'metro.stop': 'Stop',
+  'metro.beats': 'Beats per bar',
+  'metro.accent': 'Accent the first beat',
+  'metro.volume': 'Volume',
+  'metro.following': 'Following the exercise',
+  'metro.popout': 'Floating metronome',
+  'metro.close': 'Close the metronome',
+  'metro.drag': 'Drag to move',
 } as const;
 
 export type MessageKey = keyof typeof en;
