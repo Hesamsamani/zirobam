@@ -131,7 +131,7 @@ This is the owner's personal fork. Design: `docs/superpowers/specs/2026-10-16-bi
 | `src/input/noteInput.ts` | The hub every note source emits into (`midi`, `screen`, `computer`, later `microphone`) |
 | `src/input/computerKeyboard.ts`, `onScreenPiano.ts` | Keyboard by physical key, clickable piano |
 | `src/rendering/noteLabels.ts` | Names under noteheads (spelling comes from Verovio's sounding pitch via `spellFromMidi`) |
-| `src/learn/` | `noteStats`, `noteScheduler`, `nameTheNote` (pure logic); `noteCard`, `learnView`, `lessons` (screens) |
+| `src/learn/` | `noteStats`, `noteScheduler`, `nameTheNote` (pure logic); `noteCard`, `learnView` (the quiz only) |
 | `src/core/safeStorage.ts` | `storageGet/Set/Remove`: localStorage that never throws. Use it instead of `localStorage` in app code |
 | `src/core/tempo.ts`, `volume.ts`, `passRules.ts` | `clampBpm`, slider-to-dB mapping, `didPassPiece` (a piece only counts if it was played) |
 | `src/input/shortcuts.ts` | `isSpaceReserved`: where the global Space shortcut must stay out of the way |
@@ -142,9 +142,34 @@ This is the owner's personal fork. Design: `docs/superpowers/specs/2026-10-16-bi
 
 ### Test hooks and commands
 
-- `#learnView` carries `data-panel` (`quiz` or `lessons`), `data-pitch` (the note asked) and `data-result` (`correct` or `wrong`, absent between questions).
+- `#learnView` carries `data-panel` (always `quiz` now; the lessons have their own screen), `data-pitch` (the note asked) and `data-result` (`correct` or `wrong`, absent between questions).
 - `document` fires a `trainer:beat` CustomEvent for every beat that is played and highlighted. `detail` = `{ beatIndex, time, pitches, noteIds, audioTime }` (`audioTime` is on the audio clock, immune to a busy main thread). The end-to-end playback tests use it instead of console logs, which the app no longer prints.
 - `#playPause` has `aria-busy="true"` while the piano sounds load; `#notice` is the status message element.
-- Unit: `npm test` (340+ tests). End to end: `npx playwright test` (needs `npm run dev` or lets Playwright start it). All end-to-end tests pass on all three projects; the 13 failures seen at the start of the fork were stale tests (see `docs/bug-hunt-2026-10-16.md`).
+- Unit: `npm test` (960+ tests). End to end: `npx playwright test` (needs `npm run dev` or lets Playwright start it). About 500 end-to-end tests pass on all three projects (desktop, Mobile Chrome, Mobile Chrome Landscape); the 13 failures seen at the start of the fork were stale tests (see `docs/bug-hunt-2026-10-16.md`).
 - Close the options panel in tests with `#optionsClose`, not by clicking the score: on phones the panel covers it.
 - Mobile control bar: at 820px and below it wraps onto two rows (end of `style.css`).
+
+### Module map (milestone 2: menu, lessons, library, 2026-10-16)
+
+| Path | Purpose |
+|---|---|
+| `src/app/router.ts`, `shell.ts` | Hash routes (`#/lessons/ID`, `#/catalog?filter`), `hashQuery()`; the shell shows the section whose `data-views` lists the current view and calls enter / leave / change hooks |
+| `src/menu/` | `mainMenu.ts` (tiles), `songsView.ts`, `backButton.ts` |
+| `src/practice/practicePanel.ts` | The song steps panel: measure map, jump buttons, "put it together" |
+| `src/songs/` | `index.ts` built-in songs; `songBuilder.ts` (compact notation `E4q F#4e Bb3h. rq |`, `~` tie, `n` natural); `library.ts` song specs; `songText.ts`; `songGroups.ts` |
+| `src/xylophone/` | Keyboard-row xylophone: `keyRows`, `xylophoneInput`, `xyloSound`, `xyloGame`, `songMelody`, `xylophoneView` |
+| `src/metronome/` | `tempoStore`, `metronomeEngine`, `metronomePanel`, `floatingWindow` (Document Picture-in-Picture with an in-page fallback), `clickVoice` |
+| `src/game/` | XP, ranks, streak and badges: `gameStore`, `achievements`, `gameController`, `toastCenter`, `gameHud`, `progressView` |
+| `src/lessons/` | The course. `unitNotes.ts`, `unitRhythm.ts`, `unitPiano.ts` hold every lesson with its English and Persian text side by side (`Bi`); `curriculum.ts` joins them; `lessonsView.ts` and `lessonBlocks.ts` draw them; `staffPicture`, `keysPicture`, `fingersPicture` are the pictures; `exampleXml.ts` builds the MusicXML of a picture; `exampleTimeline.ts` and `lessonPlayer.ts` make the Play buttons sound; `lessonProgress.ts` remembers what was read; `courseText.ts` fills in note tokens |
+| `src/catalog/` | The song library: `types`, `parse` (compact lists), `filter` (search, artist, level, kind, sort, address query), `links` (IMSLP, MuseScore, YouTube searches), `catalogView`; the lists are in `data/*.ts` and load lazily with `loadCatalog()` |
+
+### Writing lessons and catalog data
+
+- **Lessons:** edit a unit file. Write each text once in English and once in Persian (`p(en, fa)`). Note names in text are tokens: `{C}`, `{F#}`, `{Bb}`, `{C4}`; they follow the student's note-name system. Staff examples use the song notation (`C4q D4q E4h | G4w`), must fill their measures (or set `free`) and the tests build every one. Persian text must start with a Persian letter, use Persian digits and no dashes (`curriculum.test.ts` checks).
+- **Library:** a line `@ Artist | Artist in Persian | default level` starts an artist; songs are `Title | year | level | Title in Persian | built-in song id`. Only add songs you are sure of; leave the year out when unsure. `catalogData.test.ts` checks counts, duplicates, years, Persian letters and built-in links. Never add notes of copyrighted songs; link to sheet music instead.
+- **Addresses:** `#/lessons/ID` is a screen with a name (`router.ts` `NAMED_VIEWS`); the library keeps its filter in the query and writes it with `history.replaceState`, so filtering does not add history steps.
+
+### Tooling notes
+
+- Vite's dev server can serve stale CSS after quick edits; restart it if a rule seems missing.
+- Source files use CRLF on this machine; patch scripts must preserve it (scratch `patchlib` approach), and long `node -e` / heredoc one-liners lose backslashes in Git Bash. Write scripts to a file instead.

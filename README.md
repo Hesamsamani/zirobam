@@ -4,10 +4,17 @@ A personal study fork of [ftrain/sightreading](https://github.com/ftrain/sightre
 
 ## What this fork adds
 
-- **English and Persian interface**, with right-to-left layout for Persian text. The staff, the piano and the note buttons stay left-to-right. Choose the language in Options (the three-dot button).
-- **Three ways to name notes:** letters (C D E), solfège (Do Re Mi) and Persian solfège (دو ر می). The choice applies everywhere: level names, the piano, the quiz and, if you tick "Show note names on the staff", under every note. Sharps and flats that come from the key signature are included (F♯ in D major).
-- **Play without a MIDI keyboard.** The piano button opens an on-screen piano, and the computer keyboard plays notes too (table below). Keys are matched by position, so it also works with a Persian keyboard layout. Letters on the piano show which key plays which note.
-- **Learn the notes.** The book button opens five short lessons (the staff, clefs, middle C, ledger lines, note names) and a "Name the note" quiz: one note on a staff, seven answer buttons, or play the note on any input. Notes you miss come back more often, and five stages unlock after 20 answers at 90 percent.
+- **Main menu.** Lessons, Note quiz, Sight-reading levels, Songs, Song library, Xylophone, Metronome, Progress and Settings. Every screen has its own address (`#/lessons/octaves`, `#/catalog?artist=Queen`), so the Back button, reloads and shared links work.
+- **English and Persian interface**, with right-to-left layout for Persian text. The staff, the piano, the keyboard pictures and the note buttons stay left-to-right. Choose the language in Options (the three-dot button).
+- **Three ways to name notes:** letters (C D E), solfège (Do Re Mi) and Persian solfège (دو ر می). The choice applies everywhere: level names, the piano, the quiz, the lessons and, if you tick "Show note names on the staff", under every note.
+- **Play without a MIDI keyboard.** The piano button opens an on-screen piano, and the computer keyboard plays notes too (table below). Keys are matched by position, so it also works with a Persian keyboard layout.
+- **Lessons (36).** Three units: reading notes (staff, clefs, ledger lines, octaves, sharps and flats, key signatures), reading rhythm (beat, note values, rests, time signatures, counting, dotted notes, ties) and playing the piano (keyboard, finding notes, posture, fingering, five-finger position, both hands, touch, scales, pedals, practising). Each lesson has drawn staff examples with a Play button, clickable keyboards, hand pictures and "Try it" links. Read lessons are remembered.
+- **Note quiz.** "Name the note": one note on a staff, seven answer buttons, or play the note on any input. Notes you miss come back more often, and five stages unlock after 20 answers at 90 percent.
+- **Songs.** 23 built-in songs and exercises in groups by difficulty. A song is practised in small steps with a measure map, jump buttons and a "put it together" step. You can also practise from your own MusicXML or MIDI file.
+- **Song library.** About 4,400 songs by 277 artists (Persian pop and classics, international pop and rock from the 1950s to today, classical and traditional works, modern piano, film, game and anime music). Each song has an estimated level; filter by search, artist, level and kind of music. The library finds the sheet music for you (IMSLP for classical works, MuseScore for the rest); songs marked "In the app" play right inside it.
+- **Xylophone.** One row of the computer keyboard becomes a xylophone, left to right: free play, read and play, and play-along songs.
+- **Floating metronome.** A small always-on-top window (Document Picture-in-Picture in Chrome and Edge 116+, with a draggable panel as the fallback) that shares its tempo with the exercise.
+- **Rewards.** XP and ranks, a daily goal with a streak, 16 badges, a combo counter and stars for songs. Everything stays in the browser.
 - **Phones:** the control bar wraps onto two rows so every button, including Options, stays reachable.
 - **Planned:** microphone input for an acoustic instrument.
 
@@ -34,8 +41,9 @@ npm run build
 ## Known limitations
 
 - The piano sound is fetched from `tonejs.github.io` (needs internet; one external request after the first key press or Start).
-- Persian music terms (دیز, بمل, the level names) are waiting for the owner's review.
-- 13 upstream end-to-end tests fail in this environment exactly as they do on the original code (2 desktop playback tests and 11 on the phone profiles). None of them involve this fork's changes.
+- Persian music terms (دیز, بمل, the lesson texts, the level names) are waiting for the owner's review.
+- The song library lists titles, artists and an estimated level. It contains no notes of copyrighted songs: the notes come from the sheet-music links or from your own file. The lists were put together by hand, so a few details may be wrong, and the Persian list is shorter than the international one.
+- All unit tests (about 960) and all end-to-end tests (about 500, on desktop, phone and phone-landscape profiles) pass.
 - Audit warnings in dev tooling (Vite, Vitest, gh-pages) are not fixed yet; nothing in the shipped bundle is flagged.
 
 Design: [docs/superpowers/specs/2026-10-16-bilingual-note-trainer-design.md](docs/superpowers/specs/2026-10-16-bilingual-note-trainer-design.md). Why this base app was chosen: [research/candidates.md](research/candidates.md).
