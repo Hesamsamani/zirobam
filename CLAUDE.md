@@ -106,3 +106,16 @@ The timing system uses the music generator as the single source of truth:
 - Level progress is saved to localStorage
 - `visualGroups` is for SVG highlighting only, not timing
 - Level cap is 23 (10 C major levels + 13 key levels)
+
+## Fork notes (music-notes-trainer, bilingual)
+
+This is the owner's personal fork. Design: `docs/superpowers/specs/2026-10-16-bilingual-note-trainer-design.md`.
+
+- **Branch:** work happens on `bilingual`. The only remote is `upstream` and its push URL is set to `DISABLED-local-only`. Do not push or fork to GitHub unless the owner asks.
+- **Two languages, always together:** every new user-visible string gets a key in `src/i18n/locales/en.ts` and the same key in `fa.ts`. No hard-coded UI text. Persian text follows the persian-writing skill (natural wording, ZWNJ, «guillemets»).
+- **RTL rule:** only text and panels flip for Persian. The score (`#notation`), the staff and the piano keyboard stay `dir="ltr"`.
+- **Keyboard input uses `KeyboardEvent.code`** (physical keys), so it works with a Persian layout.
+- **Note names:** internal names stay letters (`C#4`, `Bb3`). Naming systems (letters / solfège / Persian solfège) are display only, via `src/i18n/noteNames.ts`.
+- **Don't add network dependencies** (CDNs, analytics). Fonts are self-hosted.
+- **Tests first:** new modules get Vitest tests before code; upstream tests must stay green (`npm test`); E2E with `npx playwright test`.
+- **Persian terminology** (دیز, بمل, solfège names) is pending the owner's review.

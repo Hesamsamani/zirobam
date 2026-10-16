@@ -1,4 +1,24 @@
-# Sight Reading Practice
+# Music Notes Trainer (English / فارسی)
+
+A personal study fork of [ftrain/sightreading](https://github.com/ftrain/sightreading), extended so a beginner can learn to read music notes in **English or Persian**, with or without a MIDI keyboard. Persian README: [README.fa.md](README.fa.md).
+
+## What this fork adds (work in progress)
+
+- English and Persian interface, with right-to-left layout for Persian text (the staff and keyboard stay left-to-right).
+- Note names as letters (C D E), solfège (Do Re Mi) or Persian solfège (دو ر می).
+- Play without a MIDI keyboard: on-screen piano and computer keyboard.
+- A beginner "Name the note" mode with short lessons and weak-note practice.
+- Planned: microphone input for an acoustic instrument.
+
+Design: [docs/superpowers/specs/2026-10-16-bilingual-note-trainer-design.md](docs/superpowers/specs/2026-10-16-bilingual-note-trainer-design.md). Why this base app was chosen: [research/candidates.md](research/candidates.md).
+
+## Credits and license
+
+Based on `ftrain/sightreading` at commit `05158c5` (LGPL-3.0). The original `LICENSE` is kept and this fork stays under LGPL-3.0. Changes made in this fork are the ones listed above and in the git history of the `bilingual` branch. The notation engine, [Verovio](https://www.verovio.org/), is LGPL-3.0 too.
+
+---
+
+# Sight Reading Practice (upstream README)
 
 **[Try it live](https://ftrain.github.io/sightreading)** | [GitHub](https://github.com/ftrain/sightreading)
 
