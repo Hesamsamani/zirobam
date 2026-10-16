@@ -106,6 +106,46 @@ test.describe('Practice steps', () => {
   });
 });
 
+test.describe('The song library', () => {
+  test('a new song opens in practice mode like the older ones', async ({ page }) => {
+    await openSong(page, 'frere-jacques');
+    await expect(page.locator('.score-title h1')).toHaveText('Frère Jacques');
+    await expect(page.locator('#lessonInfo')).toHaveText('G major');
+    await expect(page.locator('.pp-measure')).toHaveCount(8);
+    await expect(page.locator('#notation svg .note').first()).toBeVisible();
+    await page.locator('.pp-next').click();
+    await expect(page.locator('.pp-where')).toHaveText('Measures 1-2');
+  });
+
+  test('a waltz (3/4) and a song with sharps in the key both draw and step', async ({ page }) => {
+    for (const id of ['ex-waltz', 'yankee-doodle']) {
+      await page.goto('/');
+      await page.locator('#mainMenu [data-tile="songs"]').click();
+      await page.locator(`#songsView [data-song="${id}"]`).click();
+      await expect(page.locator('.pp-measure').first()).toBeVisible();
+      await expect(page.locator('#notation svg .note').first()).toBeVisible();
+      await page.locator('.pp-next').click();
+      await page.locator('.pp-next').click();
+      await expect(page.locator('#notation svg .note').first()).toBeVisible();
+    }
+  });
+
+  test('every song and exercise opens without an error', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await page.goto('/#/songs');
+    const ids = await page.locator('#songsView [data-song]').evaluateAll((els) => els.map((e) => (e as HTMLElement).dataset.song!));
+    expect(ids.length).toBeGreaterThanOrEqual(23);
+    for (const id of ids) {
+      await page.goto('/#/songs');
+      await page.locator(`#songsView [data-song="${id}"]`).click();
+      await expect(page.locator('.pp-measure').first(), id).toBeVisible();
+      await expect(page.locator('#notation svg .note').first(), id).toBeVisible();
+    }
+    expect(errors, errors.join('\n')).toEqual([]);
+  });
+});
+
 test.describe('Practice feedback', () => {
   test('playing nothing repeats the step and says how many notes were missed', async ({ page }) => {
     await openSong(page);
@@ -166,6 +206,7 @@ test.describe('Practice steps in Persian', () => {
     await expect(measure(page, 3)).toHaveText('۳');
     await expect(page.locator('.score-title h1')).not.toHaveText(/Mary Had/);
     await expect(page.locator('.score-title h1')).toContainText('مری');
+    await expect(page.locator('#lessonInfo')).toContainText('دو');
     expect(await page.locator('.pp-map').evaluate((el) => getComputedStyle(el).direction)).toBe('ltr');
     const first = await measure(page, 1).boundingBox();
     const last = await measure(page, 8).boundingBox();

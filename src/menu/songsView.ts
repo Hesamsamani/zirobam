@@ -1,13 +1,8 @@
-import { t, type MessageKey } from '../i18n';
+import { t } from '../i18n';
 import type { BuiltInSong } from '../songs';
+import { groupSongs } from '../songs/songGroups';
 import { songTitle } from '../songs/songText';
 import { createBackButton } from './backButton';
-
-const DIFFICULTIES: ReadonlyArray<{ id: BuiltInSong['difficulty']; label: MessageKey }> = [
-  { id: 'beginner', label: 'options.songsBeginner' },
-  { id: 'easy', label: 'options.songsEasy' },
-  { id: 'intermediate', label: 'options.songsIntermediate' },
-];
 
 export interface SongsViewDeps {
   songs: readonly BuiltInSong[];
@@ -50,14 +45,13 @@ export class SongsView {
     this.title.textContent = t('songs.title');
     this.subtitle.textContent = t('songs.subtitle');
     this.list.replaceChildren();
-    for (const difficulty of DIFFICULTIES) {
-      const songs = this.deps.songs.filter((song) => song.difficulty === difficulty.id);
-      if (songs.length === 0) continue;
+    for (const entry of groupSongs(this.deps.songs)) {
       const group = make('div', 'song-group');
+      group.dataset.group = entry.id;
       const heading = make('h3', 'song-group-title');
-      heading.textContent = t(difficulty.label);
+      heading.textContent = t(entry.label);
       const items = make('ul', 'song-list');
-      for (const song of songs) items.appendChild(this.buildSong(song));
+      for (const song of entry.songs) items.appendChild(this.buildSong(song));
       group.append(heading, items);
       this.list.appendChild(group);
     }

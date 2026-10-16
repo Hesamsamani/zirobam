@@ -7,11 +7,15 @@
  * @module songs
  */
 
+import { SONG_LIBRARY } from './library';
+
 export interface BuiltInSong {
   id: string;
   title: string;
   composer: string;
   difficulty: 'beginner' | 'easy' | 'intermediate';
+  /** What kind of piece it is. Exercises are listed apart from songs. Hand-written songs may leave it out. */
+  category?: 'nursery' | 'folk' | 'classical' | 'exercise';
   xml: string;
 }
 
@@ -493,7 +497,8 @@ const MINUET_IN_G: BuiltInSong = {
 };
 
 /**
- * All available built-in songs
+ * All available built-in songs: the five written out by hand above, then the library
+ * (see library.ts), which is built from a compact notation.
  */
 export const BUILT_IN_SONGS: BuiltInSong[] = [
   MARY_HAD_A_LITTLE_LAMB,
@@ -501,6 +506,7 @@ export const BUILT_IN_SONGS: BuiltInSong[] = [
   ODE_TO_JOY,
   HAPPY_BIRTHDAY,
   MINUET_IN_G,
+  ...SONG_LIBRARY,
 ];
 
 /**

@@ -266,6 +266,27 @@ export const en = {
   'practice.status.retryPlain': 'Not yet. Playing it again.',
   'practice.status.passed': 'Clean run. Next: {next}.',
   'practice.status.finished': 'Clean run. That was the last step.',
+
+  // More songs and exercises
+  'song.hotCrossBuns': 'Hot Cross Buns',
+  'song.auClair': 'Au Clair de la Lune',
+  'song.frereJacques': 'Frère Jacques',
+  'song.londonBridge': 'London Bridge',
+  'song.oldMacdonald': 'Old MacDonald',
+  'song.lightlyRow': 'Lightly Row',
+  'song.jingleBells': 'Jingle Bells',
+  'song.yankeeDoodle': 'Yankee Doodle',
+  'song.canonD': 'Canon in D (theme)',
+  'song.exCScale': 'C major scale',
+  'song.exFiveNotes': 'Five-note pattern',
+  'song.exChordNotes': 'C major chord notes',
+  'song.exOneNoteRhythm': 'Rhythm on one note',
+  'song.exThirds': 'Skipping in thirds',
+  'song.exWaltz': 'Waltz pattern',
+  'song.exGScale': 'G major scale',
+  'song.exFScale': 'F major scale',
+  'song.exEighthScale': 'Scale in eighth notes',
+  'songs.exercises': 'Exercises',
 } as const;
 
 export type MessageKey = keyof typeof en;

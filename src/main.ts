@@ -43,6 +43,7 @@ import { SongsView } from './menu/songsView';
 import { XylophoneView } from './xylophone/xylophoneView';
 import { PracticePanel } from './practice/practicePanel';
 import { songTitle } from './songs/songText';
+import { groupSongs } from './songs/songGroups';
 import { XyloSound } from './xylophone/xyloSound';
 import { TempoStore } from './metronome/tempoStore';
 import { MetronomeEngine } from './metronome/metronomeEngine';
@@ -713,6 +714,29 @@ function describeCurrentLesson(): string {
   const match = /^(\d+)([a-d])$/.exec(getFullLevelString());
   if (!match) return currentLessonDescription;
   return describeLesson(Number(match[1]), 'abcd'.indexOf(match[2]));
+}
+
+/** Fills the song list in the options panel (grouped, in the current language). */
+function populateSongSelect() {
+  const select = document.getElementById('songSelect') as HTMLSelectElement | null;
+  if (!select) return;
+  select.replaceChildren();
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.textContent = t('options.chooseSong');
+  select.appendChild(placeholder);
+  for (const group of groupSongs(BUILT_IN_SONGS)) {
+    const optgroup = document.createElement('optgroup');
+    optgroup.label = t(group.label);
+    for (const song of group.songs) {
+      const option = document.createElement('option');
+      option.value = song.id;
+      option.textContent = songTitle(song);
+      optgroup.appendChild(option);
+    }
+    select.appendChild(optgroup);
+  }
+  select.value = '';
 }
 
 const KEY_IDS = ['C', 'G', 'F', 'D', 'Bb', 'A', 'Eb', 'E', 'Ab', 'B', 'Db'];
@@ -1564,6 +1588,8 @@ function setupControls() {
     practicePanel?.refresh();
     populateLevelJump();
     populateKeySelect();
+    populateSongSelect();
+    // Practice
     const scoreTitle = document.querySelector('.score-title h1');
     if (currentMode === 'levels') {
       if (scoreTitle) scoreTitle.textContent = t('app.title');

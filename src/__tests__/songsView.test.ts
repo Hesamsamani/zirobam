@@ -41,14 +41,27 @@ describe('SongsView', () => {
     const { view } = setup();
     const buttons = view.element.querySelectorAll<HTMLButtonElement>('button.song-card');
     expect(buttons).toHaveLength(BUILT_IN_SONGS.length);
-    expect(Array.from(buttons).map((b) => b.dataset.song)).toEqual(BUILT_IN_SONGS.map((s) => s.id));
-    expect(buttons[0].textContent).toContain(t('song.maryLamb'));
+    expect(Array.from(buttons).map((b) => b.dataset.song).sort()).toEqual(BUILT_IN_SONGS.map((s) => s.id).sort());
+    expect(view.element.querySelector('[data-song="mary-lamb"]')!.textContent).toContain(t('song.maryLamb'));
   });
 
-  it('groups songs by difficulty and skips empty groups', () => {
+  it('groups songs by difficulty with the exercises last, and skips empty groups', () => {
     const { view } = setup();
     const headings = Array.from(view.element.querySelectorAll('h3')).map((h) => h.textContent);
-    expect(headings).toEqual([t('options.songsBeginner'), t('options.songsEasy')]);
+    expect(headings).toEqual([
+      t('options.songsBeginner'),
+      t('options.songsEasy'),
+      t('options.songsIntermediate'),
+      t('songs.exercises'),
+    ]);
+    const exercises = view.element.querySelectorAll('[data-group="exercises"] [data-song]');
+    expect(exercises.length).toBeGreaterThanOrEqual(8);
+    expect(view.element.querySelector('[data-group="beginner"] [data-song="ex-c-scale"]')).toBeNull();
+  });
+
+  it('leaves out a group that has no songs', () => {
+    const only = new SongsView({ songs: BUILT_IN_SONGS.filter((s) => s.id === 'mary-lamb'), onChoose: () => {}, onBack: () => {} });
+    expect(Array.from(only.element.querySelectorAll('h3')).map((h) => h.textContent)).toEqual([t('options.songsBeginner')]);
   });
 
   it('chooses a song when its button is pressed', () => {

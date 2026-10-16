@@ -97,7 +97,8 @@ test.describe('Songs', () => {
     await openMenu(page);
     await tile(page, 'songs').click();
     await expect(page.locator('#songsView')).toBeVisible();
-    await expect(page.locator('#songsView .song-card')).toHaveCount(5);
+    expect(await page.locator('#songsView .song-card').count()).toBeGreaterThanOrEqual(23);
+    await expect(page.locator('#songsView .song-group-title')).toHaveText(['Beginner', 'Easy', 'Intermediate', 'Exercises']);
 
     await page.locator('#songsView [data-song="twinkle"]').click();
     await expect(page).toHaveURL(/#\/practice$/);
@@ -127,6 +128,17 @@ test.describe('Songs', () => {
     await expect(page).toHaveURL(/#\/levels$/);
     await expect(page.locator('#practiceInfo')).toBeHidden();
     await expect(page.locator('#levelDisplay')).toBeVisible();
+  });
+
+  test('the options list offers the same songs in groups', async ({ page }) => {
+    await page.goto('/#/levels');
+    await page.waitForSelector('#notation svg');
+    await page.locator('#optionsToggle').click();
+    expect(await page.locator('#songSelect option').count()).toBeGreaterThanOrEqual(24);
+    await expect(page.locator('#songSelect optgroup')).toHaveCount(4);
+    await page.locator('#songSelect').selectOption('frere-jacques');
+    await expect(page).toHaveURL(/#\/practice$/);
+    await expect(page.locator('.score-title h1')).toHaveText('Frère Jacques');
   });
 
   test('the address #/practice without a song leads to the song list', async ({ page }) => {
