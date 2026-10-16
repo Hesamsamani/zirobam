@@ -4,6 +4,7 @@ export const en = {
   'options.title': 'Options',
   'options.language': 'Language',
   'progress.moreToAdvance': '{n} more to advance',
+  'key.major': '{tonic} major',
 } as const;
 
 export type MessageKey = keyof typeof en;

@@ -6,4 +6,5 @@ export const fa: Record<MessageKey, string> = {
   'options.title': 'تنظیمات',
   'options.language': 'زبان',
   'progress.moreToAdvance': '{n} تکرار دیگر تا مرحله‌ی بعد',
+  'key.major': '{tonic} ماژور',
 };
