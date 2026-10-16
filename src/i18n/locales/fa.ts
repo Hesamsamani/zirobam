@@ -532,5 +532,12 @@ export const fa: Record<MessageKey, string> = {
   'backup.err.nothing': 'چیزی در این فایل برای بازگردانی نیست.',
   'backup.err.read': 'خواندن فایل ممکن نشد.',
   'backup.err.failed': 'ساختن نسخه‌ی پشتیبان ممکن نشد.',
+  'options.credit': 'صدای پیانو: پیانوی بزرگ سالامندر، ساخته‌ی الکساندر هولم (CC BY 3.0).',
+  // Offline use and installing
+  'pwa.title': 'استفاده بدون اینترنت',
+  'pwa.offlineReady': 'برنامه و صدای پیانو در همین مرورگر ذخیره شده‌اند، پس بدون اینترنت هم کار می‌کند.',
+  'pwa.installHint': 'برنامه را در پنجره‌ی جداگانه، مثل یک برنامه‌ی رایانه یا گوشی، باز کنید.',
+  'pwa.install': 'نصب برنامه',
+  'pwa.installed': 'نصب شد. از میان برنامه‌های خود آن را باز کنید.',
   'catalog.cat.mine': 'نت‌های من',
 };

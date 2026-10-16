@@ -12,6 +12,7 @@ A personal study fork of [ftrain/sightreading](https://github.com/ftrain/sightre
 - **Note quiz.** "Name the note": one note on a staff, seven answer buttons, or play the note on any input. Notes you miss come back more often, and five stages unlock after 20 answers at 90 percent.
 - **Songs.** 45 built-in songs and exercises in groups by difficulty, 22 of them real public-domain tunes with their notes: carols (Silent Night, Joy to the World, O Come All Ye Faithful), folk songs (Amazing Grace, Auld Lang Syne, Greensleeves, Scarborough Fair, Danny Boy, When the Saints), children's songs and classical themes (Für Elise, Eine kleine Nachtmusik, Brahms' Lullaby). A song is practised in small steps with a measure map, jump buttons and a "put it together" step. You can also practise from your own MusicXML or MIDI file.
 - **My scores and the song maker.** Attach your own MusicXML, MXL or MIDI file to any library song (or open a file without a row) and practise from it; the file stays in this browser. "Write a song" lets you type or tap your own melody (any of 15 keys, 2/4, 3/4 or 4/4), shows it on the staff as you write, checks every measure and practises it like a built-in song.
+- **Offline and installable.** The production build works without internet and can be installed as an app (Options shows an Install button where the browser allows it).
 - **Backup and restore.** One button (in Options and under the progress) saves your XP, badges, lesson progress, settings and every score into a JSON file; another restores it, in any browser, after showing what the file contains and asking first. Files with the wrong marker, a newer version, unknown keys or odd scores are refused or trimmed.
 - **Song library.** About 4,570 songs by 287 artists (Persian pop and classics, international pop and rock from the 1950s to today, classical and traditional works, modern piano, film, game and anime music). Each song has an estimated level; filter by search, artist, level and kind of music. The library finds the sheet music for you (IMSLP for classical works, MuseScore for the rest); songs marked "In the app" play right inside it.
 - **Xylophone.** One row of the computer keyboard becomes a xylophone, left to right: free play, read and play, and play-along songs.
@@ -42,7 +43,8 @@ npm run build
 
 ## Known limitations
 
-- The piano sound is fetched from `tonejs.github.io` (needs internet; one external request after the first key press or Start).
+- The app needs no internet after its first load: the piano sounds, the fonts and every screen are served from the app's own files, and a service worker (production build only) keeps them in the browser. The development server (`npm run dev`) has no service worker, so there the app needs the dev server.
+- A new version of the app is used the next time it is opened after the update (the old files stay until then).
 - Persian music terms (دیز, بمل, the lesson texts, the level names) are waiting for the owner's review.
 - The song library lists titles, artists and an estimated level. It contains no notes of copyrighted songs: the notes come from the sheet-music links or from your own file. The lists were put together by hand, so a few details may be wrong, and the Persian list is shorter than the international one.
 - All unit tests (about 960) and all end-to-end tests (about 500, on desktop, phone and phone-landscape profiles) pass.
@@ -53,6 +55,8 @@ Design: [docs/superpowers/specs/2026-10-16-bilingual-note-trainer-design.md](doc
 ## Credits and license
 
 The notes of the public-domain songs were read from the LilyPond scores on English and German Wikipedia (CC BY-SA 4.0) and from The Session's ABC settings, compared with each other and with the well-known tunes; see `src/songs/libraryMore.ts`. The tests check the length of every measure and the first notes of every tune, so please tell us if a song sounds wrong anywhere else.
+
+Piano sounds: the Salamander Grand Piano by Alexander Holm, licensed CC BY 3.0 (copied from the Tone.js samples; see `public/samples/salamander/README.md`). Fonts: Inter and Crimson Pro through `@fontsource` and Vazirmatn (SIL OFL 1.1).
 
 Based on `ftrain/sightreading` at commit `05158c5` (LGPL-3.0). The original `LICENSE` is kept and this fork stays under LGPL-3.0. Changes made in this fork are the ones listed above and in the git history of the `bilingual` branch. The notation engine, [Verovio](https://www.verovio.org/), is LGPL-3.0 too.
 

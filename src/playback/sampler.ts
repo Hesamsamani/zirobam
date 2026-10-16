@@ -26,7 +26,7 @@ export interface SamplerConfig {
 // DEFAULT CONFIGURATION
 // ============================================
 
-const DEFAULT_BASE_URL = 'https://tonejs.github.io/audio/salamander/';
+const DEFAULT_BASE_URL = `${import.meta.env.BASE_URL}samples/salamander/`;
 
 const PIANO_SAMPLES: Record<string, string> = {
   A0: 'A0.mp3',

@@ -531,6 +531,13 @@ export const en = {
   'backup.err.nothing': 'There is nothing in this file to restore.',
   'backup.err.read': 'The file could not be read.',
   'backup.err.failed': 'The backup could not be made.',
+  'options.credit': 'Piano sounds: Salamander Grand Piano by Alexander Holm (CC BY 3.0).',
+  // Offline use and installing
+  'pwa.title': 'Offline use',
+  'pwa.offlineReady': 'The app and its piano sounds are saved in this browser, so it works without internet.',
+  'pwa.installHint': 'Open it in its own window, like an app on your computer or phone.',
+  'pwa.install': 'Install the app',
+  'pwa.installed': 'Installed. You can open it from your apps.',
   'catalog.cat.mine': 'My scores',
 } as const;
 

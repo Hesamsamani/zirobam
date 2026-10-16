@@ -39,6 +39,14 @@ import { hashQuery, Router, VIEWS, type View } from './app/router';
 import { AppShell } from './app/shell';
 import { MainMenu } from './menu/mainMenu';
 import { SongsView } from './menu/songsView';
+import '@fontsource/inter/latin-400.css';
+import '@fontsource/inter/latin-500.css';
+import '@fontsource/inter/latin-600.css';
+import '@fontsource/crimson-pro/latin-400.css';
+import '@fontsource/crimson-pro/latin-500.css';
+import '@fontsource/crimson-pro/latin-600.css';
+import { InstallPrompt } from './pwa/installPrompt';
+import { PwaPanel } from './pwa/pwaPanel';
 import { SongMakerView } from './songs/songMakerView';
 import { applyBackup, backupFileName, browserStorage, createBackup } from './backup/backup';
 import { BackupPanel, type BackupPanelDeps } from './backup/backupView';
@@ -453,7 +461,7 @@ async function loadAudio() {
       C8: 'C8.mp3',
     },
     release: 2, // Longer release for sustain
-    baseUrl: 'https://tonejs.github.io/audio/salamander/',
+    baseUrl: `${import.meta.env.BASE_URL}samples/salamander/`, // the app's own copy, so it plays without internet
   }).toDestination();
 
   await Tone.loaded();
@@ -1068,6 +1076,26 @@ function setupLearnMode(): LearnHandle {
   };
 }
 
+/** The browser's offer to install the app is kept from the first moment, because it comes only once, early. */
+const installPrompt = new InstallPrompt();
+
+/**
+ * Keeps the app in the browser so it opens without internet. Only the production build has a worker to register;
+ * the development server must always show the newest files.
+ */
+function registerServiceWorker(onReady: () => void) {
+  if (!import.meta.env.PROD || !('serviceWorker' in navigator)) return;
+  const register = () => {
+    navigator.serviceWorker
+      .register(`${import.meta.env.BASE_URL}sw.js`)
+      .then(() => navigator.serviceWorker.ready)
+      .then(onReady)
+      .catch((error) => console.warn('The app could not be saved for offline use:', error));
+  };
+  if (document.readyState === 'complete') register();
+  else window.addEventListener('load', register, { once: true });
+}
+
 function openOptionsPanel() {
   const panel = document.getElementById('optionsPanel');
   if (panel) panel.hidden = false;
@@ -1231,12 +1259,15 @@ function setupNavigation(learn: LearnHandle) {
     reload: () => void setTimeout(() => window.location.reload(), 900),
   };
   const optionsBackup = new BackupPanel(backupDeps, true);
-  document.querySelector('#optionsPanel .options-footer')?.before(optionsBackup.element);
+  const pwaPanel = new PwaPanel({ prompt: installPrompt });
+  document.querySelector('#optionsPanel .options-footer')?.before(pwaPanel.element, optionsBackup.element);
+  registerServiceWorker(() => pwaPanel.markOfflineReady());
   const progressBackup = new BackupPanel(backupDeps);
   progressBackup.element.classList.add('pv-backup');
   onLocaleChange(() => {
     optionsBackup.refresh();
     progressBackup.refresh();
+    pwaPanel.refresh();
   });
   const progress = new ProgressView({ store: gameStore, onBack: () => appShell.navigate('home'), footer: progressBackup.element });
   // The xylophone draws its staff notes with its own notation engine, so the quiz keeps its settings

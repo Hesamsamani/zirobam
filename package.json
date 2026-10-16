@@ -6,7 +6,7 @@
   "homepage": "https://ftrain.github.io/sightreading",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "tsc && vite build && node scripts/build-sw.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -27,6 +27,8 @@
     "vitest": "^4.0.15"
   },
   "dependencies": {
+    "@fontsource/crimson-pro": "^5.3.0",
+    "@fontsource/inter": "^5.3.0",
     "@tonejs/midi": "^2.0.28",
     "jszip": "^3.10.1",
     "tonal": "^6.4.2",

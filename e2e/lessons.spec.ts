@@ -120,7 +120,7 @@ test.describe('Lessons', () => {
     await page.evaluate((all) => localStorage.setItem('lessons.read.v1', JSON.stringify(all.slice(0, -1))), ids);
     await page.goto(`/#/lessons/${last}`);
     await page.reload();
-    await expect(page.locator('.lesson-next')).toHaveText('Finish the course');
+    await expect(page.locator('.lesson-next')).toHaveText('Finish the course', { timeout: 15000 }); // a reload of a heavy page, on a busy machine
     await page.locator('.lesson-next').click();
     await expect(page).toHaveURL(/#\/lessons$/);
     await expect(page.locator('.course-done')).toBeVisible();

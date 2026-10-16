@@ -96,7 +96,7 @@ test.describe('Keyboard', () => {
 
 test.describe('Starting playback', () => {
   test('pressing the button again while the sounds load cancels the start', async ({ page }) => {
-    await page.route('**/audio/salamander/**', async (route) => {
+    await page.route('**/samples/salamander/**', async (route) => {
       await new Promise((resolve) => setTimeout(resolve, 3000));
       await route.continue();
     });
@@ -112,7 +112,7 @@ test.describe('Starting playback', () => {
   });
 
   test('the exercise still runs, silently, when the piano sounds cannot be loaded', async ({ page }) => {
-    await page.route('**/audio/salamander/**', (route) => route.abort());
+    await page.route('**/samples/salamander/**', (route) => route.abort());
     await openApp(page);
     await recordBeats(page);
     await page.locator('#bpm').fill('200');

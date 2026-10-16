@@ -5257,3 +5257,32 @@ html[dir='rtl'] .nav-arrow {
   font-size: 0.85rem;
   line-height: 1.5;
 }
+
+/* Offline use and installing, in the options */
+.pwa-offline,
+.pwa-hint {
+  margin: 0 0 var(--space-sm);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
+.pwa-status {
+  margin: 8px 0 0;
+  color: var(--correct);
+  font-size: 0.85rem;
+}
+
+.pwa-panel[hidden],
+.pwa-offline[hidden],
+.pwa-hint[hidden],
+.pwa-install[hidden] {
+  display: none;
+}
+
+.options-credit {
+  margin: 0 0 var(--space-sm);
+  color: var(--text-subtle);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
