@@ -64,6 +64,17 @@ describe('SongsView', () => {
     expect(Array.from(only.element.querySelectorAll('h3')).map((h) => h.textContent)).toEqual([t('options.songsBeginner')]);
   });
 
+  it('shows the best stars on the songs that were finished, and none on the others', () => {
+    const stars: Record<string, number> = { 'mary-lamb': 3, twinkle: 1 };
+    const view = new SongsView({ songs: BUILT_IN_SONGS, onChoose: () => {}, onBack: () => {}, starsFor: (id) => stars[id] ?? 0 });
+    const card = (id: string) => view.element.querySelector(`[data-song="${id}"]`)!;
+    expect(card('mary-lamb').querySelectorAll('.song-card-stars .star.on')).toHaveLength(3);
+    expect(card('twinkle').querySelectorAll('.song-card-stars .star.on')).toHaveLength(1);
+    expect(card('twinkle').querySelectorAll('.song-card-stars .star')).toHaveLength(3);
+    expect(card('mary-lamb').querySelector('.song-card-stars')!.getAttribute('aria-label')).toBe('Best: 3 of 3 stars');
+    expect(card('ode-to-joy').querySelector('.song-card-stars')).toBeNull();
+  });
+
   it('chooses a song when its button is pressed', () => {
     const { view, onChoose } = setup();
     view.element.querySelector<HTMLButtonElement>('[data-song="twinkle"]')!.click();

@@ -139,6 +139,53 @@ describe('quiz panel', () => {
     other.dispose();
   });
 
+  it('reports every answer, so the app can reward it', () => {
+    const answers: boolean[] = [];
+    const other = new LearnView({
+      quiz: new NameTheNoteQuiz(stats, seeded(5)),
+      hub,
+      renderNote,
+      formatLetter: (letter) => letter,
+      onAnswer: (result) => answers.push(result.correct),
+    });
+    document.body.appendChild(other.element);
+    other.open();
+    const asked = other.element.dataset.pitch!;
+    hub.noteOn(asked, 'screen');
+    expect(answers).toEqual([true]);
+    other.dispose();
+  });
+
+  it('reports when all the lessons have been read', () => {
+    localStorage.removeItem('learn.seenLessons');
+    const done = vi.fn();
+    const other = new LearnView({
+      quiz: new NameTheNoteQuiz(stats, seeded(5)),
+      hub,
+      renderNote,
+      formatLetter: (letter) => letter,
+      onLessonsDone: done,
+    });
+    document.body.appendChild(other.element);
+    other.open(); // first time: the lessons
+    other.element.querySelector<HTMLButtonElement>('.learn-lesson-start')!.click();
+    expect(done).toHaveBeenCalledTimes(1);
+    other.dispose();
+  });
+
+  it('shows the number of right answers in a row from two up', () => {
+    view.open();
+    const combo = q<HTMLElement>('.learn-combo');
+    expect(combo.hidden).toBe(true);
+    view.setCombo(1);
+    expect(combo.hidden).toBe(true);
+    view.setCombo(5);
+    expect(combo.hidden).toBe(false);
+    expect(combo.textContent).toBe('In a row: 5');
+    view.setCombo(0);
+    expect(combo.hidden).toBe(true);
+  });
+
   it('keeps later stages locked until 20 answers at 90%, then unlocks stage 2', () => {
     view.open();
     const stageOption = (n: number) => q<HTMLSelectElement>('.learn-stage-select').options[n - 1];

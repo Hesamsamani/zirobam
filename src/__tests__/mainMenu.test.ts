@@ -45,7 +45,7 @@ describe('MainMenu', () => {
 
   it('offers learning, levels, songs and settings', () => {
     const ids = MENU_TILES.map((tileDef) => tileDef.id);
-    expect(ids).toEqual(expect.arrayContaining(['learn', 'levels', 'songs', 'xylophone', 'metronome', 'settings']));
+    expect(ids).toEqual(expect.arrayContaining(['learn', 'levels', 'songs', 'xylophone', 'metronome', 'progress', 'settings']));
   });
 
   it('tells which level the player is on', () => {
@@ -59,7 +59,8 @@ describe('MainMenu', () => {
     tile('levels').click();
     tile('songs').click();
     tile('xylophone').click();
-    expect(navigate.mock.calls.map(([view]) => view)).toEqual(['learn', 'levels', 'songs', 'xylophone']);
+    tile('progress').click();
+    expect(navigate.mock.calls.map(([view]) => view)).toEqual(['learn', 'levels', 'songs', 'xylophone', 'progress']);
   });
 
   it('opens the settings instead of a screen for the settings tile', () => {
@@ -97,6 +98,20 @@ describe('MainMenu', () => {
     expect(navigate).toHaveBeenCalledWith('levels');
   });
 
+  it('shows the extra strip (the rank and goal) under the subtitle', () => {
+    const extra = document.createElement('div');
+    extra.className = 'game-hud';
+    const menu = new MainMenu({
+      navigate: () => {},
+      openSettings: () => {},
+      openMetronome: () => {},
+      levelLabel: () => '1a',
+      resume: () => ({ view: 'levels', title: 'Level 1a', detail: '' }),
+      extra,
+    });
+    expect(menu.element.querySelector('.menu-header .game-hud')).toBe(extra);
+  });
+
   it('is not counted among the tiles', () => {
     const { menu } = setup();
     expect(menu.element.querySelectorAll('.menu-tile')).toHaveLength(MENU_TILES.length);
@@ -107,7 +122,7 @@ describe('MainMenu', () => {
     const paths = Array.from(menu.element.querySelectorAll<HTMLElement>('.menu-paths [data-tile]')).map((b) => b.dataset.tile);
     const tools = Array.from(menu.element.querySelectorAll<HTMLElement>('.menu-tools [data-tile]')).map((b) => b.dataset.tile);
     expect(paths).toEqual(['learn', 'levels', 'songs']);
-    expect(tools).toEqual(['xylophone', 'metronome', 'settings']);
+    expect(tools).toEqual(['xylophone', 'metronome', 'progress', 'settings']);
   });
 
   it('continues into a song when that is where you were', () => {

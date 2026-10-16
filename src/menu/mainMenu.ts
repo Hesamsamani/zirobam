@@ -1,7 +1,7 @@
 import { t, type MessageKey } from '../i18n';
 import type { View } from '../app/router';
 
-export type TileId = 'learn' | 'levels' | 'songs' | 'xylophone' | 'metronome' | 'settings';
+export type TileId = 'learn' | 'levels' | 'songs' | 'xylophone' | 'metronome' | 'progress' | 'settings';
 
 export interface MenuTile {
   id: TileId;
@@ -20,6 +20,7 @@ export const MENU_TILES: readonly MenuTile[] = [
   { id: 'songs', group: 'path', title: 'menu.songs.title', desc: 'menu.songs.desc', target: { view: 'songs' } },
   { id: 'xylophone', group: 'tool', title: 'menu.xylophone.title', desc: 'menu.xylophone.desc', target: { view: 'xylophone' } },
   { id: 'metronome', group: 'tool', title: 'menu.metronome.title', desc: 'menu.metronome.desc', target: { action: 'metronome' } },
+  { id: 'progress', group: 'tool', title: 'menu.progress.title', desc: 'menu.progress.desc', target: { view: 'progress' } },
   { id: 'settings', group: 'tool', title: 'menu.settings.title', desc: 'menu.settings.desc', target: { action: 'settings' } },
 ];
 
@@ -41,6 +42,8 @@ export interface MainMenuDeps {
   levelLabel(): string;
   /** Where the player left off. */
   resume(): ResumeInfo;
+  /** Shown under the subtitle: the rank, the daily goal and the streak. */
+  extra?: HTMLElement;
 }
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -52,6 +55,7 @@ const ICONS: Readonly<Record<TileId, string>> = {
   songs: 'M9 17.5V6l10-2v11.5M9 17.5a2.2 2.2 0 1 1-4.4 0 2.2 2.2 0 0 1 4.4 0zM19 15.5a2.2 2.2 0 1 1-4.4 0 2.2 2.2 0 0 1 4.4 0z',
   xylophone: 'M3.2 4h3.2v16H3.2zM8.6 4h3.2v13H8.6zM14 4h3.2v10H14zM19.4 4h1.8v7h-1.8z',
   metronome: 'M8 22h8l-2-16h-4zM12 6l4-3M12 14.5h.01',
+  progress: 'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z',
   settings: 'M4 7h9M17 7h3M4 12h3M11 12h9M4 17h11M19 17h1M15 7a2 2 0 1 0 .01 0M9 12a2 2 0 1 0 .01 0M17 17a2 2 0 1 0 .01 0',
 };
 
@@ -98,6 +102,7 @@ export class MainMenu {
     this.title = make('h1', 'menu-title');
     this.subtitle = make('p', 'menu-subtitle');
     header.append(this.title, this.subtitle);
+    if (deps.extra) header.appendChild(deps.extra);
 
     // The sheet of music: continue where you stopped
     this.resumeButton = make('button', 'menu-resume');

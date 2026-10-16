@@ -1,4 +1,4 @@
-import { t, applyTranslations, type MessageKey } from '../i18n';
+import { t, applyTranslations, formatNumber, type MessageKey } from '../i18n';
 import type { NoteInputHub } from '../input/noteInput';
 import { LESSONS } from './lessons';
 import { MAX_STAGE, RECENT_LIMIT } from './noteStats';
@@ -17,6 +17,10 @@ export interface LearnViewDeps {
   onClose?: () => void;
   /** What the Close button does. Without it the button just closes the view. */
   onExit?: () => void;
+  /** Called after every answer to a question. */
+  onAnswer?: (result: AnswerResult) => void;
+  /** Called when the player has gone through all the lessons. */
+  onLessonsDone?: () => void;
 }
 
 function make<K extends keyof HTMLElementTagNameMap>(
@@ -42,6 +46,7 @@ export class LearnView {
   private readonly answerButtons = new Map<string, HTMLButtonElement>();
   private readonly feedback: HTMLElement;
   private readonly stats: HTMLElement;
+  private readonly combo: HTMLElement;
   private readonly nextButton: HTMLButtonElement;
   private readonly stageSelect: HTMLSelectElement;
   private readonly lessonTitle: HTMLElement;
@@ -82,6 +87,8 @@ export class LearnView {
     // Quiz panel
     this.quizPanel = make('div', 'learn-quiz');
     this.stats = make('p', 'learn-stats');
+    this.combo = make('p', 'learn-combo');
+    this.combo.hidden = true;
     const card = make('div', 'learn-card');
     card.setAttribute('dir', 'ltr');
     this.noteHolder = make('div', 'learn-note');
@@ -103,7 +110,7 @@ export class LearnView {
     this.nextButton.hidden = true;
     this.nextButton.addEventListener('click', () => this.askNext());
     this.quizPanel.append(
-      this.stats, card, make('p', 'learn-prompt', 'learn.prompt'), answers,
+      this.stats, this.combo, card, make('p', 'learn-prompt', 'learn.prompt'), answers,
       this.feedback, this.nextButton, make('p', 'learn-hint', 'learn.hint')
     );
 
@@ -218,6 +225,7 @@ export class LearnView {
     this.element.dataset.result = result.correct ? 'correct' : 'wrong';
     this.refreshStageSelect();
     this.refreshStats();
+    this.deps.onAnswer?.(result);
 
     if (result.correct) {
       this.timer = setTimeout(() => this.askNext(), this.deps.autoAdvanceMs ?? 900);
@@ -299,5 +307,12 @@ export class LearnView {
       // storage unavailable: the lessons will show again next time
     }
     this.showQuiz();
+    this.deps.onLessonsDone?.();
+  }
+
+  /** Shows the number of right answers in a row (from 2 up). */
+  setCombo(count: number): void {
+    this.combo.hidden = count < 2;
+    this.combo.textContent = count < 2 ? '' : t('game.combo', { n: formatNumber(count) });
   }
 }

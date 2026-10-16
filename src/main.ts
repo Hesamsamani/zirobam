@@ -49,6 +49,11 @@ import { TempoStore } from './metronome/tempoStore';
 import { MetronomeEngine } from './metronome/metronomeEngine';
 import { MetronomePanel } from './metronome/metronomePanel';
 import { FloatingWindow } from './metronome/floatingWindow';
+import { GameStore, practiceStars } from './game/gameStore';
+import { GameController } from './game/gameController';
+import { ToastCenter } from './game/toastCenter';
+import { GameHud } from './game/gameHud';
+import { ProgressView } from './game/progressView';
 import {
   t, initLocale, setLocale, getLocale, onLocaleChange, applyTranslations,
   formatNumber, setPersianDigits, isLocale,
@@ -147,6 +152,15 @@ let mainMenu: MainMenu | null = null;
 let songsView: SongsView | null = null;
 let xylophoneView: XylophoneView | null = null;
 let practicePanel: PracticePanel | null = null;
+/** Rewards: XP, rank, the daily goal, badges and song stars. */
+const gameStore = new GameStore({
+  beginnerSongIds: BUILT_IN_SONGS.filter((s) => s.difficulty === 'beginner' && s.category !== 'exercise').map((s) => s.id),
+});
+const game = new GameController({ store: gameStore, toasts: new ToastCenter() });
+let gameHud: GameHud | null = null;
+let progressView: ProgressView | null = null;
+/** Steps repeated since the song was started, for its stars. */
+let practiceRetries = 0;
 /** Tries at the current practice step (1 for the first), and wrong notes in the current try. */
 let practiceAttempt = 1;
 let mistakeCount = 0;
@@ -961,6 +975,12 @@ function setupLearnMode(): LearnHandle {
     formatLetter: (letter) => formatNoteName(letter, getNoteNameSystem()),
     onClose: () => setLearnOpen(false),
     onExit: () => shell?.navigate(learnReturnView),
+    onAnswer: (result) => {
+      game.answer(result.correct);
+      view.setCombo(gameStore.combo());
+      if (result.unlockedStage) game.stage(result.unlockedStage);
+    },
+    onLessonsDone: () => game.lessonsRead(),
   });
   document.getElementById('musicStand')!.appendChild(view.element);
 
@@ -1042,8 +1062,11 @@ function setupNavigation(learn: LearnHandle) {
   const appShell = new AppShell(router);
   shell = appShell;
 
+  const hud = new GameHud(gameStore);
+  gameHud = hud;
   const menu = new MainMenu({
     navigate: (view) => appShell.navigate(view),
+    extra: hud.element,
     openSettings: openOptionsPanel,
     openMetronome: () => {
       void Tone.start(); // unlock audio now, while the click is fresh
@@ -1074,7 +1097,10 @@ function setupNavigation(learn: LearnHandle) {
       if (currentMode === 'practice') appShell.navigate('practice');
     },
     onBack: () => appShell.navigate('home'),
+    starsFor: (songId) => gameStore.songStars(songId),
   });
+  gameStore.onChange(() => songs.refresh()); // new stars show on the cards
+  const progress = new ProgressView({ store: gameStore, onBack: () => appShell.navigate('home') });
   // The xylophone draws its staff notes with its own notation engine, so the quiz keeps its settings
   const xylophone = new XylophoneView({
     hub: noteInput,
@@ -1087,11 +1113,14 @@ function setupNavigation(learn: LearnHandle) {
     }),
     formatName: (name) => formatNoteName(name, getNoteNameSystem()),
     onBack: () => appShell.navigate('home'),
+    onReadAnswer: (correct) => game.answer(correct),
+    onSongFinished: (songId, stars) => game.xyloSong(songId, stars),
   });
   mainMenu = menu;
   songsView = songs;
   xylophoneView = xylophone;
-  document.getElementById('app')!.prepend(menu.element, songs.element, xylophone.element);
+  progressView = progress;
+  document.getElementById('app')!.prepend(menu.element, songs.element, xylophone.element, progress.element);
 
   document.getElementById('homeButton')!.addEventListener('click', () => appShell.navigate('home'));
 
@@ -1133,6 +1162,9 @@ function setupNavigation(learn: LearnHandle) {
           break;
         case 'xylophone':
           xylophone.activate();
+          break;
+        case 'progress':
+          progress.refresh();
           break;
       }
     },
@@ -1602,6 +1634,8 @@ function setupControls() {
     songsView?.refresh();
     xylophoneView?.refresh();
     practicePanel?.refresh();
+    gameHud?.refresh();
+    progressView?.refresh();
     populateLevelJump();
     populateKeySelect();
     populateSongSelect();
@@ -1798,6 +1832,7 @@ function onPieceComplete() {
     if (didPassPiece({ hadMistake, notesPlayed, notesRequired })) {
       // Advance to next step
       practiceSession.markMastered();
+      game.stepPassed();
       practiceAttempt = 1;
       mistakeCount = 0;
       const hasMore = practiceSession.nextStep();
@@ -1828,6 +1863,9 @@ function onPieceComplete() {
         stop();
         updatePracticeDisplay();
         practicePanel?.setStatus(t('practice.status.finished'), 'good');
+        if (currentPracticeSongId) {
+          game.songFinished(currentPracticeSongId, practiceStars(practiceSession.getAllSteps().length, practiceRetries));
+        }
         showCelebration();
         const progressInfo = document.getElementById('progressInfo');
         if (progressInfo) {
@@ -1838,6 +1876,7 @@ function onPieceComplete() {
       // Had mistakes or didn't play enough - loop the current segment
       // Give countoff for 4+ bars to help re-orient
       practiceAttempt++;
+      practiceRetries++;
       updatePracticeDisplay();
       practicePanel?.setStatus(retryMessage(mistakeCount, Math.max(0, notesRequired - notesPlayed)), 'retry');
       hadMistake = false;
@@ -1854,6 +1893,7 @@ function onPieceComplete() {
     // Level mode: the piece must have been played, not merely allowed to run to the end
     if (didPassPiece({ hadMistake, notesPlayed, notesRequired })) {
       incrementLevel();
+      game.levelPassed(getLevel());
     }
 
     // Reset tracking for next round
@@ -2351,6 +2391,7 @@ function practiceKeyLine(): string {
 function enterPracticeMode() {
   if (!practiceSession) return;
   practiceAttempt = 1;
+  practiceRetries = 0;
   mistakeCount = 0;
 
   // Update header

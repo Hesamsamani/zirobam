@@ -1,4 +1,4 @@
-import { t } from '../i18n';
+import { formatNumber, t } from '../i18n';
 import type { BuiltInSong } from '../songs';
 import { groupSongs } from '../songs/songGroups';
 import { songTitle } from '../songs/songText';
@@ -8,6 +8,8 @@ export interface SongsViewDeps {
   songs: readonly BuiltInSong[];
   onChoose(songId: string): void;
   onBack(): void;
+  /** Best stars earned on a song (0 when it has not been finished). */
+  starsFor?(songId: string): number;
 }
 
 function make<K extends keyof HTMLElementTagNameMap>(tag: K, className: string): HTMLElementTagNameMap[K] {
@@ -65,6 +67,19 @@ export class SongsView {
     const name = make('span', 'song-card-title');
     name.textContent = songTitle(song);
     button.appendChild(name);
+    const stars = this.deps.starsFor?.(song.id) ?? 0;
+    if (stars > 0) {
+      const row = make('span', 'song-card-stars');
+      row.setAttribute('role', 'img');
+      row.setAttribute('aria-label', t('song.stars', { n: formatNumber(stars) }));
+      for (let i = 1; i <= 3; i++) {
+        const star = make('span', i <= stars ? 'star on' : 'star');
+        star.textContent = '★';
+        star.setAttribute('aria-hidden', 'true');
+        row.appendChild(star);
+      }
+      button.appendChild(row);
+    }
     button.addEventListener('click', () => this.deps.onChoose(song.id));
     item.appendChild(button);
     return item;
