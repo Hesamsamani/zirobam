@@ -21,6 +21,10 @@ export interface SongSpec {
 
 export interface ParsedNote {
   token: string;
+  /** Tied to the next note (written with a ~ after the length). */
+  tie: boolean;
+  /** An explicit natural sign (written Fn4q). */
+  natural: boolean;
   rest: boolean;
   /** "C4", "F#4", "Bb3"; empty for a rest. */
   pitch: string;
@@ -41,18 +45,20 @@ const DURATIONS: Readonly<Record<string, { divisions: number; type: string }>> =
   s: { divisions: 1, type: '16th' },
 };
 
-const TOKEN = /^(?:([A-G])([#b]?)(\d)|(r))([whqes])(\.?)$/;
+const TOKEN = /^(?:([A-G])([#bn]?)(\d)|(r))([whqes])(\.?)(~?)$/;
 
 function readNote(token: string): ParsedNote {
   const match = TOKEN.exec(token);
   if (!match) throw new Error(`Cannot read the note "${token}"`);
-  const [, step, accidental, octave, rest, code, dot] = match;
+  const [, step, accidental, octave, rest, code, dot, tie] = match;
   const base = DURATIONS[code];
   if (dot && base.divisions % 2 !== 0) throw new Error(`A dotted sixteenth is not supported: "${token}"`);
   return {
     token,
     rest: Boolean(rest),
-    pitch: rest ? '' : `${step}${accidental}${octave}`,
+    tie: Boolean(tie),
+    natural: accidental === 'n',
+    pitch: rest ? '' : `${step}${accidental === 'n' ? '' : accidental}${octave}`,
     step: step ?? '',
     alter: accidental === '#' ? 1 : accidental === 'b' ? -1 : 0,
     octave: octave ? Number(octave) : 0,
@@ -62,8 +68,11 @@ function readNote(token: string): ParsedNote {
   };
 }
 
-/** Reads the melody text into measures and checks that each measure has exactly the right length. */
-export function parseMelody(text: string, beats: number, beatType: number): ParsedNote[][] {
+/**
+ * Reads the melody text into measures and checks that each measure has exactly the right length
+ * (unless `strict` is false, for notes that only illustrate lengths).
+ */
+export function parseMelody(text: string, beats: number, beatType: number, strict = true): ParsedNote[][] {
   const length = (beats * 16) / beatType;
   const measures = text
     .split('|')
@@ -72,7 +81,7 @@ export function parseMelody(text: string, beats: number, beatType: number): Pars
     .map((part) => part.split(/\s+/).map(readNote));
   measures.forEach((notes, index) => {
     const total = notes.reduce((sum, note) => sum + note.duration, 0);
-    if (total !== length) {
+    if (strict && total !== length) {
       throw new Error(`Measure ${index + 1} has ${total / 4} beats, expected ${length / 4}: ${notes.map((n) => n.token).join(' ')}`);
     }
   });
@@ -82,7 +91,7 @@ export function parseMelody(text: string, beats: number, beatType: number): Pars
 const SHARP_ORDER = ['F', 'C', 'G', 'D', 'A', 'E', 'B'];
 const FLAT_ORDER = ['B', 'E', 'A', 'D', 'G', 'C', 'F'];
 
-function keyAlter(step: string, fifths: number): number {
+export function keyAlter(step: string, fifths: number): number {
   if (fifths > 0 && SHARP_ORDER.slice(0, fifths).includes(step)) return 1;
   if (fifths < 0 && FLAT_ORDER.slice(0, -fifths).includes(step)) return -1;
   return 0;

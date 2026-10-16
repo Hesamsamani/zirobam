@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { Router, parseRoute, formatRoute, isView, VIEWS, type View } from '../app/router';
+import { Router, parseRoute, parseLocation, formatRoute, isView, VIEWS, type View } from '../app/router';
 
 /** The smallest window the router needs: a hash, and hashchange listeners. */
 function fakeWindow(initialHash = '') {
@@ -41,11 +41,39 @@ describe('parseRoute', () => {
   });
 });
 
+describe('parseLocation', () => {
+  it('reads a lesson name after the view', () => {
+    expect(parseLocation('#/lessons/note-values')).toEqual({ view: 'lessons', param: 'note-values' });
+    expect(parseLocation('#/lessons')).toEqual({ view: 'lessons', param: null });
+    expect(parseLocation('#lessons/staff')).toEqual({ view: 'lessons', param: 'staff' });
+  });
+
+  it('only some screens take a name; elsewhere it is not an address of the app', () => {
+    expect(parseLocation('#/levels/extra')).toEqual({ view: 'home', param: null });
+    expect(parseLocation('#/lessons/a/b')).toEqual({ view: 'home', param: null });
+    expect(parseLocation('#/lessons/BAD NAME')).toEqual({ view: 'home', param: null });
+  });
+
+  it('ignores a query on the catalogue (it is read by the screen itself) and refuses it elsewhere', () => {
+    expect(parseLocation('#/catalog?artist=Queen&level=2')).toEqual({ view: 'catalog', param: null });
+    expect(parseLocation('#/levels?x=1')).toEqual({ view: 'home', param: null });
+  });
+
+  it('keeps parseRoute as the view alone', () => {
+    expect(parseRoute('#/lessons/staff')).toBe('lessons');
+  });
+});
+
 describe('formatRoute', () => {
   it('uses #/ for home and #/name for the rest', () => {
     expect(formatRoute('home')).toBe('#/');
     expect(formatRoute('levels')).toBe('#/levels');
     expect(formatRoute('xylophone')).toBe('#/xylophone');
+  });
+
+  it('adds the name of a lesson', () => {
+    expect(formatRoute('lessons', 'staff')).toBe('#/lessons/staff');
+    expect(formatRoute('lessons', null)).toBe('#/lessons');
   });
 });
 
@@ -104,6 +132,20 @@ describe('Router', () => {
     changeHash('#/xylophone');
     changeHash('#/garbage');
     expect(seen).toEqual(['levels', 'xylophone', 'home']);
+  });
+
+  it('tells listeners about the lesson name, and about a change of it on the same screen', () => {
+    const { win, changeHash } = fakeWindow('#/lessons');
+    const router = new Router(win);
+    const seen: Array<[View, string | null]> = [];
+    router.onChange((view, param) => seen.push([view, param]));
+    router.start();
+    router.navigate('lessons', 'staff');
+    changeHash('#/lessons/clefs');
+    changeHash('#/lessons/clefs');
+    expect(win.location.hash).toBe('#/lessons/clefs');
+    expect(router.param()).toBe('clefs');
+    expect(seen).toEqual([['lessons', null], ['lessons', 'staff'], ['lessons', 'clefs']]);
   });
 
   it('stops telling a listener after it unsubscribed', () => {

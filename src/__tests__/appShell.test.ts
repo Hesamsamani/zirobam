@@ -108,6 +108,23 @@ describe('AppShell', () => {
     expect(wasHidden).toBe(false);
   });
 
+  it('gives the enter hook the name after the screen, and a change hook when only the name changes', () => {
+    const { win, changeHash } = fakeWindow('#/lessons/staff');
+    const shell = new AppShell(new Router(win));
+    const calls: string[] = [];
+    shell.register('lessons', {
+      enter: (view, _previous, param) => calls.push(`enter ${view} ${param}`),
+      change: (view, param) => calls.push(`change ${view} ${param}`),
+      leave: () => calls.push('leave'),
+    });
+    shell.start();
+    changeHash('#/lessons/clefs');
+    changeHash('#/lessons');
+    shell.navigate('lessons', 'rests');
+    expect(shell.currentParam()).toBe('rests');
+    expect(calls).toEqual(['enter lessons staff', 'change lessons clefs', 'change lessons null', 'change lessons rests']);
+  });
+
   it('does not run hooks again for the same view', () => {
     const { win } = fakeWindow();
     const shell = new AppShell(new Router(win));

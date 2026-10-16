@@ -1,20 +1,41 @@
 /** The screens of the app. `levels` and `practice` share the music stand; `learn` opens inside it too. */
-export const VIEWS = ['home', 'levels', 'practice', 'songs', 'learn', 'xylophone', 'progress'] as const;
+export const VIEWS = ['home', 'levels', 'practice', 'songs', 'learn', 'lessons', 'catalog', 'xylophone', 'progress'] as const;
 export type View = (typeof VIEWS)[number];
 
 export function isView(value: string): value is View {
   return (VIEWS as readonly string[]).includes(value);
 }
 
-/** `#/` and anything unknown mean the home screen. */
-export function parseRoute(hash: string): View {
-  const match = /^#\/?([a-z]*)$/.exec(hash);
-  const name = match?.[1] ?? '';
-  return isView(name) ? name : 'home';
+/** Screens whose address can end in a name (`#/lessons/note-values`). */
+const NAMED_VIEWS: readonly View[] = ['lessons'];
+/** Screens that keep their filters in a query after the address (`#/catalog?artist=...`). */
+const QUERY_VIEWS: readonly View[] = ['catalog'];
+
+export interface RouteLocation {
+  view: View;
+  param: string | null;
 }
 
-export function formatRoute(view: View): string {
-  return view === 'home' ? '#/' : `#/${view}`;
+/** The screen and the optional name in an address. `#/` and anything unknown mean the home screen. */
+export function parseLocation(hash: string): RouteLocation {
+  const home: RouteLocation = { view: 'home', param: null };
+  const [path, ...query] = hash.split('?');
+  const match = /^#\/?([a-z]*)(?:\/([a-z0-9-]+))?$/.exec(path);
+  const name = match?.[1] ?? '';
+  const param = match?.[2] ?? null;
+  if (!isView(name)) return home;
+  if (param && !NAMED_VIEWS.includes(name)) return home;
+  if (query.length > 0 && !QUERY_VIEWS.includes(name)) return home;
+  return { view: name, param };
+}
+
+export function parseRoute(hash: string): View {
+  return parseLocation(hash).view;
+}
+
+export function formatRoute(view: View, param: string | null = null): string {
+  if (view === 'home') return '#/';
+  return param ? `#/${view}/${param}` : `#/${view}`;
 }
 
 /** What the router needs from `window`; a small fake stands in for it in tests. */
@@ -27,8 +48,8 @@ export interface RouterWindow {
 /** Keeps the current screen in the address (`#/levels`), so the Back button and reloads work. */
 export class Router {
   private readonly win: RouterWindow;
-  private readonly listeners = new Set<(view: View) => void>();
-  private last: View | null = null;
+  private readonly listeners = new Set<(view: View, param: string | null) => void>();
+  private last: string | null = null;
   private started = false;
 
   constructor(win: RouterWindow = window) {
@@ -36,15 +57,22 @@ export class Router {
   }
 
   current(): View {
-    return parseRoute(this.win.location.hash);
+    return parseLocation(this.win.location.hash).view;
   }
 
-  navigate(view: View): void {
-    if (this.current() !== view) this.win.location.hash = formatRoute(view);
+  /** The name that follows the screen in the address, for example the lesson. */
+  param(): string | null {
+    return parseLocation(this.win.location.hash).param;
+  }
+
+  navigate(view: View, param: string | null = null): void {
+    const target = formatRoute(view, param);
+    const here = parseLocation(this.win.location.hash);
+    if (here.view !== view || here.param !== param) this.win.location.hash = target;
     this.emit();
   }
 
-  onChange(listener: (view: View) => void): () => void {
+  onChange(listener: (view: View, param: string | null) => void): () => void {
     this.listeners.add(listener);
     return () => void this.listeners.delete(listener);
   }
@@ -65,11 +93,12 @@ export class Router {
 
   private readonly handleHashChange = (): void => this.emit();
 
-  /** Only a real change of screen is announced, so navigate() followed by the browser's hashchange fires once. */
+  /** Only a real change of screen (or of its name) is announced, so navigate() followed by the browser's hashchange fires once. */
   private emit(): void {
-    const view = this.current();
-    if (view === this.last) return;
-    this.last = view;
-    for (const listener of [...this.listeners]) listener(view);
+    const { view, param } = parseLocation(this.win.location.hash);
+    const key = formatRoute(view, param);
+    if (key === this.last) return;
+    this.last = key;
+    for (const listener of [...this.listeners]) listener(view, param);
   }
 }
