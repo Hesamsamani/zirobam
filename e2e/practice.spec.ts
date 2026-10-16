@@ -177,6 +177,7 @@ test.describe('The song library', () => {
   });
 
   test('every song and exercise opens without an error', async ({ page }) => {
+    test.setTimeout(120000); // it opens every song in turn
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto('/#/songs');
