@@ -11,6 +11,10 @@ export interface SongsViewDeps {
   onBack(): void;
   /** Best stars earned on a song (0 when it has not been finished). */
   starsFor?(songId: string): number;
+  /** Opens the song maker. Without it the screen has no "Write a song" button. */
+  makeSong?(): void;
+  /** Opens a song made in the song maker for editing. */
+  editSong?(scoreId: string): void;
   /** The student's own scores. Without it the screen has no "My scores" group. */
   scores?: {
     list(): Promise<ScoreSummary[]>;
@@ -34,6 +38,7 @@ export class SongsView {
   private readonly deps: SongsViewDeps;
   private readonly title: HTMLElement;
   private readonly subtitle: HTMLElement;
+  private readonly make: HTMLButtonElement | null = null;
   private readonly list: HTMLElement;
   /** The score the student is being asked about removing. */
   private removing: string | null = null;
@@ -50,6 +55,13 @@ export class SongsView {
     this.title = make('h2', 'view-title');
     this.subtitle = make('p', 'view-subtitle');
     header.append(createBackButton(deps.onBack), this.title, this.subtitle);
+    if (deps.makeSong) {
+      const open = deps.makeSong;
+      this.make = make('button', 'songs-make');
+      this.make.type = 'button';
+      this.make.addEventListener('click', () => open());
+      header.appendChild(this.make);
+    }
 
     this.list = make('div', 'song-groups');
     this.element.append(header, this.list);
@@ -61,6 +73,7 @@ export class SongsView {
   refresh(): void {
     this.title.textContent = t('songs.title');
     this.subtitle.textContent = t('songs.subtitle');
+    if (this.make) this.make.textContent = t('maker.open');
     this.list.replaceChildren();
     for (const entry of groupSongs(this.deps.songs)) {
       const group = make('div', 'song-group');
@@ -150,6 +163,16 @@ export class SongsView {
       this.renderScores();
       this.list.querySelector<HTMLElement>('.score-keep')?.focus();
     });
+    const edit = this.deps.editSong;
+    if (score.kind === 'maker' && edit) {
+      const button = make('button', 'score-edit');
+      button.type = 'button';
+      button.textContent = t('maker.edit');
+      button.setAttribute('aria-label', t('maker.editFor', { title: score.title }));
+      button.addEventListener('click', () => edit(score.id));
+      item.append(card, button, remove);
+      return item;
+    }
     item.append(card, remove);
     return item;
   }

@@ -4825,3 +4825,333 @@ html[dir='rtl'] .nav-arrow {
     justify-content: flex-start;
   }
 }
+
+/* ============================================
+   SONG MAKER
+   ============================================ */
+.songs-make {
+  margin-top: 14px;
+  min-height: 44px;
+  padding: 0 20px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.songs-make:hover {
+  border-color: var(--accent-light);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.score-edit {
+  min-height: 36px;
+  padding: 0 10px;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.85rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.score-edit:hover {
+  color: var(--text);
+}
+
+.songs-make:focus-visible,
+.score-edit:focus-visible,
+.maker-chip:focus-visible,
+.maker-note:focus-visible,
+.maker-tool:focus-visible,
+.maker-save:focus-visible,
+.maker-practise:focus-visible,
+.maker-input:focus-visible {
+  outline: 2px solid var(--current);
+  outline-offset: 2px;
+}
+
+.maker-view {
+  flex: 1;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: var(--space-xl) var(--space-lg);
+}
+
+.maker-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: var(--space-xl);
+  align-items: start;
+}
+
+.maker-form,
+.maker-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  min-width: 0;
+}
+
+.maker-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-md);
+}
+
+.maker-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.maker-label,
+.maker-chips-label {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.maker-heading {
+  margin: 0;
+  padding: 0;
+  color: var(--text);
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.maker-input {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  color: var(--text);
+  font: inherit;
+}
+
+.maker-input:hover {
+  border-color: rgba(255, 255, 255, 0.32);
+}
+
+.maker-notes {
+  resize: vertical;
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.maker-notes[aria-invalid='true'] {
+  border-color: var(--wrong);
+}
+
+.maker-hint {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
+.maker-problem {
+  min-height: 1.4em;
+  margin: 0;
+  color: #e69a9a;
+  font-size: 0.92rem;
+}
+
+.maker-palette {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: var(--space-md);
+  background: var(--bg-warm);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  min-width: 0;
+}
+
+.maker-palette legend {
+  padding: 0 6px;
+}
+
+.maker-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.maker-chips-label {
+  min-width: 4.5em;
+}
+
+.maker-chip,
+.maker-tool {
+  min-width: 44px;
+  min-height: 40px;
+  padding: 0 12px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.92rem;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.maker-chip:hover:not(:disabled),
+.maker-tool:hover {
+  border-color: var(--accent-light);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.maker-chip[aria-pressed='true'] {
+  border-color: var(--current);
+  background: rgba(201, 162, 39, 0.16);
+  color: #fff;
+}
+
+.maker-chip:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.maker-letters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(54px, 1fr));
+  gap: 6px;
+}
+
+.maker-note {
+  min-height: 48px;
+  padding: 0 8px;
+  background: var(--paper);
+  border: 0;
+  border-radius: 10px;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+
+.maker-note:active {
+  transform: scale(0.96);
+}
+
+.maker-rest {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: var(--text);
+}
+
+.maker-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.maker-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 160px;
+  padding: 14px;
+  background: var(--paper);
+  border-radius: 12px;
+  box-shadow: 0 2px 12px var(--paper-shadow);
+  overflow: hidden;
+}
+
+.maker-preview svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.maker-empty,
+.maker-more {
+  margin: 0;
+  color: #6b655e;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.maker-count {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.maker-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.maker-save,
+.maker-practise {
+  min-height: 48px;
+  padding: 0 22px;
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.maker-save {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: var(--text);
+}
+
+.maker-save:hover {
+  border-color: var(--accent-light);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.maker-practise {
+  background: var(--paper);
+  border: 0;
+  color: var(--ink);
+}
+
+.maker-status {
+  min-height: 1.4em;
+  margin: 0;
+  color: var(--correct);
+  font-size: 0.92rem;
+}
+
+@media (max-width: 860px) {
+  .maker-view {
+    padding: var(--space-lg) var(--space-md);
+  }
+
+  .maker-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-lg);
+  }
+}
+
+@media (max-width: 480px) {
+  .maker-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .maker-actions > button {
+    flex: 1 1 100%;
+  }
+}

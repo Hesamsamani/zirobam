@@ -23,6 +23,26 @@ export interface SongSpec {
   melody: string;
 }
 
+/** What is wrong with a melody text, so that a screen can say it in the student's language. */
+export type MelodyProblem =
+  | { kind: 'note'; token: string }
+  | { kind: 'dotted16th'; token: string }
+  | { kind: 'measure'; measure: number; beats: number; expected: number }
+  /** A plain letter where the key signature has a sharp or flat. */
+  | { kind: 'keySign'; token: string; needed: string; natural: string }
+  /** A plain letter where an earlier sign in the same measure is still in force. */
+  | { kind: 'carried'; token: string; needed: string; natural: string };
+
+export class MelodyError extends Error {
+  readonly problem: MelodyProblem;
+
+  constructor(message: string, problem: MelodyProblem) {
+    super(message);
+    this.name = 'MelodyError';
+    this.problem = problem;
+  }
+}
+
 export interface ParsedNote {
   token: string;
   /** Tied to the next note (written with a ~ after the length). */
@@ -53,10 +73,10 @@ const TOKEN = /^(?:([A-G])([#bn]?)(\d)|(r))([whqes])(\.?)(~?)$/;
 
 function readNote(token: string): ParsedNote {
   const match = TOKEN.exec(token);
-  if (!match) throw new Error(`Cannot read the note "${token}"`);
+  if (!match) throw new MelodyError(`Cannot read the note "${token}"`, { kind: 'note', token });
   const [, step, accidental, octave, rest, code, dot, tie] = match;
   const base = DURATIONS[code];
-  if (dot && base.divisions % 2 !== 0) throw new Error(`A dotted sixteenth is not supported: "${token}"`);
+  if (dot && base.divisions % 2 !== 0) throw new MelodyError(`A dotted sixteenth is not supported: "${token}"`, { kind: 'dotted16th', token });
   return {
     token,
     rest: Boolean(rest),
@@ -86,7 +106,12 @@ export function parseMelody(text: string, beats: number, beatType: number, stric
   measures.forEach((notes, index) => {
     const total = notes.reduce((sum, note) => sum + note.duration, 0);
     if (strict && total !== length) {
-      throw new Error(`Measure ${index + 1} has ${total / 4} beats, expected ${length / 4}: ${notes.map((n) => n.token).join(' ')}`);
+      throw new MelodyError(`Measure ${index + 1} has ${total / 4} beats, expected ${length / 4}: ${notes.map((n) => n.token).join(' ')}`, {
+        kind: 'measure',
+        measure: index + 1,
+        beats: total / 4,
+        expected: length / 4,
+      });
     }
   });
   return measures;
@@ -139,10 +164,12 @@ function measuresXml(measures: ParsedNote[][], fifths: number): string[] {
         const inForce = changed.get(id) ?? keyAlter(note.step, fifths);
         if (!note.rest && note.alter === 0 && !note.natural && inForce !== 0) {
           const needed = `${note.step}${inForce > 0 ? '#' : 'b'}${note.octave}`;
-          throw new Error(
+          const natural = `${note.step}n${note.octave}`;
+          throw new MelodyError(
             fromKey
-              ? `"${note.token}": the key signature has ${needed}, so write ${needed} (or ${note.step}n${note.octave} for a natural)`
-              : `"${note.token}": ${needed} earlier in the measure is still in force, so write ${note.step}n${note.octave} for a natural`,
+              ? `"${note.token}": the key signature has ${needed}, so write ${needed} (or ${natural} for a natural)`
+              : `"${note.token}": ${needed} earlier in the measure is still in force, so write ${natural} for a natural`,
+            { kind: fromKey ? 'keySign' : 'carried', token: note.token, needed, natural },
           );
         }
         const xml = noteXml(note, inForce, tieIn && !note.rest);

@@ -1,13 +1,13 @@
 /** The screens of the app. `levels` and `practice` share the music stand; `learn` opens inside it too. */
-export const VIEWS = ['home', 'levels', 'practice', 'songs', 'learn', 'lessons', 'catalog', 'xylophone', 'progress'] as const;
+export const VIEWS = ['home', 'levels', 'practice', 'songs', 'learn', 'lessons', 'catalog', 'xylophone', 'progress', 'maker'] as const;
 export type View = (typeof VIEWS)[number];
 
 export function isView(value: string): value is View {
   return (VIEWS as readonly string[]).includes(value);
 }
 
-/** Screens whose address can end in a name (`#/lessons/note-values`). */
-const NAMED_VIEWS: readonly View[] = ['lessons'];
+/** Screens whose address can end in a name (`#/lessons/note-values`, `#/maker/maker-lk3j2a`). */
+const NAMED_VIEWS: readonly View[] = ['lessons', 'maker'];
 /** Screens that keep their filters in a query after the address (`#/catalog?artist=...`). */
 const QUERY_VIEWS: readonly View[] = ['catalog'];
 

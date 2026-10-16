@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildSongXml, parseMelody, type SongSpec } from '../songs/songBuilder';
+import { buildSongXml, MelodyError, parseMelody, type SongSpec } from '../songs/songBuilder';
 import { extractMelody } from '../xylophone/songMelody';
 import { parseMusicXML } from '../upload/parser';
 import { noteDataToString } from '../core';
@@ -43,6 +43,23 @@ describe('parseMelody', () => {
     expect(() => parseMelody('C4q D4q E4q | G4w', 4, 4)).toThrow(/measure 1/i);
     expect(() => parseMelody('C4w | G4h', 4, 4)).toThrow(/measure 2/i);
     expect(() => parseMelody('C4q C4q C4q | C4h.', 3, 4)).not.toThrow();
+  });
+
+  it('says what was wrong in a form a screen can translate', () => {
+    const problem = (fn: () => unknown) => {
+      try {
+        fn();
+      } catch (error) {
+        return error instanceof MelodyError ? error.problem : undefined;
+      }
+      return undefined;
+    };
+    expect(problem(() => parseMelody('C4q D4q E4q | G4w', 4, 4))).toEqual({ kind: 'measure', measure: 1, beats: 3, expected: 4 });
+    expect(problem(() => parseMelody('C4q D4q E4q E4e | G4w', 4, 4))).toEqual({ kind: 'measure', measure: 1, beats: 3.5, expected: 4 });
+    expect(problem(() => parseMelody('H4q C4q C4h', 4, 4))).toEqual({ kind: 'note', token: 'H4q' });
+    expect(problem(() => parseMelody('C4s. D4q', 4, 4))).toEqual({ kind: 'dotted16th', token: 'C4s.' });
+    expect(problem(() => buildSongXml({ ...base, fifths: 1, melody: 'G4q A4q B4q F4q | G4w' }))).toEqual({ kind: 'keySign', token: 'F4q', needed: 'F#4', natural: 'Fn4' });
+    expect(problem(() => buildSongXml({ ...base, melody: 'C4q D4q F#4q F4q | G4w' }))).toEqual({ kind: 'carried', token: 'F4q', needed: 'F#4', natural: 'Fn4' });
   });
 
   it('refuses a note it cannot read', () => {

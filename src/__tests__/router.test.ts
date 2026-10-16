@@ -161,6 +161,13 @@ describe('Router', () => {
     expect(seen).toEqual([['lessons', null], ['lessons', 'staff'], ['lessons', 'clefs']]);
   });
 
+  it('opens the song maker, with the name of the song to edit', () => {
+    expect(parseLocation('#/maker')).toEqual({ view: 'maker', param: null });
+    expect(parseLocation('#/maker/maker-lk3j2a')).toEqual({ view: 'maker', param: 'maker-lk3j2a' });
+    expect(formatRoute('maker', 'maker-lk3j2a')).toBe('#/maker/maker-lk3j2a');
+    expect(parseLocation('#/songs/maker-lk3j2a').view).toBe('home');
+  });
+
   it('stops telling a listener after it unsubscribed', () => {
     const { win } = fakeWindow();
     const router = new Router(win);

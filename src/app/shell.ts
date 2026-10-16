@@ -16,13 +16,16 @@ export interface ViewHooks {
 export class AppShell {
   private readonly router: Router;
   private readonly root: Document;
+  private readonly scrollToTop: () => void;
   private readonly hooks = new Map<View, ViewHooks>();
   private view: View | null = null;
   private param: string | null = null;
 
-  constructor(router: Router, root: Document = document) {
+  /** `scrollToTop` brings the new screen to its top; the page keeps its scroll position when a screen is switched by hiding another. */
+  constructor(router: Router, root: Document = document, scrollToTop: () => void = () => undefined) {
     this.router = router;
     this.root = root;
+    this.scrollToTop = scrollToTop;
   }
 
   register(views: View | readonly View[], hooks: ViewHooks): void {
@@ -62,6 +65,7 @@ export class AppShell {
       const views = (section.dataset.views ?? '').split(/\s+/);
       section.classList.toggle('view-hidden', !views.includes(next));
     }
+    this.scrollToTop();
     this.hooks.get(next)?.enter?.(next, previous, param);
   }
 }

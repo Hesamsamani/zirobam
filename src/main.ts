@@ -39,6 +39,8 @@ import { hashQuery, Router, VIEWS, type View } from './app/router';
 import { AppShell } from './app/shell';
 import { MainMenu } from './menu/mainMenu';
 import { SongsView } from './menu/songsView';
+import { SongMakerView } from './songs/songMakerView';
+import { newMakerId } from './songs/songMaker';
 import { XylophoneView } from './xylophone/xylophoneView';
 import { PracticePanel } from './practice/practicePanel';
 import { songTitle } from './songs/songText';
@@ -1143,7 +1145,7 @@ function openLessonAction(action: LessonAction, appShell: AppShell) {
 function setupNavigation(learn: LearnHandle) {
   setupMetronomeWindow();
   const router = new Router();
-  const appShell = new AppShell(router);
+  const appShell = new AppShell(router, document, () => window.scrollTo(0, 0));
   shell = appShell;
 
   const hud = new GameHud(gameStore);
@@ -1192,8 +1194,30 @@ function setupNavigation(learn: LearnHandle) {
     },
     onBack: () => appShell.navigate('home'),
     starsFor: (songId) => gameStore.songStars(songId),
+    makeSong: () => appShell.navigate('maker'),
+    editSong: (scoreId) => appShell.navigate('maker', scoreId),
   });
   gameStore.onChange(() => songs.refresh()); // new stars show on the cards
+  const maker = new SongMakerView({
+    toolkit: new VerovioToolkit(verovioModule) as unknown as NotationToolkit,
+    onBack: () => appShell.navigate('songs'),
+    open: async (id) => {
+      const stored = await scoreStore.get(id);
+      return stored && stored.kind === 'maker' && typeof stored.data === 'string' ? stored.data : null;
+    },
+    save: async (id, title, xml) => {
+      const result = await scoreStore.put({ id, title, kind: 'maker', data: xml });
+      if (!result.ok) return result.reason === 'full' ? 'full' : 'failed';
+      return scoreStore.persistent() ? 'saved' : 'memory';
+    },
+    practise: (id) => void practiseStoredScore(id),
+    newId: () => newMakerId(),
+    formatName: (letter) => formatNoteName(letter, getNoteNameSystem()),
+    // the address names the song, so a reload opens it again; no new step for the Back button
+    onSaved: (id) => history.replaceState(null, '', `#/maker/${id}`),
+  });
+  onLocaleChange(() => maker.refresh());
+  onNoteNamesChange(() => maker.refresh());
   const progress = new ProgressView({ store: gameStore, onBack: () => appShell.navigate('home') });
   // The xylophone draws its staff notes with its own notation engine, so the quiz keeps its settings
   const xylophone = new XylophoneView({
@@ -1258,7 +1282,7 @@ function setupNavigation(learn: LearnHandle) {
   songsView = songs;
   xylophoneView = xylophone;
   progressView = progress;
-  document.getElementById('app')!.prepend(menu.element, lessons.element, songs.element, catalog.element, xylophone.element, progress.element);
+  document.getElementById('app')!.prepend(menu.element, lessons.element, songs.element, maker.element, catalog.element, xylophone.element, progress.element);
 
   document.getElementById('homeButton')!.addEventListener('click', () => appShell.navigate('home'));
 
@@ -1277,6 +1301,7 @@ function setupNavigation(learn: LearnHandle) {
     },
     change: (view, param) => {
       if (view === 'lessons') lessons.show(param);
+      if (view === 'maker') void maker.show(param);
     },
     enter: (view, previous, param) => {
       if (STAND_VIEWS.includes(view)) pianoKeyboard?.attach();
@@ -1291,6 +1316,9 @@ function setupNavigation(learn: LearnHandle) {
           break;
         case 'songs':
           songs.refresh();
+          break;
+        case 'maker':
+          void maker.show(param);
           break;
         case 'catalog':
           void catalog.activate();

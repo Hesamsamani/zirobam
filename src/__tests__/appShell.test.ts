@@ -135,4 +135,16 @@ describe('AppShell', () => {
     shell.navigate('levels');
     expect(calls).toEqual(['enter']);
   });
+
+  it('scrolls to the top when another screen opens, but not when only the name changes', () => {
+    const { win, changeHash } = fakeWindow('#/lessons');
+    const scrolled: string[] = [];
+    const shell = new AppShell(new Router(win), document, () => scrolled.push('top'));
+    shell.start();
+    expect(scrolled).toEqual(['top']);
+    changeHash('#/lessons/clefs');
+    expect(scrolled).toEqual(['top']);
+    changeHash('#/songs');
+    expect(scrolled).toEqual(['top', 'top']);
+  });
 });

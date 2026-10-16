@@ -202,3 +202,63 @@ describe('SongsView: my scores', () => {
     expect(view.element.querySelector('.my-scores .song-group-title')!.textContent).toBe('نت‌های من');
   });
 });
+
+describe('SongsView: song maker', () => {
+  const flush = async () => {
+    for (let i = 0; i < 5; i++) await Promise.resolve();
+  };
+
+  function setupMaker(kinds: Array<'xml' | 'maker'> = []) {
+    const list = kinds.map((kind, i) => ({ id: `${kind}-${i}`, title: `Tune ${i}`, kind, size: 10, addedAt: 100 - i }));
+    const scores = {
+      list: vi.fn(async () => list),
+      practise: vi.fn(),
+      remove: vi.fn(async () => undefined),
+      persistent: () => true,
+      onChange: () => () => undefined,
+    };
+    const makeSong = vi.fn();
+    const editSong = vi.fn();
+    const view = new SongsView({ songs: BUILT_IN_SONGS, onChoose: vi.fn(), onBack: vi.fn(), scores, makeSong, editSong });
+    document.body.replaceChildren(view.element);
+    return { view, makeSong, editSong };
+  }
+
+  beforeEach(() => {
+    localStorage.clear();
+    initLocale();
+    setLocale('en');
+  });
+
+  it('has a button that opens the song maker', () => {
+    const { view, makeSong } = setupMaker();
+    const button = view.element.querySelector<HTMLButtonElement>('.songs-make')!;
+    expect(button.textContent).toBe('Write a song');
+    button.click();
+    expect(makeSong).toHaveBeenCalledOnce();
+  });
+
+  it('has no such button when the screen is not given the song maker', () => {
+    const view = new SongsView({ songs: BUILT_IN_SONGS, onChoose: vi.fn(), onBack: vi.fn() });
+    expect(view.element.querySelector('.songs-make')).toBeNull();
+  });
+
+  it('lets a song made here be edited, and no other score', async () => {
+    const { view, editSong } = setupMaker(['maker', 'xml']);
+    await flush();
+    const edits = view.element.querySelectorAll<HTMLButtonElement>('.score-edit');
+    expect(edits).toHaveLength(1);
+    expect(edits[0].textContent).toBe('Edit');
+    expect(edits[0].getAttribute('aria-label')).toBe('Edit Tune 0');
+    edits[0].click();
+    expect(editSong).toHaveBeenCalledWith('maker-0');
+  });
+
+  it('writes the buttons in Persian', async () => {
+    setLocale('fa');
+    const { view } = setupMaker(['maker']);
+    await flush();
+    expect(view.element.querySelector('.songs-make')!.textContent).toBe('نوشتن آهنگ');
+    expect(view.element.querySelector('.score-edit')!.textContent).toBe('ویرایش');
+  });
+});
