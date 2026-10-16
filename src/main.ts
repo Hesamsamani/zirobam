@@ -48,6 +48,8 @@ import { describeLesson, keyIdForLevel } from './lessonText';
 import { noteInput, type NoteSource } from './input/noteInput';
 import { ComputerKeyboard, keyHints } from './input/computerKeyboard';
 import { OnScreenPiano } from './input/onScreenPiano';
+import { addNoteLabels, removeNoteLabels } from './rendering/noteLabels';
+import { spellFromMidi } from './core/noteUtils';
 
 // State
 let toolkit: VerovioToolkit;
@@ -256,6 +258,7 @@ function rerenderCurrentMusic() {
 
   // Rebuild timing events to ensure they match the new IDs
   buildTimingEvents();
+  refreshNoteLabels();
 }
 
 // Regenerate XML from current notes (for fingering toggle)
@@ -412,6 +415,7 @@ function renderCurrentMusic() {
 
   // Build timing events from the source note data (not from SVG)
   buildTimingEvents();
+  refreshNoteLabels();
 }
 
 // Note ID mapping: maps time (in beats) to SVG element IDs
@@ -632,6 +636,30 @@ function buildTimingEvents() {
     (window as unknown as Record<string, unknown>).__timingEvents = timingEvents;
     (window as unknown as Record<string, unknown>).__currentRightHandNotes = currentRightHandNotes;
   }
+}
+
+let showNoteNames = localStorage.getItem('ui.showNoteNames') === '1';
+
+function noteNameForElement(el: Element): string | null {
+  const id = el.getAttribute('id');
+  if (!id) return null;
+  const attrs = toolkit.getElementAttr(id);
+  if (!attrs?.pname) return null;
+  const letter = String(attrs.pname).toUpperCase();
+  // The sounding pitch already includes the key signature, so F in D major is spelled F#
+  const midi = toolkit.getMIDIValuesForElement(id)?.pitch;
+  const spelled =
+    typeof midi === 'number' && attrs.oct !== undefined
+      ? spellFromMidi(letter, Number(attrs.oct), midi)
+      : letter;
+  return formatNoteName(spelled, getNoteNameSystem());
+}
+
+function refreshNoteLabels() {
+  const notation = document.getElementById('notation');
+  if (!notation) return;
+  if (showNoteNames) addNoteLabels(notation, noteNameForElement);
+  else removeNoteLabels(notation);
 }
 
 function localizeLevel(levelString: string): string {
@@ -1312,7 +1340,21 @@ function setupControls() {
       updateLevelDisplay();
     }
     syncLanguageControls();
+    refreshNoteLabels();
   };
+
+  const showNoteNamesInput = document.getElementById('showNoteNames') as HTMLInputElement;
+  showNoteNamesInput.checked = showNoteNames;
+  showNoteNamesInput.addEventListener('change', () => {
+    showNoteNames = showNoteNamesInput.checked;
+    try {
+      localStorage.setItem('ui.showNoteNames', showNoteNames ? '1' : '0');
+    } catch {
+      // storage unavailable
+    }
+    refreshNoteLabels();
+  });
+
   onLocaleChange(refreshTexts);
   onNoteNamesChange(refreshTexts);
   refreshTexts();

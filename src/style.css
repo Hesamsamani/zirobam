@@ -1529,3 +1529,14 @@ body.piano-open #musicStand {
 .piano-key.black[data-hint]::after {
   color: var(--current);
 }
+
+.note-label {
+  fill: var(--ink);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: var(--paper);
+  stroke-width: 60px;
+  stroke-linejoin: round;
+  pointer-events: none;
+}

@@ -81,6 +81,20 @@ export function midiToNoteData(midi: number, duration: number = 1): NoteData {
   };
 }
 
+const NATURAL_SEMITONES: Record<string, number> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+
+/**
+ * Spell a note from its letter, octave and sounding MIDI pitch, so key-signature accidentals
+ * are included: ('F', 4, 66) is 'F#'. More than a semitone away falls back to the plain letter.
+ */
+export function spellFromMidi(letter: string, octave: number, midi: number): string {
+  const natural = (octave + 1) * 12 + (NATURAL_SEMITONES[letter] ?? 0);
+  const difference = midi - natural;
+  if (difference === 1) return `${letter}#`;
+  if (difference === -1) return `${letter}b`;
+  return letter;
+}
+
 // ============================================
 // NOTE COMPARISON
 // ============================================
