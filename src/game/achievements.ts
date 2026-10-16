@@ -4,6 +4,7 @@ export type BadgeId =
   | 'first-note'
   | 'combo-10'
   | 'correct-100'
+  | 'lessons-5'
   | 'lessons'
   | 'stage-3'
   | 'stage-5'
@@ -29,8 +30,9 @@ export interface BadgeContext {
     songsFinished: number;
     xyloSongs: number;
     xyloThreeStars: number;
+    lessonsRead: number;
+    lessonsTotal: number;
   };
-  lessonsRead: boolean;
   finishedSongIds: readonly string[];
   beginnerSongIds: readonly string[];
   daysGoalMet: number;
@@ -49,7 +51,14 @@ export const BADGES: readonly Badge[] = [
   { id: 'first-note', title: 'badge.firstNote.title', desc: 'badge.firstNote.desc', icon: 'note', earned: (c) => c.counters.correct >= 1 },
   { id: 'combo-10', title: 'badge.combo10.title', desc: 'badge.combo10.desc', icon: 'flame', earned: (c) => c.counters.bestCombo >= 10 },
   { id: 'correct-100', title: 'badge.correct100.title', desc: 'badge.correct100.desc', icon: 'target', earned: (c) => c.counters.correct >= 100 },
-  { id: 'lessons', title: 'badge.lessons.title', desc: 'badge.lessons.desc', icon: 'book', earned: (c) => c.lessonsRead },
+  { id: 'lessons-5', title: 'badge.lessons5.title', desc: 'badge.lessons5.desc', icon: 'book', earned: (c) => c.counters.lessonsRead >= 5 },
+  {
+    id: 'lessons',
+    title: 'badge.lessons.title',
+    desc: 'badge.lessons.desc',
+    icon: 'book',
+    earned: (c) => c.counters.lessonsTotal > 0 && c.counters.lessonsRead >= c.counters.lessonsTotal,
+  },
   { id: 'stage-3', title: 'badge.stage3.title', desc: 'badge.stage3.desc', icon: 'clef', earned: (c) => c.counters.maxStage >= 3 },
   { id: 'stage-5', title: 'badge.stage5.title', desc: 'badge.stage5.desc', icon: 'crown', earned: (c) => c.counters.maxStage >= 5 },
   { id: 'level-5', title: 'badge.level5.title', desc: 'badge.level5.desc', icon: 'star', earned: (c) => c.counters.maxLevel >= 5 },

@@ -16,7 +16,7 @@ test.describe('Main menu', () => {
   test('is the first screen and hides the exercise', async ({ page }) => {
     await openMenu(page);
     await expect(page.locator('#mainMenu h1')).toHaveText('Music Notes Trainer');
-    await expect(page.locator('#mainMenu .menu-tile')).toHaveCount(7);
+    await expect(page.locator('#mainMenu .menu-tile')).toHaveCount(8);
     await expect(page.locator('#musicStand')).toBeHidden();
     await expect(page.locator('#controlBar')).toBeHidden();
     await expect(page.locator('body')).toHaveAttribute('data-view', 'home');
@@ -81,7 +81,7 @@ test.describe('Main menu', () => {
     await expect(tile(page, 'levels')).toContainText('1a');
   });
 
-  test('the learn tile opens the lessons, and Close goes back to the menu', async ({ page }) => {
+  test('the quiz tile opens the quiz, and Close goes back to the menu', async ({ page }) => {
     await openMenu(page);
     await tile(page, 'learn').click();
     await expect(page.locator('#learnView')).toBeVisible();
@@ -221,7 +221,8 @@ test.describe('Main menu in Persian', () => {
     await openMenu(page, 'fa');
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
     await expect(page.locator('#mainMenu h1')).toHaveText('مربی نت‌خوانی');
-    await expect(tile(page, 'learn')).toContainText('یادگیری نت‌ها');
+    await expect(tile(page, 'lessons')).toContainText('درس‌ها');
+    await expect(tile(page, 'learn')).toContainText('آزمون نت‌شناسی');
     await expect(tile(page, 'songs')).toContainText('آهنگ‌ها');
     await expect(tile(page, 'settings')).toContainText('تنظیمات');
     await expect(tile(page, 'levels')).toContainText('۱a');

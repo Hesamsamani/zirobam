@@ -13,12 +13,10 @@ async function openMenu(page: Page, locale?: 'fa'): Promise<void> {
   await expect(page.locator('#mainMenu')).toBeVisible();
 }
 
-/** Opens the note quiz, going through the lessons the first time. */
+/** Opens the note quiz from the menu. */
 async function startQuiz(page: Page): Promise<void> {
   await page.locator('#mainMenu [data-tile="learn"]').click();
   await expect(page.locator('#learnView')).toBeVisible();
-  while (await page.locator('.learn-lesson-next').isVisible()) await page.locator('.learn-lesson-next').click();
-  await page.locator('.learn-lesson-start').click();
   await expect(page.locator('#learnView')).toHaveAttribute('data-panel', 'quiz');
 }
 
@@ -44,9 +42,9 @@ test.describe('Rewards on the home screen', () => {
     await page.locator('#mainMenu [data-tile="progress"]').click();
     await expect(page).toHaveURL(/#\/progress$/);
     await expect(page.locator('#progressView')).toBeVisible();
-    await expect(page.locator('.pv-badge')).toHaveCount(15);
+    await expect(page.locator('.pv-badge')).toHaveCount(16);
     await expect(page.locator('.pv-badge[data-state="earned"]')).toHaveCount(0);
-    await expect(page.locator('.pv-count')).toHaveText('0 of 15 earned');
+    await expect(page.locator('.pv-count')).toHaveText('0 of 16 earned');
     await page.locator('#progressView .back-btn').click();
     await expect(page.locator('#mainMenu')).toBeVisible();
   });
@@ -69,19 +67,18 @@ test.describe('Rewards for the note quiz', () => {
 
     const toasts = page.locator('#toasts');
     await expect(toasts).toHaveAttribute('role', 'status');
-    // the 5 XP for the lessons and the 2 XP for the answer arrive together and are shown as one toast
-    await expect(toasts.locator('.toast[data-kind="xp"] .toast-title')).toHaveText('+7 XP');
+    await expect(toasts.locator('.toast[data-kind="xp"] .toast-title')).toHaveText('+2 XP');
     await expect(toasts.locator('.toast[data-kind="badge"] .toast-title', { hasText: 'First note' })).toHaveText('Badge earned: First note');
-    expect((await saved(page)).xp).toBe(7); // 2 for the answer, 5 for the lessons read first
+    expect((await saved(page)).xp).toBe(2);
 
     await page.reload();
     await expect(page.locator('#learnView')).toBeVisible();
     await page.locator('#learnView .learn-header .learn-text-btn').last().click();
-    await expect(page.locator('#mainMenu .hud-goal-text')).toHaveText('Today: 7 of 50 XP');
+    await expect(page.locator('#mainMenu .hud-goal-text')).toHaveText('Today: 2 of 50 XP');
     await page.locator('#mainMenu [data-tile="progress"]').click();
     await expect(page.locator('.pv-badge[data-badge="first-note"]')).toHaveAttribute('data-state', 'earned');
-    await expect(page.locator('.pv-badge[data-badge="lessons"]')).toHaveAttribute('data-state', 'earned');
-    await expect(page.locator('.pv-count')).toHaveText('2 of 15 earned');
+    await expect(page.locator('.pv-badge[data-badge="lessons"]')).toHaveAttribute('data-state', 'locked');
+    await expect(page.locator('.pv-count')).toHaveText('1 of 16 earned');
     await expect(page.locator('[data-stat="correct"] dd')).toHaveText('1');
   });
 
@@ -93,7 +90,7 @@ test.describe('Rewards for the note quiz', () => {
       if (i < 4) await expect(page.locator('#learnView')).not.toHaveAttribute('data-result', /.+/, { timeout: 5000 });
     }
     await expect(page.locator('.learn-combo')).toHaveText('In a row: 5');
-    expect((await saved(page)).xp).toBe(5 + 2 * 5 + 1); // the lessons, five answers, one more for the fifth in a row
+    expect((await saved(page)).xp).toBe(2 * 5 + 1); // five answers, one more for the fifth in a row
     expect((await saved(page)).counters.bestCombo).toBe(5);
   });
 
@@ -106,15 +103,15 @@ test.describe('Rewards for the note quiz', () => {
     const wrong = pitch![0] === 'C' ? 'D' : 'C';
     await page.locator(`.learn-answer[data-letter="${wrong}"]`).click();
     await expect(page.locator('#learnView')).toHaveAttribute('data-result', 'wrong');
-    expect((await saved(page)).xp).toBe(5 + 2); // the lessons and the one right answer
+    expect((await saved(page)).xp).toBe(2); // the one right answer
     await expect(page.locator('.learn-combo')).toBeHidden();
   });
 
-  test('reading all the lessons earns the student badge', async ({ page }) => {
+  test('opening the quiz alone earns nothing: the lessons have their own rewards', async ({ page }) => {
     await openMenu(page);
     await startQuiz(page);
-    expect((await saved(page)).badges.lessons).toBeTruthy();
-    expect((await saved(page)).xp).toBe(5);
+    expect((await saved(page)).xp ?? 0).toBe(0);
+    expect((await saved(page)).badges ?? {}).toEqual({});
   });
 });
 
@@ -193,7 +190,7 @@ test.describe('The progress screen', () => {
         localStorage.setItem('game.v1', JSON.stringify({
           version: 1, xp: 120, goal: 50, days: { [key]: 120 },
           counters: { correct: 40, bestCombo: 12, piecesPassed: 3, stepsPassed: 9, songsFinished: 1, xyloSongs: 0, xyloThreeStars: 0, maxLevel: 3, maxStage: 2 },
-          lessonsRead: true, songStars: { 'mary-lamb': 2 }, xyloBest: {}, badges: { 'first-note': key, combo10: key },
+          songStars: { 'mary-lamb': 2 }, xyloBest: {}, badges: { 'first-note': key, combo10: key },
         }));
       }
     });
@@ -216,7 +213,7 @@ test.describe('The progress screen', () => {
     await page.locator('.pv-reset').click();
     await page.locator('.pv-reset-yes').click();
     await expect(page.locator('#progressView .hud-rank-name')).toHaveText('Rank 1');
-    await expect(page.locator('.pv-count')).toHaveText('0 of 15 earned');
+    await expect(page.locator('.pv-count')).toHaveText('0 of 16 earned');
     expect((await saved(page)).xp).toBe(0);
     expect((await saved(page)).goal).toBe(50);
     expect(dialogs).toBe(0);
@@ -251,7 +248,7 @@ test.describe('Rewards in Persian', () => {
     await expect(page.locator('#mainMenu .hud-goal-text')).toHaveText('امروز: ۰ از ۵۰ امتیاز');
     await page.locator('#mainMenu [data-tile="progress"]').click();
     await expect(page.locator('#progressView h2')).toHaveText('پیشرفت');
-    await expect(page.locator('.pv-count')).toHaveText('۰ از ۱۵ نشان به دست آمده');
+    await expect(page.locator('.pv-count')).toHaveText('۰ از ۱۶ نشان به دست آمده');
     await expect(page.locator('.pv-badge[data-badge="first-note"] .pv-badge-title')).toHaveText('نخستین نت');
   });
 });

@@ -1,11 +1,9 @@
 import { t, applyTranslations, formatNumber, type MessageKey } from '../i18n';
 import type { NoteInputHub } from '../input/noteInput';
-import { LESSONS } from './lessons';
 import { MAX_STAGE, RECENT_LIMIT } from './noteStats';
 import type { AnswerResult, Clef, NameTheNoteQuiz } from './nameTheNote';
 
 const LETTERS = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
-const SEEN_KEY = 'learn.seenLessons';
 
 export interface LearnViewDeps {
   quiz: NameTheNoteQuiz;
@@ -19,8 +17,8 @@ export interface LearnViewDeps {
   onExit?: () => void;
   /** Called after every answer to a question. */
   onAnswer?: (result: AnswerResult) => void;
-  /** Called when the player has gone through all the lessons. */
-  onLessonsDone?: () => void;
+  /** Opens the lessons screen. Without it there is no Lessons button. */
+  onOpenLessons?: () => void;
 }
 
 function make<K extends keyof HTMLElementTagNameMap>(
@@ -41,7 +39,6 @@ export class LearnView {
   readonly element: HTMLElement;
   private readonly deps: LearnViewDeps;
   private readonly quizPanel: HTMLElement;
-  private readonly lessonsPanel: HTMLElement;
   private readonly noteHolder: HTMLElement;
   private readonly answerButtons = new Map<string, HTMLButtonElement>();
   private readonly feedback: HTMLElement;
@@ -49,15 +46,7 @@ export class LearnView {
   private readonly combo: HTMLElement;
   private readonly nextButton: HTMLButtonElement;
   private readonly stageSelect: HTMLSelectElement;
-  private readonly lessonTitle: HTMLElement;
-  private readonly lessonBody: HTMLElement;
-  private readonly lessonExamples: HTMLElement;
-  private readonly lessonCount: HTMLElement;
-  private readonly lessonPrev: HTMLButtonElement;
-  private readonly lessonNext: HTMLButtonElement;
-  private readonly lessonStart: HTMLButtonElement;
   private readonly unsubscribe: Array<() => void>;
-  private lessonIndex = 0;
   private locked = false;
   private opened = false;
   private timer: ReturnType<typeof setTimeout> | null = null;
@@ -75,13 +64,17 @@ export class LearnView {
     this.stageSelect = make('select', 'learn-stage-select');
     this.stageSelect.id = 'learnStage';
     this.stageSelect.addEventListener('change', () => this.changeStage());
-    const lessonsButton = make('button', 'learn-text-btn', 'learn.lessons');
-    lessonsButton.type = 'button';
-    lessonsButton.addEventListener('click', () => this.showLessons(0));
     const closeButton = make('button', 'learn-text-btn', 'learn.close');
     closeButton.type = 'button';
     closeButton.addEventListener('click', () => (this.deps.onExit ? this.deps.onExit() : this.close()));
-    controls.append(this.stageSelect, lessonsButton, closeButton);
+    controls.appendChild(this.stageSelect);
+    if (deps.onOpenLessons) {
+      const lessonsButton = make('button', 'learn-text-btn learn-open-lessons', 'learn.lessons');
+      lessonsButton.type = 'button';
+      lessonsButton.addEventListener('click', () => deps.onOpenLessons?.());
+      controls.appendChild(lessonsButton);
+    }
+    controls.appendChild(closeButton);
     header.appendChild(controls);
 
     // Quiz panel
@@ -114,25 +107,8 @@ export class LearnView {
       this.feedback, this.nextButton, make('p', 'learn-hint', 'learn.hint')
     );
 
-    // Lessons panel
-    this.lessonsPanel = make('div', 'learn-lessons');
-    this.lessonTitle = make('h3', 'learn-lesson-title');
-    this.lessonExamples = make('div', 'learn-examples');
-    this.lessonBody = make('p', 'learn-lesson-body');
-    this.lessonCount = make('p', 'learn-lesson-count');
-    const nav = make('div', 'learn-lesson-nav');
-    this.lessonPrev = make('button', 'learn-lesson-prev learn-text-btn', 'lessons.prev');
-    this.lessonNext = make('button', 'learn-lesson-next learn-text-btn', 'lessons.next');
-    this.lessonStart = make('button', 'learn-lesson-start learn-text-btn', 'lessons.start');
-    for (const b of [this.lessonPrev, this.lessonNext, this.lessonStart]) b.type = 'button';
-    this.lessonPrev.addEventListener('click', () => this.showLessons(this.lessonIndex - 1));
-    this.lessonNext.addEventListener('click', () => this.showLessons(this.lessonIndex + 1));
-    this.lessonStart.addEventListener('click', () => this.finishLessons());
-    nav.append(this.lessonPrev, this.lessonCount, this.lessonNext, this.lessonStart);
-    this.lessonsPanel.append(this.lessonTitle, this.lessonExamples, this.lessonBody, nav);
-
-    this.element.append(header, this.quizPanel, this.lessonsPanel);
-    this.lessonsPanel.hidden = true;
+    this.element.append(header, this.quizPanel);
+    this.element.dataset.panel = 'quiz';
 
     this.unsubscribe = [deps.hub.onNoteOn.on(({ noteName }) => this.handlePlayed(noteName))];
     this.refresh();
@@ -145,8 +121,7 @@ export class LearnView {
   open(): void {
     this.opened = true;
     this.element.hidden = false;
-    if (this.hasSeenLessons()) this.showQuiz();
-    else this.showLessons(0);
+    this.showQuiz();
   }
 
   close(): void {
@@ -167,15 +142,11 @@ export class LearnView {
     for (const [letter, button] of this.answerButtons) button.textContent = this.deps.formatLetter(letter);
     this.refreshStageSelect();
     this.refreshStats();
-    if (this.element.dataset.panel === 'lessons') this.showLessons(this.lessonIndex);
   }
 
   // ----- quiz -----
 
   private showQuiz(): void {
-    this.element.dataset.panel = 'quiz';
-    this.quizPanel.hidden = false;
-    this.lessonsPanel.hidden = true;
     this.askNext();
   }
 
@@ -265,49 +236,6 @@ export class LearnView {
   private clearTimer(): void {
     if (this.timer) clearTimeout(this.timer);
     this.timer = null;
-  }
-
-  // ----- lessons -----
-
-  private hasSeenLessons(): boolean {
-    try {
-      return localStorage.getItem(SEEN_KEY) === '1';
-    } catch {
-      return false;
-    }
-  }
-
-  private showLessons(index: number): void {
-    this.clearTimer();
-    this.lessonIndex = Math.max(0, Math.min(LESSONS.length - 1, index));
-    const lesson = LESSONS[this.lessonIndex];
-    this.element.dataset.panel = 'lessons';
-    this.quizPanel.hidden = true;
-    this.lessonsPanel.hidden = false;
-    this.lessonTitle.textContent = t(lesson.titleKey);
-    this.lessonBody.textContent = t(lesson.bodyKey);
-    this.lessonCount.textContent = t('lessons.count', { n: this.lessonIndex + 1, total: LESSONS.length });
-    this.lessonExamples.replaceChildren();
-    for (const example of lesson.examples) {
-      const holder = make('div', 'learn-example');
-      holder.setAttribute('dir', 'ltr');
-      this.deps.renderNote(example.pitch, example.clef, holder);
-      this.lessonExamples.appendChild(holder);
-    }
-    const last = this.lessonIndex === LESSONS.length - 1;
-    this.lessonPrev.disabled = this.lessonIndex === 0;
-    this.lessonNext.hidden = last;
-    this.lessonStart.hidden = !last;
-  }
-
-  private finishLessons(): void {
-    try {
-      localStorage.setItem(SEEN_KEY, '1');
-    } catch {
-      // storage unavailable: the lessons will show again next time
-    }
-    this.showQuiz();
-    this.deps.onLessonsDone?.();
   }
 
   /** Shows the number of right answers in a row (from 2 up). */

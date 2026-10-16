@@ -80,6 +80,11 @@ import { LearnView } from './learn/learnView';
 import { NameTheNoteQuiz } from './learn/nameTheNote';
 import { NoteStats } from './learn/noteStats';
 import { createNoteCardRenderer, type NotationToolkit } from './learn/noteCard';
+import { ALL_LESSONS } from './lessons/curriculum';
+import { LessonPlayer } from './lessons/lessonPlayer';
+import { LessonProgress } from './lessons/lessonProgress';
+import { LessonsView } from './lessons/lessonsView';
+import type { LessonAction } from './lessons/types';
 
 // State
 let toolkit: VerovioToolkit;
@@ -162,6 +167,7 @@ const gameStore = new GameStore({
 const game = new GameController({ store: gameStore, toasts: new ToastCenter() });
 let gameHud: GameHud | null = null;
 let progressView: ProgressView | null = null;
+const lessonProgress = new LessonProgress(ALL_LESSONS.map((lesson) => lesson.id));
 /** Steps repeated since the song was started, for its stars. */
 let practiceRetries = 0;
 /** Tries at the current practice step (1 for the first), and wrong notes in the current try. */
@@ -1028,11 +1034,11 @@ function setupLearnMode(): LearnHandle {
       view.setCombo(gameStore.combo());
       if (result.unlockedStage) game.stage(result.unlockedStage);
     },
-    onLessonsDone: () => game.lessonsRead(),
+    onOpenLessons: () => shell?.navigate('lessons'),
   });
   document.getElementById('musicStand')!.appendChild(view.element);
 
-  // The book button switches between the exercise and the lessons
+  // The book button switches between the exercise and the note quiz
   toggle.addEventListener('click', () => {
     shell?.navigate(shell.current() === 'learn' ? learnReturnView : 'learn');
   });
@@ -1104,6 +1110,28 @@ function setupMetronomeWindow() {
   onNoteNamesChange(() => panel.refresh());
 }
 
+/** What the "Try it" buttons of a lesson do. The metronome button is a click, so it may start audio. */
+function openLessonAction(action: LessonAction, appShell: AppShell) {
+  switch (action) {
+    case 'quiz':
+      appShell.navigate('learn');
+      break;
+    case 'levels':
+      appShell.navigate('levels');
+      break;
+    case 'songs':
+      appShell.navigate('songs');
+      break;
+    case 'xylophone':
+      appShell.navigate('xylophone');
+      break;
+    case 'metronome':
+      void Tone.start();
+      void metronomeWindow?.open();
+      break;
+  }
+}
+
 function setupNavigation(learn: LearnHandle) {
   setupMetronomeWindow();
   const router = new Router();
@@ -1121,6 +1149,7 @@ function setupNavigation(learn: LearnHandle) {
       void metronomeWindow?.open();
     },
     levelLabel: () => localizeLevel(getFullLevelString()),
+    lessonsProgress: () => ({ read: lessonProgress.count(), total: lessonProgress.total() }),
     resume: () => {
       if (currentMode === 'practice' && practiceSession) {
         const { currentStep, totalSteps } = practiceSession.getProgress();
@@ -1164,11 +1193,40 @@ function setupNavigation(learn: LearnHandle) {
     onReadAnswer: (correct) => game.answer(correct),
     onSongFinished: (songId, stars) => game.xyloSong(songId, stars),
   });
+  const lessonPlayer = new LessonPlayer({
+    // the piano the exercises use; it loads on first use
+    ready: async () => {
+      await initAudio();
+      return Boolean(sampler?.loaded);
+    },
+    play: (note, seconds, startsIn) => void sampler?.triggerAttackRelease(note, seconds, Tone.now() + 0.05 + startsIn),
+    stopAll: () => sampler?.releaseAll(),
+  });
+  const lessons = new LessonsView({
+    toolkit: new VerovioToolkit(verovioModule) as unknown as NotationToolkit,
+    progress: lessonProgress,
+    onBack: () => appShell.navigate('home'),
+    open: (lessonId) => appShell.navigate('lessons', lessonId),
+    onAction: (action) => openLessonAction(action, appShell),
+    onRead: (_lessonId, firstTime) => {
+      if (firstTime) game.lessonRead(lessonProgress.count(), lessonProgress.total());
+    },
+    playNote: (note) => {
+      void Tone.start();
+      lessonPlayer.playNote(note);
+    },
+    playExample: (spec, onDone) => {
+      void Tone.start();
+      return lessonPlayer.playExample(spec, onDone);
+    },
+  });
+  onLocaleChange(() => lessons.refresh());
+  onNoteNamesChange(() => lessons.refresh());
   mainMenu = menu;
   songsView = songs;
   xylophoneView = xylophone;
   progressView = progress;
-  document.getElementById('app')!.prepend(menu.element, songs.element, xylophone.element, progress.element);
+  document.getElementById('app')!.prepend(menu.element, lessons.element, songs.element, xylophone.element, progress.element);
 
   document.getElementById('homeButton')!.addEventListener('click', () => appShell.navigate('home'));
 
@@ -1183,14 +1241,21 @@ function setupNavigation(learn: LearnHandle) {
       if (STAND_VIEWS.includes(view) && (isPlaying || isStarting)) stop();
       if (view === 'learn') learn.close();
       if (view === 'xylophone') xylophone.deactivate();
+      if (view === 'lessons') lessons.stop();
     },
-    enter: (view, previous) => {
+    change: (view, param) => {
+      if (view === 'lessons') lessons.show(param);
+    },
+    enter: (view, previous, param) => {
       if (STAND_VIEWS.includes(view)) pianoKeyboard?.attach();
       else pianoKeyboard?.detach();
 
       switch (view) {
         case 'home':
           menu.refresh();
+          break;
+        case 'lessons':
+          lessons.show(param);
           break;
         case 'songs':
           songs.refresh();

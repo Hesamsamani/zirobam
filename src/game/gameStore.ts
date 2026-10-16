@@ -50,6 +50,9 @@ interface Counters {
   xyloThreeStars: number;
   maxLevel: number;
   maxStage: number;
+  /** The most lessons read so far, and how many lessons the course had at that time. */
+  lessonsRead: number;
+  lessonsTotal: number;
 }
 
 interface State {
@@ -58,7 +61,6 @@ interface State {
   goal: Goal;
   days: Record<string, number>;
   counters: Counters;
-  lessonsRead: boolean;
   songStars: Record<string, Stars>;
   xyloBest: Record<string, Stars>;
   badges: Partial<Record<BadgeId, string>>;
@@ -72,9 +74,8 @@ function emptyState(): State {
     days: {},
     counters: {
       correct: 0, bestCombo: 0, piecesPassed: 0, stepsPassed: 0, songsFinished: 0,
-      xyloSongs: 0, xyloThreeStars: 0, maxLevel: 1, maxStage: 1,
+      xyloSongs: 0, xyloThreeStars: 0, maxLevel: 1, maxStage: 1, lessonsRead: 0, lessonsTotal: 0,
     },
-    lessonsRead: false,
     songStars: {},
     xyloBest: {},
     badges: {},
@@ -108,7 +109,6 @@ function readState(raw: unknown): State | null {
   }
   state.counters.maxLevel = Math.max(1, state.counters.maxLevel);
   state.counters.maxStage = Math.max(1, state.counters.maxStage);
-  state.lessonsRead = data.lessonsRead === true;
 
   for (const field of ['songStars', 'xyloBest'] as const) {
     const source = data[field];
@@ -280,10 +280,17 @@ export class GameStore {
     return this.award(stars > best ? stars * 10 : 2);
   }
 
-  recordLessonsRead(): Award {
-    if (this.state.lessonsRead) return this.award(0, false);
-    this.state.lessonsRead = true;
-    return this.award(5);
+  /**
+   * A lesson was read for the first time: `done` of the course's `total` lessons are read now.
+   * 3 XP each, and 20 more the moment the course is complete.
+   */
+  recordLessonRead(done: number, total: number): Award {
+    const counters = this.state.counters;
+    const wasComplete = counters.lessonsTotal > 0 && counters.lessonsRead >= counters.lessonsTotal;
+    counters.lessonsTotal = count(total);
+    counters.lessonsRead = Math.max(counters.lessonsRead, count(done, 0, counters.lessonsTotal));
+    const complete = counters.lessonsTotal > 0 && counters.lessonsRead >= counters.lessonsTotal;
+    return this.award(3 + (complete && !wasComplete ? 20 : 0));
   }
 
   /** A stage of the note quiz was unlocked. */
@@ -338,7 +345,6 @@ export class GameStore {
   private earnBadges(today: string): BadgeId[] {
     const ctx: BadgeContext = {
       counters: this.state.counters,
-      lessonsRead: this.state.lessonsRead,
       finishedSongIds: Object.keys(this.state.songStars),
       beginnerSongIds: this.beginnerSongIds,
       daysGoalMet: Object.values(this.state.days).filter((xp) => xp >= this.state.goal).length,

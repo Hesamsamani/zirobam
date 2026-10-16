@@ -39,7 +39,6 @@ beforeEach(() => {
   vi.useFakeTimers();
   localStorage.clear();
   initLocale();
-  localStorage.setItem('learn.seenLessons', '1');
   hub = new NoteInputHub();
   stats = new NoteStats(fakeStorage());
   renderNote = vi.fn<RenderNote>();
@@ -156,23 +155,6 @@ describe('quiz panel', () => {
     other.dispose();
   });
 
-  it('reports when all the lessons have been read', () => {
-    localStorage.removeItem('learn.seenLessons');
-    const done = vi.fn();
-    const other = new LearnView({
-      quiz: new NameTheNoteQuiz(stats, seeded(5)),
-      hub,
-      renderNote,
-      formatLetter: (letter) => letter,
-      onLessonsDone: done,
-    });
-    document.body.appendChild(other.element);
-    other.open(); // first time: the lessons
-    other.element.querySelector<HTMLButtonElement>('.learn-lesson-start')!.click();
-    expect(done).toHaveBeenCalledTimes(1);
-    other.dispose();
-  });
-
   it('shows the number of right answers in a row from two up', () => {
     view.open();
     const combo = q<HTMLElement>('.learn-combo');
@@ -199,22 +181,31 @@ describe('quiz panel', () => {
   });
 });
 
-describe('lessons panel', () => {
-  it('opens on the lessons the first time and starts the quiz at the end', () => {
-    localStorage.removeItem('learn.seenLessons');
+describe('the quiz without lessons', () => {
+  it('opens straight on the quiz, whatever was read before', () => {
     view.open();
-    expect(view.element.dataset.panel).toBe('lessons');
-    expect(q('.learn-lesson-count').textContent).toBe('Lesson 1 of 5');
-    for (let i = 0; i < 4; i++) q<HTMLButtonElement>('.learn-lesson-next').click();
-    expect(q('.learn-lesson-count').textContent).toBe('Lesson 5 of 5');
-    q<HTMLButtonElement>('.learn-lesson-start').click();
     expect(view.element.dataset.panel).toBe('quiz');
-    expect(localStorage.getItem('learn.seenLessons')).toBe('1');
+    expect(q('.learn-card')).not.toBeNull();
+    expect(view.element.querySelector('.learn-lessons')).toBeNull();
+    expect(view.element.querySelector('.learn-lesson-next')).toBeNull();
   });
 
-  it('draws each lesson example', () => {
-    localStorage.removeItem('learn.seenLessons');
-    view.open();
-    expect(renderNote).toHaveBeenCalledWith('E4', 'treble', expect.any(HTMLElement));
+  it('has a Lessons button only when the app can open the lessons', () => {
+    expect(view.element.querySelector('.learn-open-lessons')).toBeNull();
+    const onOpenLessons = vi.fn();
+    const other = new LearnView({
+      quiz: new NameTheNoteQuiz(stats, seeded(5)),
+      hub,
+      renderNote,
+      formatLetter: (letter) => letter,
+      onOpenLessons,
+    });
+    document.body.appendChild(other.element);
+    other.open();
+    const button = other.element.querySelector<HTMLButtonElement>('.learn-open-lessons')!;
+    expect(button.textContent).toBe('Lessons');
+    button.click();
+    expect(onOpenLessons).toHaveBeenCalledOnce();
+    other.dispose();
   });
 });

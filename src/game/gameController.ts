@@ -38,8 +38,8 @@ export class GameController {
     return this.announce(this.store.recordXyloSong(songId, stars));
   }
 
-  lessonsRead(): Award {
-    return this.announce(this.store.recordLessonsRead());
+  lessonRead(done: number, total: number): Award {
+    return this.announce(this.store.recordLessonRead(done, total));
   }
 
   stage(stage: number): Award {

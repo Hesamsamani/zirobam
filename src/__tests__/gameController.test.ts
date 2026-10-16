@@ -58,10 +58,10 @@ describe('GameController', () => {
     game.stepPassed();
     game.songFinished('mary-lamb', 3);
     game.xyloSong('twinkle', 2);
-    game.lessonsRead();
+    game.lessonRead(1, 1);
     game.stage(3);
     expect(store.stats()).toMatchObject({ stepsPassed: 1, songsFinished: 1, xyloSongs: 1, maxStage: 3 });
-    expect(store.totalXp()).toBe(5 + 30 + 20 + 5);
+    expect(store.totalXp()).toBe(5 + 30 + 20 + 23);
     expect(store.hasBadge('stage-3')).toBe(true);
     expect(store.hasBadge('lessons')).toBe(true);
   });

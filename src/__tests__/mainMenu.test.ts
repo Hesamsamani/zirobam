@@ -8,7 +8,14 @@ function setup(level = '3b') {
   const openSettings = vi.fn();
   const openMetronome = vi.fn();
   const resume = { view: 'levels' as View, title: 'Level 3b', detail: 'Quarter notes (RH)' };
-  const menu = new MainMenu({ navigate, openSettings, openMetronome, levelLabel: () => level, resume: () => resume });
+  const menu = new MainMenu({
+    navigate,
+    openSettings,
+    openMetronome,
+    levelLabel: () => level,
+    resume: () => resume,
+    lessonsProgress: () => ({ read: 3, total: 36 }),
+  });
   document.body.replaceChildren(menu.element);
   const tile = (id: string) => menu.element.querySelector<HTMLButtonElement>(`[data-tile="${id}"]`)!;
   return { menu, navigate, openSettings, openMetronome, tile, resume };
@@ -43,9 +50,20 @@ describe('MainMenu', () => {
     }
   });
 
-  it('offers learning, levels, songs and settings', () => {
+  it('offers lessons, the quiz, levels, songs and the tools', () => {
     const ids = MENU_TILES.map((tileDef) => tileDef.id);
-    expect(ids).toEqual(expect.arrayContaining(['learn', 'levels', 'songs', 'xylophone', 'metronome', 'progress', 'settings']));
+    expect(ids).toEqual(expect.arrayContaining(['lessons', 'learn', 'levels', 'songs', 'xylophone', 'metronome', 'progress', 'settings']));
+  });
+
+  it('keeps the lessons apart from the quiz', () => {
+    const { tile } = setup();
+    expect(tile('lessons').querySelector('.menu-tile-title')!.textContent).toBe('Lessons');
+    expect(tile('learn').querySelector('.menu-tile-title')!.textContent).toBe('Note quiz');
+  });
+
+  it('tells how many lessons were read', () => {
+    const { tile } = setup();
+    expect(tile('lessons').querySelector('.menu-tile-desc')!.textContent).toContain('3 of 36');
   });
 
   it('tells which level the player is on', () => {
@@ -55,12 +73,13 @@ describe('MainMenu', () => {
 
   it('opens the screen of a tile when it is pressed', () => {
     const { tile, navigate } = setup();
+    tile('lessons').click();
     tile('learn').click();
     tile('levels').click();
     tile('songs').click();
     tile('xylophone').click();
     tile('progress').click();
-    expect(navigate.mock.calls.map(([view]) => view)).toEqual(['learn', 'levels', 'songs', 'xylophone', 'progress']);
+    expect(navigate.mock.calls.map(([view]) => view)).toEqual(['lessons', 'learn', 'levels', 'songs', 'xylophone', 'progress']);
   });
 
   it('opens the settings instead of a screen for the settings tile', () => {
@@ -117,11 +136,11 @@ describe('MainMenu', () => {
     expect(menu.element.querySelectorAll('.menu-tile')).toHaveLength(MENU_TILES.length);
   });
 
-  it('puts the three ways to practise apart from the tools', () => {
+  it('puts the ways to learn and practise apart from the tools', () => {
     const { menu } = setup();
     const paths = Array.from(menu.element.querySelectorAll<HTMLElement>('.menu-paths [data-tile]')).map((b) => b.dataset.tile);
     const tools = Array.from(menu.element.querySelectorAll<HTMLElement>('.menu-tools [data-tile]')).map((b) => b.dataset.tile);
-    expect(paths).toEqual(['learn', 'levels', 'songs']);
+    expect(paths).toEqual(['lessons', 'learn', 'levels', 'songs']);
     expect(tools).toEqual(['xylophone', 'metronome', 'progress', 'settings']);
   });
 

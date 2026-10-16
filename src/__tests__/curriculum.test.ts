@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { ALL_LESSONS, UNITS, findLesson, neighbours, unitOf } from '../lessons/curriculum';
 import { buildExampleXml, exampleNoteNames } from '../lessons/exampleXml';
-import { lessonText, resolveNoteTokens } from '../lessons/lessonText';
+import { courseText, resolveNoteTokens } from '../lessons/courseText';
 import type { Bi, Block, Lesson } from '../lessons/types';
 
 const ACTIONS = ['quiz', 'levels', 'songs', 'metronome', 'xylophone'];
@@ -106,7 +106,7 @@ describe('the words', () => {
     expect(resolveNoteTokens('{E} و {G}', 'solfege-fa')).toBe('می و سل');
     expect(resolveNoteTokens('{C4}', 'letters')).toBe('C4');
     expect(resolveNoteTokens('{F#3}', 'solfege')).toBe('Fa♯3');
-    expect(lessonText({ en: 'a {C}', fa: 'ب {C}' }, 'fa', 'solfege-fa')).toBe('ب دو');
+    expect(courseText({ en: 'a {C}', fa: 'ب {C}' }, 'fa', 'solfege-fa')).toBe('ب دو');
   });
 });
 

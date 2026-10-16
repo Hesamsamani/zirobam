@@ -17,6 +17,6 @@ export function resolveNoteTokens(text: string, system: NoteNameSystem = getNote
 }
 
 /** One text of a lesson in the chosen language, with the note names filled in. */
-export function lessonText(text: Bi, locale: Locale, system?: NoteNameSystem): string {
+export function courseText(text: Bi, locale: Locale, system?: NoteNameSystem): string {
   return resolveNoteTokens(text[locale], system);
 }

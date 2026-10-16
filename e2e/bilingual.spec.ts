@@ -54,12 +54,9 @@ test.describe('Bilingual interface and practice without MIDI', () => {
     await expect(page.locator('#notation text.note-label').first()).toBeVisible();
   });
 
-  test('Name the note: lessons first, then a question answered by clicking', async ({ page }) => {
+  test('Name the note: opens on the quiz, answered by clicking', async ({ page }) => {
     await page.locator('#learnToggle').click();
     const view = page.locator('#learnView');
-    await expect(view).toHaveAttribute('data-panel', 'lessons');
-    for (let i = 0; i < 4; i++) await page.locator('.learn-lesson-next').click();
-    await page.locator('.learn-lesson-start').click();
     await expect(view).toHaveAttribute('data-panel', 'quiz');
 
     const pitch = await view.getAttribute('data-pitch');

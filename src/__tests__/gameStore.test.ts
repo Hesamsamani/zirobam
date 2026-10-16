@@ -117,10 +117,40 @@ describe('other XP', () => {
     expect(store.stats().xyloThreeStars).toBe(2);
   });
 
-  it('is 5 for reading the lessons, once', () => {
+  it('is 3 for each lesson read for the first time, and 20 more for finishing the course', () => {
     const { store } = storeAt('2026-10-16');
-    expect(store.recordLessonsRead().xp).toBe(5);
-    expect(store.recordLessonsRead().xp).toBe(0);
+    expect(store.recordLessonRead(1, 3).xp).toBe(3);
+    expect(store.recordLessonRead(2, 3).xp).toBe(3);
+    expect(store.recordLessonRead(3, 3).xp).toBe(23);
+    expect(store.stats().lessonsRead).toBe(3);
+    expect(store.stats().lessonsTotal).toBe(3);
+  });
+
+  it('does not pay the course bonus twice', () => {
+    const { store } = storeAt('2026-10-16');
+    store.recordLessonRead(2, 2);
+    expect(store.recordLessonRead(2, 2).xp).toBe(3);
+  });
+
+  it('earns a badge for five lessons, and another for the whole course', () => {
+    const { store } = storeAt('2026-10-16');
+    for (let done = 1; done <= 4; done++) store.recordLessonRead(done, 6);
+    expect(store.hasBadge('lessons-5')).toBe(false);
+    store.recordLessonRead(5, 6);
+    expect(store.hasBadge('lessons-5')).toBe(true);
+    expect(store.hasBadge('lessons')).toBe(false);
+    store.recordLessonRead(6, 6);
+    expect(store.hasBadge('lessons')).toBe(true);
+  });
+
+  it('asks for the whole course again when lessons are added to it', () => {
+    const { store } = storeAt('2026-10-16');
+    store.recordLessonRead(3, 3);
+    expect(store.hasBadge('lessons')).toBe(true);
+    expect(store.stats().lessonsTotal).toBe(3);
+    store.recordLessonRead(3, 4);
+    expect(store.stats().lessonsTotal).toBe(4);
+    expect(store.recordLessonRead(4, 4).xp).toBe(23);
   });
 });
 
