@@ -218,6 +218,38 @@ describe('CatalogView', () => {
     expect(q(view, '.catalog-showing')).toBeNull();
   });
 
+  it('keeps the focus on the Show more button while there is more, and moves it to the new songs at the end', async () => {
+    const { view } = setup({ pageSize: 3 });
+    await view.activate();
+    const more = q<HTMLButtonElement>(view, '.catalog-more');
+    more.focus();
+    more.click();
+    expect(q<HTMLButtonElement>(view, '.catalog-more')).toBe(more);
+    expect(document.activeElement).toBe(more);
+    more.click();
+    expect(q(view, '.catalog-more')).toBeNull();
+    expect(document.activeElement).toBe(view.element.querySelectorAll('.catalog-row')[6].querySelector('.catalog-artist'));
+  });
+
+  it('does not rebuild the artist suggestions while typing, which would close the list', async () => {
+    const { view } = setup();
+    await view.activate();
+    const first = view.element.querySelector('#catalogArtists option');
+    type(q(view, '#catalogArtist'), 'qu');
+    type(q(view, '#catalogArtist'), 'que');
+    expect(view.element.querySelector('#catalogArtists option')).toBe(first);
+  });
+
+  it('suggests the artists again in the new language', async () => {
+    const { view } = setup();
+    await view.activate();
+    setLocale('fa');
+    view.refresh();
+    const options = Array.from(view.element.querySelectorAll('#catalogArtists option')).map((o) => (o as HTMLOptionElement).value);
+    expect(options).toContain('گوگوش');
+    expect(options).not.toContain('Googoosh');
+  });
+
   it('goes back to the first page when the filter changes', async () => {
     const { view } = setup({ pageSize: 3 });
     await view.activate();

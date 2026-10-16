@@ -131,6 +131,23 @@ test.describe('Lessons', () => {
     expect(state.badges['lessons-5']).toBeTruthy();
   });
 
+  test('the Play button and the keys of a lesson work without errors, and Play ends by itself', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.goto('/#/lessons/steps-skips');
+    const play = page.locator('.lesson-play').first();
+    await expect(play).toHaveText('Play');
+    await play.click();
+    // it sounds for a few seconds, or ends at once when the piano sounds cannot be loaded
+    await expect(play).toHaveText('Play', { timeout: 40000 });
+    await expect(play).toHaveAttribute('aria-pressed', 'false');
+
+    await page.goto('/#/lessons/finding-notes');
+    await page.locator('.lk-key[data-note="E4"]').first().click();
+    await page.waitForTimeout(500);
+    expect(errors).toEqual([]);
+  });
+
   test('does not scroll sideways', async ({ page }) => {
     for (const route of ['#/lessons', '#/lessons/time-signature', '#/lessons/five-finger-position', '#/lessons/octaves']) {
       await page.goto(`/${route}`);

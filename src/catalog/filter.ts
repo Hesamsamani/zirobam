@@ -25,12 +25,26 @@ export function normalize(text: string): string {
     .trim();
 }
 
+// Normalising thousands of songs on every key press would be slow, so each song is done once.
+const haystacks = new WeakMap<CatalogSong, string>();
+const artistTexts = new WeakMap<CatalogSong, string>();
+
 function haystack(song: CatalogSong): string {
-  return normalize([song.title, song.titleFa, song.artist, song.artistFa].filter(Boolean).join(' '));
+  let text = haystacks.get(song);
+  if (text === undefined) {
+    text = normalize([song.title, song.titleFa, song.artist, song.artistFa].filter(Boolean).join(' '));
+    haystacks.set(song, text);
+  }
+  return text;
 }
 
 function artistText(song: CatalogSong): string {
-  return normalize([song.artist, song.artistFa].filter(Boolean).join(' '));
+  let text = artistTexts.get(song);
+  if (text === undefined) {
+    text = normalize([song.artist, song.artistFa].filter(Boolean).join(' '));
+    artistTexts.set(song, text);
+  }
+  return text;
 }
 
 export function filterSongs(songs: readonly CatalogSong[], filter: CatalogFilter): CatalogSong[] {

@@ -89,6 +89,8 @@ export class CatalogView {
   private matches: CatalogSong[] = [];
   private shown = 0;
   private list: HTMLElement | null = null;
+  /** What the artist suggestions were built for, so typing does not rebuild them. */
+  private artistsFor = '';
 
   constructor(deps: CatalogViewDeps) {
     this.deps = deps;
@@ -262,6 +264,9 @@ export class CatalogView {
 
   private fillArtists(songs: readonly CatalogSong[]): void {
     const fa = getLocale() === 'fa';
+    const key = `${fa ? 'fa' : 'en'}:${songs.length}`;
+    if (key === this.artistsFor) return;
+    this.artistsFor = key;
     this.artistOptions.replaceChildren(
       ...artistList(songs)
         .sort((a, b) => a.name.localeCompare(b.name))
@@ -349,25 +354,40 @@ export class CatalogView {
     this.list?.appendChild(rows);
   }
 
-  /** "Showing 60 of 1,200" and a button for the next page, or nothing when everything is shown. */
+  /**
+   * "Showing 60 of 1,200" and a button for the next page. The footer is updated in place, so a keyboard user
+   * keeps the focus on the button; when everything is shown it goes away and the focus moves to the new songs.
+   */
   private renderMore(): void {
-    this.results.querySelector('.catalog-footer')?.remove();
     const total = this.matches.length;
     const shown = Math.min(this.shown, total);
-    if (shown >= total) return;
-    const footer = make('div', 'catalog-footer');
-    footer.appendChild(make('p', 'catalog-showing', t('catalog.showing', { shown: formatCount(shown), total: formatCount(total) })));
+    let footer = this.results.querySelector<HTMLElement>('.catalog-footer');
+    if (shown >= total) {
+      footer?.remove();
+      return;
+    }
     const next = Math.min(this.pageSize, total - shown);
-    const more = make('button', 'catalog-more', t('catalog.more', { n: formatCount(next) }));
-    more.type = 'button';
-    more.addEventListener('click', () => {
-      const before = Math.min(this.shown, this.matches.length);
-      this.shown += this.pageSize;
-      this.appendRows(before, Math.min(this.shown, this.matches.length));
-      this.renderMore();
-    });
-    footer.appendChild(more);
-    this.results.appendChild(footer);
+    if (!footer) {
+      footer = make('div', 'catalog-footer');
+      footer.appendChild(make('p', 'catalog-showing'));
+      const more = make('button', 'catalog-more');
+      more.type = 'button';
+      more.addEventListener('click', () => this.showMore());
+      footer.appendChild(more);
+      this.results.appendChild(footer);
+    }
+    footer.querySelector('.catalog-showing')!.textContent = t('catalog.showing', { shown: formatCount(shown), total: formatCount(total) });
+    footer.querySelector('.catalog-more')!.textContent = t('catalog.more', { n: formatCount(next) });
+  }
+
+  private showMore(): void {
+    const before = Math.min(this.shown, this.matches.length);
+    this.shown += this.pageSize;
+    const after = Math.min(this.shown, this.matches.length);
+    this.appendRows(before, after);
+    const finished = after >= this.matches.length;
+    this.renderMore();
+    if (finished) this.list?.children[before]?.querySelector<HTMLElement>('.catalog-artist')?.focus();
   }
 
   private buildRow(song: CatalogSong): HTMLLIElement {
