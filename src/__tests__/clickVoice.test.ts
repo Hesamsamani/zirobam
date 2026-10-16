@@ -26,7 +26,7 @@ vi.mock('tone', () => {
   return { Synth, PolySynth };
 });
 
-import { ClickVoice, clickParams } from '../metronome/clickVoice';
+import { ClickVoice, clickParams, beatParams } from '../metronome/clickVoice';
 
 const synths = () => created as FakeSynth[];
 
@@ -40,6 +40,18 @@ describe('clickParams', () => {
     expect(sub.pitch).toBe('C5');
     expect(sub.volumeDb).toBe(-26);
     expect(20 * Math.log10(sub.velocity)).toBeCloseTo(-18, 5);
+  });
+});
+
+describe('beatParams', () => {
+  it('plays the first beat of the bar higher and louder than the other beats', () => {
+    const accented = beatParams(true, -20);
+    const plain = beatParams(false, -20);
+    expect(accented).toEqual({ pitch: 'G5', volumeDb: -26, velocity: 1 });
+    expect(plain.pitch).toBe('C5');
+    expect(plain.volumeDb).toBe(-26);
+    expect(plain.velocity).toBeGreaterThan(0.2);
+    expect(plain.velocity).toBeLessThan(1);
   });
 });
 
@@ -66,6 +78,16 @@ describe('ClickVoice', () => {
     const synth = synths()[0];
     expect(synth.volume.value).toBe(-26);
     expect(synth.triggerAttackRelease).toHaveBeenCalledWith('G5', '32n', 1.25, 1);
+  });
+
+  it('plays a metronome beat through the same synth, at the given time', () => {
+    const voice = new ClickVoice();
+    voice.play(0, -20, 0.5);
+    voice.playBeat(false, -20, 1.5);
+    expect(created).toHaveLength(1);
+    const calls = synths()[0].triggerAttackRelease.mock.calls;
+    expect(calls[1][0]).toBe('C5');
+    expect(calls[1][2]).toBe(1.5);
   });
 
   it('limits how many clicks can sound at once', () => {
