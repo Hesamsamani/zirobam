@@ -38,7 +38,7 @@ English Suite No. 2: Bourrée|1720|3
 Concerto for Two Violins, 2nd movement|1730|3
 
 @ Ludwig van Beethoven | بتهوون | 3
-Für Elise|1810
+Für Elise|1810|||fur-elise
 Moonlight Sonata, 1st movement|1801
 Moonlight Sonata, 3rd movement|1801|4
 Pathétique Sonata, 1st movement|1799|4
@@ -77,7 +77,7 @@ Piano Sonata No. 5 in G major, K. 283|1774
 Piano Sonata No. 12 in F major, K. 332: 1st movement|1783
 Piano Sonata No. 10 in C major, K. 330: 1st movement|1783
 Variations on "Ah! vous dirai-je, maman", K. 265|1781
-Eine kleine Nachtmusik, 1st movement|1787
+Eine kleine Nachtmusik, 1st movement|1787|||eine-kleine
 Eine kleine Nachtmusik, Romanze|1787
 Fantasia in D minor, K. 397|1782
 Fantasia in C minor, K. 475|1785|4
@@ -244,7 +244,7 @@ Totentanz|1849
 Rákóczi March|1847
 
 @ Johannes Brahms | برامس | 3
-Lullaby (Wiegenlied), Op. 49 No. 4|1868|2
+Lullaby (Wiegenlied), Op. 49 No. 4|1868|2||brahms-lullaby
 Hungarian Dance No. 5|1869
 Hungarian Dance No. 1|1869
 Intermezzo in A major, Op. 118 No. 2|1893
@@ -756,24 +756,24 @@ Old MacDonald Had a Farm||1||old-macdonald
 Lightly Row||1||lightly-row
 Jingle Bells|1857|1||jingle-bells
 Yankee Doodle||1||yankee-doodle
-Amazing Grace|1779|1
-Greensleeves|1580|2
-Auld Lang Syne|1788|1
-Silent Night|1818|1
+Amazing Grace|1779|1||amazing-grace
+Greensleeves|1580|2||greensleeves
+Auld Lang Syne|1788|1||auld-lang-syne
+Silent Night|1818|1||silent-night
 Oh! Susanna|1848|1
 Swing Low, Sweet Chariot||2
-When the Saints Go Marching In||2
-Scarborough Fair||2
+When the Saints Go Marching In||2||when-the-saints
+Scarborough Fair||2||scarborough-fair
 The Last Rose of Summer||2
-Danny Boy|1913|2
+Danny Boy|1913|2||danny-boy
 Home on the Range|1873|1
 Shenandoah||2
 Down in the Valley||1
 Skip to My Lou||1
 She'll Be Coming 'Round the Mountain||1
-Row, Row, Row Your Boat||1
+Row, Row, Row Your Boat||1||row-row-row
 Rock-a-bye Baby||1
-Pop Goes the Weasel||1
+Pop Goes the Weasel||1||pop-goes-the-weasel
 Baa, Baa, Black Sheep||1
 Itsy Bitsy Spider||1
 This Old Man||1
@@ -785,16 +785,21 @@ America the Beautiful|1910|2
 The Star-Spangled Banner|1814|3
 Battle Hymn of the Republic|1861|2
 Deck the Halls||2
-Joy to the World||2
-O Come, All Ye Faithful|1751|2
-Away in a Manger|1885|1
-We Wish You a Merry Christmas||2
+Joy to the World||2||joy-to-the-world
+O Come, All Ye Faithful|1751|2||o-come-all-ye-faithful
+Away in a Manger|1885|1||away-in-a-manger
+We Wish You a Merry Christmas||2||we-wish-you
 God Rest Ye Merry, Gentlemen||2
 O Holy Night|1847|3
 The First Noel||2
 O Little Town of Bethlehem||2
-It Came Upon the Midnight Clear||2
+It Came Upon the Midnight Clear||2||it-came-upon-midnight-clear
 Carol of the Bells|1914|3
 Coventry Carol||2
 Good King Wenceslas||2
+The Skye Boat Song||2|آواز قایق اسکای|skye-boat-song
+O Tannenbaum||1|ای درخت کاج|o-tannenbaum
+Alle meine Entchen||1|اردک‌های کوچک من|alle-meine-entchen
+Sur le pont d'Avignon||1|روی پل آوینیون|sur-le-pont
+Fuchs, du hast die Gans gestohlen||1|روباه، غاز را دزدیدی|fuchs-gans
 `;

@@ -40,6 +40,16 @@ export interface ParsedMusicXML {
 // KEY SIGNATURE HELPERS
 // ============================================
 
+/** The scale degree (0 based) whose note is the tonic of each mode that shares a key signature with its major key. */
+const MODE_DEGREE: Readonly<Record<string, number>> = { minor: 5, aeolian: 5, dorian: 1, phrygian: 2, lydian: 3, mixolydian: 4, locrian: 6 };
+
+/** The same key signature, named after its mode when the file says one (A minor instead of C major). */
+function namedForMode(key: KeyInfo, mode: string | null): KeyInfo {
+  const degree = mode ? MODE_DEGREE[mode.trim().toLowerCase()] : undefined;
+  if (degree === undefined) return key;
+  return { ...key, name: `${key.scale[degree]} ${mode!.trim().toLowerCase() === 'aeolian' ? 'minor' : mode!.trim().toLowerCase()}` };
+}
+
 const KEY_SIGNATURES: Record<string, KeyInfo> = {
   '-7': { name: 'Cb major', fifths: -7, scale: ['Cb', 'Db', 'Eb', 'Fb', 'Gb', 'Ab', 'Bb'] },
   '-6': { name: 'Gb major', fifths: -6, scale: ['Gb', 'Ab', 'Bb', 'Cb', 'Db', 'Eb', 'F'] },
@@ -290,7 +300,7 @@ export function parseMusicXML(xmlString: string): ParsedMusicXML {
           if (keyEl) {
             const fifths = getChildNumber(keyEl, 'fifths');
             if (fifths !== null) {
-              keySignature = KEY_SIGNATURES[String(fifths)] ?? KEY_SIGNATURES['0'];
+              keySignature = namedForMode(KEY_SIGNATURES[String(fifths)] ?? KEY_SIGNATURES['0'], getChildText(keyEl, 'mode'));
             }
           }
         }

@@ -156,7 +156,7 @@ This is the owner's personal fork. Design: `docs/superpowers/specs/2026-10-16-bi
 | `src/app/router.ts`, `shell.ts` | Hash routes (`#/lessons/ID`, `#/catalog?filter`), `hashQuery()`; the shell shows the section whose `data-views` lists the current view and calls enter / leave / change hooks |
 | `src/menu/` | `mainMenu.ts` (tiles), `songsView.ts`, `backButton.ts` |
 | `src/practice/practicePanel.ts` | The song steps panel: measure map, jump buttons, "put it together" |
-| `src/songs/` | `index.ts` built-in songs; `songBuilder.ts` (compact notation `E4q F#4e Bb3h. rq |`, `~` tie, `n` natural); `library.ts` song specs; `songText.ts`; `songGroups.ts` |
+| `src/songs/` | `index.ts` built-in songs; `songBuilder.ts` (compact notation `E4q F#4e Bb3h. rq |`, `~` tie, `n` natural, 2/3/4 beats, accidentals outside the key get a drawn sign); `library.ts` song specs, `libraryMore.ts` the public-domain tunes with their notes (read from Wikipedia LilyPond scores; a pickup is written as leading rests, 6/8 as 3/4; `songMelodies.test.ts` pins the opening notes of each); `songText.ts`; `songGroups.ts` |
 | `src/xylophone/` | Keyboard-row xylophone: `keyRows`, `xylophoneInput`, `xyloSound`, `xyloGame`, `songMelody`, `xylophoneView` |
 | `src/metronome/` | `tempoStore`, `metronomeEngine`, `metronomePanel`, `floatingWindow` (Document Picture-in-Picture with an in-page fallback), `clickVoice` |
 | `src/game/` | XP, ranks, streak and badges: `gameStore`, `achievements`, `gameController`, `toastCenter`, `gameHud`, `progressView` |

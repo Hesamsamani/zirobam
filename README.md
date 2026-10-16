@@ -10,7 +10,7 @@ A personal study fork of [ftrain/sightreading](https://github.com/ftrain/sightre
 - **Play without a MIDI keyboard.** The piano button opens an on-screen piano, and the computer keyboard plays notes too (table below). Keys are matched by position, so it also works with a Persian keyboard layout.
 - **Lessons (36).** Three units: reading notes (staff, clefs, ledger lines, octaves, sharps and flats, key signatures), reading rhythm (beat, note values, rests, time signatures, counting, dotted notes, ties) and playing the piano (keyboard, finding notes, posture, fingering, five-finger position, both hands, touch, scales, pedals, practising). Each lesson has drawn staff examples with a Play button, clickable keyboards, hand pictures and "Try it" links. Read lessons are remembered.
 - **Note quiz.** "Name the note": one note on a staff, seven answer buttons, or play the note on any input. Notes you miss come back more often, and five stages unlock after 20 answers at 90 percent.
-- **Songs.** 23 built-in songs and exercises in groups by difficulty. A song is practised in small steps with a measure map, jump buttons and a "put it together" step. You can also practise from your own MusicXML or MIDI file.
+- **Songs.** 45 built-in songs and exercises in groups by difficulty, 22 of them real public-domain tunes with their notes: carols (Silent Night, Joy to the World, O Come All Ye Faithful), folk songs (Amazing Grace, Auld Lang Syne, Greensleeves, Scarborough Fair, Danny Boy, When the Saints), children's songs and classical themes (Für Elise, Eine kleine Nachtmusik, Brahms' Lullaby). A song is practised in small steps with a measure map, jump buttons and a "put it together" step. You can also practise from your own MusicXML or MIDI file.
 - **Song library.** About 4,570 songs by 287 artists (Persian pop and classics, international pop and rock from the 1950s to today, classical and traditional works, modern piano, film, game and anime music). Each song has an estimated level; filter by search, artist, level and kind of music. The library finds the sheet music for you (IMSLP for classical works, MuseScore for the rest); songs marked "In the app" play right inside it.
 - **Xylophone.** One row of the computer keyboard becomes a xylophone, left to right: free play, read and play, and play-along songs.
 - **Floating metronome.** A small always-on-top window (Document Picture-in-Picture in Chrome and Edge 116+, with a draggable panel as the fallback) that shares its tempo with the exercise.
@@ -49,6 +49,8 @@ npm run build
 Design: [docs/superpowers/specs/2026-10-16-bilingual-note-trainer-design.md](docs/superpowers/specs/2026-10-16-bilingual-note-trainer-design.md). Why this base app was chosen: [research/candidates.md](research/candidates.md).
 
 ## Credits and license
+
+The notes of the public-domain songs were read from the LilyPond scores on English and German Wikipedia (CC BY-SA 4.0) and from The Session's ABC settings, compared with each other and with the well-known tunes; see `src/songs/libraryMore.ts`. The tests check the length of every measure and the first notes of every tune, so please tell us if a song sounds wrong anywhere else.
 
 Based on `ftrain/sightreading` at commit `05158c5` (LGPL-3.0). The original `LICENSE` is kept and this fork stays under LGPL-3.0. Changes made in this fork are the ones listed above and in the git history of the `bilingual` branch. The notation engine, [Verovio](https://www.verovio.org/), is LGPL-3.0 too.
 

@@ -177,12 +177,12 @@ test.describe('The song library', () => {
   });
 
   test('every song and exercise opens without an error', async ({ page }) => {
-    test.setTimeout(120000); // it opens every song in turn
+    test.setTimeout(240000); // it opens every song in turn
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto('/#/songs');
     const ids = await page.locator('#songsView [data-song]').evaluateAll((els) => els.map((e) => (e as HTMLElement).dataset.song!));
-    expect(ids.length).toBeGreaterThanOrEqual(23);
+    expect(ids.length).toBeGreaterThanOrEqual(45);
     for (const id of ids) {
       await page.goto('/#/songs');
       await page.locator(`#songsView [data-song="${id}"]`).click();

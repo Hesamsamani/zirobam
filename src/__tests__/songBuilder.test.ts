@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { buildSongXml, parseMelody, type SongSpec } from '../songs/songBuilder';
 import { extractMelody } from '../xylophone/songMelody';
 import { parseMusicXML } from '../upload/parser';
+import { noteDataToString } from '../core';
 
 const base: SongSpec = {
   id: 'test',
@@ -85,12 +86,56 @@ describe('buildSongXml', () => {
     expect(parseMusicXML(xml).keySignature.name).toBe('G major');
   });
 
+  it('writes the mode, and the app names the key after it', () => {
+    const minor = buildSongXml({ ...base, mode: 'minor', melody: 'A4q B4q C5q D5q | E5w' });
+    expect(minor).toContain('<mode>minor</mode>');
+    expect(parseMusicXML(minor).keySignature.name).toBe('A minor');
+    const dorian = buildSongXml({ ...base, mode: 'dorian', melody: 'D4q E4q F4q G4q | A4w' });
+    expect(parseMusicXML(dorian).keySignature.name).toBe('D dorian');
+    const eMinor = buildSongXml({ ...base, fifths: 1, mode: 'minor', melody: 'E4q F#4q G4q A4q | B4w' });
+    expect(parseMusicXML(eMinor).keySignature.name).toBe('E minor');
+    expect(parseMusicXML(buildSongXml(base)).keySignature.name).toBe('C major');
+  });
+
   it('requires the sharp to be written where the key signature has one', () => {
     expect(() => buildSongXml({ ...base, fifths: 1, melody: 'G4q A4q B4q F4q | G4w' })).toThrow(/F#/);
   });
 
-  it('refuses an accidental that the key signature does not have', () => {
-    expect(() => buildSongXml({ ...base, melody: 'C4q D4q F#4q F4q | G4w' })).toThrow(/key/i);
+  it('supports 2/4 with a half-note rest for the left hand', () => {
+    const xml = buildSongXml({ ...base, beats: 2, melody: 'C4q D4q | E4h' });
+    expect(xml).toContain('<beats>2</beats>');
+    expect(xml).toContain('<rest/><duration>8</duration><type>half</type><staff>2</staff>');
+    expect(parseMusicXML(xml).timeSignature).toMatchObject({ beats: 2, beatType: 4 });
+  });
+
+  it('draws a sign for an accidental outside the key, once per measure and pitch', () => {
+    const xml = buildSongXml({ ...base, melody: 'C4q F#4q F#4q G4q | F#4q F#5q Fn4q Fn4q' });
+    const signs = xml.match(/<accidental>[a-z]+<\/accidental>/g);
+    // measure 1: the first F#4 only. Measure 2: F#4 again, F#5 (another octave), then Fn4 cancels the sharp
+    // and the second Fn4 needs no sign
+    expect(signs).toEqual([
+      '<accidental>sharp</accidental>',
+      '<accidental>sharp</accidental>',
+      '<accidental>sharp</accidental>',
+      '<accidental>natural</accidental>',
+    ]);
+    expect(extractMelody(xml).map((n) => n.pitch)).toEqual(['C4', 'F#4', 'F#4', 'G4', 'F#4', 'F#5', 'F4', 'F4']);
+  });
+
+  it('plays an accidental outside the key as the altered pitch', () => {
+    const parsed = parseMusicXML(buildSongXml({ ...base, fifths: -1, melody: 'F4q Bb4q A4q Bn4q | C5w' }));
+    expect(parsed.measures[0].rightHand.map((n) => noteDataToString(n))).toEqual(['F4', 'Bb4', 'A4', 'B4']);
+  });
+
+  it('refuses a plain note while a sign for that pitch is still in force in the measure', () => {
+    expect(() => buildSongXml({ ...base, melody: 'C4q D4q F#4q F4q | G4w' })).toThrow(/natural/i);
+  });
+
+  it('keeps ties between notes', () => {
+    const xml = buildSongXml({ ...base, melody: 'C4h D4h~ | D4w' });
+    expect(xml).toContain('<tie type="start"/>');
+    expect(xml).toContain('<tie type="stop"/>');
+    expect(extractMelody(xml).map((n) => n.pitch)).toEqual(['C4', 'D4']);
   });
 
   it('escapes characters that are special in XML', () => {

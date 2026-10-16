@@ -10,11 +10,15 @@ export interface SongSpec {
   category: SongCategory;
   /** Key signature: sharps (positive) or flats (negative). */
   fifths: number;
-  /** Beats per measure, in quarter notes: 3 or 4. */
-  beats: 3 | 4;
+  /** The mode the tune is in, when it is not major (a minor tune has the key signature of its relative major). */
+  mode?: 'minor' | 'dorian';
+  /** Beats per measure, in quarter notes: 2, 3 or 4. */
+  beats: 2 | 3 | 4;
   /**
    * The tune for the right hand. Notes are written like `E4q`, `F#4e`, `Bb3h.` (step, optional # or b,
-   * octave, length w h q e s, optional dot), rests like `rq`. Measures are separated by `|`.
+   * octave, length w h q e s, optional dot, optional ~ to tie to the next note), rests like `rq`. A sharp or
+   * flat outside the key signature is written the same way (`F#4q` in C major); a natural that cancels a sign
+   * in force is written `Fn4q`. Measures are separated by `|`.
    */
   melody: string;
 }
@@ -97,48 +101,74 @@ export function keyAlter(step: string, fifths: number): number {
   return 0;
 }
 
-function checkKey(measures: ParsedNote[][], fifths: number): void {
-  for (const note of measures.flat()) {
-    if (note.rest) continue;
-    const inKey = keyAlter(note.step, fifths);
-    if (note.alter === inKey) continue;
-    const written = `${note.step}${note.alter > 0 ? '#' : note.alter < 0 ? 'b' : ''}${note.octave}`;
-    if (note.alter === 0) {
-      const needed = `${note.step}${inKey > 0 ? '#' : 'b'}${note.octave}`;
-      throw new Error(`"${note.token}": the key signature has ${needed}, so write ${needed} (a plain ${written} would need a natural sign)`);
-    }
-    throw new Error(`"${note.token}": ${written} is not in the key signature, and accidentals outside the key are not supported`);
-  }
-}
-
 function escapeXml(text: string): string {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-function noteXml(note: ParsedNote): string {
+/**
+ * The sign to draw next to a note: one is needed when the pitch differs from what is in force, which is the
+ * key signature at the start of a measure and then whatever earlier notes of the same pitch in it set.
+ */
+function accidentalXml(note: ParsedNote, inForce: number): string {
+  if (note.alter === inForce) return '';
+  return note.alter > 0 ? '<accidental>sharp</accidental>' : note.alter < 0 ? '<accidental>flat</accidental>' : '<accidental>natural</accidental>';
+}
+
+function noteXml(note: ParsedNote, inForce: number, tieIn: boolean): string {
   const dot = note.dotted ? '<dot/>' : '';
   if (note.rest) return `      <note><rest/><duration>${note.duration}</duration><type>${note.type}</type>${dot}<staff>1</staff></note>`;
   const alter = note.alter !== 0 ? `<alter>${note.alter}</alter>` : '';
-  return `      <note><pitch><step>${note.step}</step>${alter}<octave>${note.octave}</octave></pitch><duration>${note.duration}</duration><type>${note.type}</type>${dot}<staff>1</staff></note>`;
+  const ties = (tieIn ? '<tie type="stop"/>' : '') + (note.tie ? '<tie type="start"/>' : '');
+  const tied = (tieIn ? '<tied type="stop"/>' : '') + (note.tie ? '<tied type="start"/>' : '');
+  const notations = tied ? `<notations>${tied}</notations>` : '';
+  return `      <note><pitch><step>${note.step}</step>${alter}<octave>${note.octave}</octave></pitch><duration>${note.duration}</duration>${ties}<type>${note.type}</type>${dot}${accidentalXml(note, inForce)}<staff>1</staff>${notations}</note>`;
+}
+
+/**
+ * The notes of every measure as XML. A plain letter where a sign is in force (the key signature, or an earlier
+ * accidental in the same measure) is refused, because it would have to be a natural and the song says so with `n`.
+ */
+function measuresXml(measures: ParsedNote[][], fifths: number): string[] {
+  let tieIn = false;
+  return measures.map((notes) => {
+    const changed = new Map<string, number>(); // step + octave -> the alteration in force, for this measure
+    return notes
+      .map((note) => {
+        const id = `${note.step}${note.octave}`;
+        const fromKey = !changed.has(id);
+        const inForce = changed.get(id) ?? keyAlter(note.step, fifths);
+        if (!note.rest && note.alter === 0 && !note.natural && inForce !== 0) {
+          const needed = `${note.step}${inForce > 0 ? '#' : 'b'}${note.octave}`;
+          throw new Error(
+            fromKey
+              ? `"${note.token}": the key signature has ${needed}, so write ${needed} (or ${note.step}n${note.octave} for a natural)`
+              : `"${note.token}": ${needed} earlier in the measure is still in force, so write ${note.step}n${note.octave} for a natural`,
+          );
+        }
+        const xml = noteXml(note, inForce, tieIn && !note.rest);
+        if (!note.rest) changed.set(id, note.alter);
+        tieIn = note.tie;
+        return xml;
+      })
+      .join('\n');
+  });
 }
 
 /** MusicXML for a song: the tune in the right hand, a rest in the left hand (like the hand-written songs). */
 export function buildSongXml(spec: SongSpec): string {
   const measures = parseMelody(spec.melody, spec.beats, 4);
-  checkKey(measures, spec.fifths);
+  const notesXml = measuresXml(measures, spec.fifths);
   const length = spec.beats * 4;
-  const restXml =
-    spec.beats === 4
-      ? `<rest/><duration>${length}</duration><type>whole</type><staff>2</staff>`
-      : `<rest/><duration>${length}</duration><type>half</type><dot/><staff>2</staff>`;
+  const restType = spec.beats === 4 ? 'whole' : spec.beats === 3 ? 'half' : 'half';
+  const restXml = `<rest/><duration>${length}</duration><type>${restType}</type>${spec.beats === 3 ? '<dot/>' : ''}<staff>2</staff>`;
 
   const body = measures
-    .map((notes, index) => {
+    .map((_, index) => {
       const attributes =
         index === 0
           ? `      <attributes>
         <divisions>4</divisions>
-        <key><fifths>${spec.fifths}</fifths></key>
+        <key><fifths>${spec.fifths}</fifths>${spec.mode ? `<mode>${spec.mode}</mode>` : ''}</key>
         <time><beats>${spec.beats}</beats><beat-type>4</beat-type></time>
         <staves>2</staves>
         <clef number="1"><sign>G</sign><line>2</line></clef>
@@ -147,7 +177,7 @@ export function buildSongXml(spec: SongSpec): string {
 `
           : '';
       return `    <measure number="${index + 1}">
-${attributes}${notes.map(noteXml).join('\n')}
+${attributes}${notesXml[index]}
       <backup><duration>${length}</duration></backup>
       <note>${restXml}</note>
     </measure>`;

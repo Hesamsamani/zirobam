@@ -1,5 +1,6 @@
 import type { BuiltInSong } from './index';
 import { defineSong, type SongSpec } from './songBuilder';
+import { MORE_SPECS } from './libraryMore';
 
 /**
  * More songs and exercises, all in the public domain. The tunes are simplified arrangements for
@@ -206,4 +207,4 @@ const SPECS: readonly SongSpec[] = [
   },
 ];
 
-export const SONG_LIBRARY: BuiltInSong[] = SPECS.map(defineSong);
+export const SONG_LIBRARY: BuiltInSong[] = [...SPECS, ...MORE_SPECS].map(defineSong);
