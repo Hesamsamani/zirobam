@@ -93,6 +93,12 @@
           </button>
         </div>
 
+        <div class="control-section piano-toggle">
+          <button id="pianoToggle" class="piano-btn" aria-label="Show or hide the piano keyboard" data-i18n-attr="aria-label:control.togglePiano" aria-pressed="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M8 5v14M12 5v14M16 5v14"/></svg>
+          </button>
+        </div>
+
         <div class="control-section fingering">
           <button id="fingeringToggle" class="fingering-btn" aria-label="Toggle fingering" data-i18n-attr="aria-label:control.toggleFingering" aria-pressed="false">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -247,6 +253,7 @@
         </div>
       </div>
 
+      <div id="pianoDock" class="piano-dock" hidden></div>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>

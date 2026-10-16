@@ -42,11 +42,12 @@ import {
 import type { MessageKey } from './i18n';
 import {
   getNoteNameSystem, setNoteNameSystem, loadNoteNameSystem, onNoteNamesChange,
-  formatKeyName, isNoteNameSystem,
+  formatKeyName, formatNoteName, isNoteNameSystem,
 } from './i18n/noteNames';
 import { describeLesson, keyIdForLevel } from './lessonText';
 import { noteInput, type NoteSource } from './input/noteInput';
-import { ComputerKeyboard } from './input/computerKeyboard';
+import { ComputerKeyboard, keyHints } from './input/computerKeyboard';
+import { OnScreenPiano } from './input/onScreenPiano';
 
 // State
 let toolkit: VerovioToolkit;
@@ -162,7 +163,7 @@ async function init() {
   // Setup MIDI
   setupMIDI();
 
-  // Every input source (MIDI, computer keyboard, later the on-screen piano) arrives here
+  // Every input source (MIDI, computer keyboard, on-screen piano) arrives here
   noteInput.onNoteOn.on(({ noteName, source }) => {
     handleNoteOn(noteName);
     playUserNote(noteName, source);
@@ -171,7 +172,7 @@ async function init() {
     handleNoteOff(noteName);
     stopUserNote(noteName, source);
   });
-  new ComputerKeyboard(noteInput, document).attach();
+  setupPiano();
 
   // Handle window resize - re-render existing music, don't generate new
   window.addEventListener('resize', () => {
@@ -838,6 +839,37 @@ function handleNoteOn(noteName: string) {
 
 function handleNoteOff(noteName: string) {
   activeNotes.delete(noteName);
+}
+
+function setupPiano() {
+  const dock = document.getElementById('pianoDock')!;
+  const toggle = document.getElementById('pianoToggle')!;
+  const piano = new OnScreenPiano(noteInput, { ariaLabel: t('piano.label') });
+  dock.appendChild(piano.element);
+
+  const refresh = () => {
+    piano.setLabelFormatter((name) => formatNoteName(name, getNoteNameSystem()));
+    piano.setAriaLabel(t('piano.label'));
+    piano.setHints(keyHints(keyboard.getOctave()));
+  };
+  const keyboard = new ComputerKeyboard(noteInput, document, refresh);
+  keyboard.attach();
+  onNoteNamesChange(refresh);
+  refresh();
+
+  const setOpen = (open: boolean) => {
+    dock.hidden = !open;
+    toggle.classList.toggle('active', open);
+    toggle.setAttribute('aria-pressed', String(open));
+    document.body.classList.toggle('piano-open', open);
+    try {
+      localStorage.setItem('ui.pianoOpen', open ? '1' : '0');
+    } catch {
+      // storage unavailable
+    }
+  };
+  toggle.addEventListener('click', () => setOpen(dock.hidden));
+  setOpen(localStorage.getItem('ui.pianoOpen') === '1');
 }
 
 // A MIDI keyboard makes its own sound; the on-screen piano and the computer keyboard use the app's piano.

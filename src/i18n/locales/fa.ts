@@ -19,6 +19,8 @@ export const fa: Record<MessageKey, string> = {
   'control.toggleMetronome': 'روشن یا خاموش‌کردن مترونوم',
   'control.uploadFile': 'بارگذاری فایل MusicXML',
   'control.options': 'تنظیمات',
+  'control.togglePiano': 'نمایش یا پنهان‌کردن پیانوی روی صفحه',
+  'piano.label': 'صفحه‌کلید پیانو',
 
   // Options panel
   'options.title': 'تنظیمات',

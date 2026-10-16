@@ -1397,3 +1397,135 @@ html[dir='rtl'] .fingering-panel {
   left: auto;
   right: var(--space-lg);
 }
+
+/* ============================================
+   ON-SCREEN PIANO
+   ============================================ */
+.piano-btn {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.piano-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.piano-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.piano-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.piano-dock {
+  position: fixed;
+  left: 50%;
+  bottom: 96px;
+  transform: translateX(-50%);
+  width: min(96vw, 980px);
+  padding: var(--space-sm);
+  background: var(--surface);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  z-index: 45;
+  overflow-x: auto;
+}
+
+.piano-dock[hidden] {
+  display: none;
+}
+
+body.piano-open #musicStand {
+  padding-bottom: 270px;
+}
+
+.piano {
+  position: relative;
+  display: flex;
+  min-width: calc(var(--white-keys) * 34px);
+  height: 130px;
+  user-select: none;
+  touch-action: none;
+}
+
+.piano-key {
+  position: relative;
+  padding: 0;
+  border: 1px solid #222;
+  cursor: pointer;
+  font-family: var(--font-sans);
+}
+
+.piano-key.white {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  padding-bottom: 6px;
+  background: #f6f3ee;
+  border-radius: 0 0 5px 5px;
+  color: #555;
+}
+
+.piano-key.black {
+  position: absolute;
+  top: 0;
+  height: 62%;
+  background: #1d1b19;
+  border-radius: 0 0 4px 4px;
+  z-index: 2;
+}
+
+.piano-key.white.pressed {
+  background: var(--current);
+}
+
+.piano-key.black.pressed {
+  background: var(--accent-light);
+}
+
+.piano-key-label {
+  font-size: 0.7rem;
+  pointer-events: none;
+}
+
+.piano-key-octave {
+  font-size: 0.6rem;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.piano-key[data-hint]::after {
+  content: attr(data-hint);
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--accent);
+  pointer-events: none;
+}
+
+.piano-key.black[data-hint]::after {
+  color: var(--current);
+}

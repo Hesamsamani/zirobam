@@ -17,6 +17,8 @@ export const en = {
   'control.toggleMetronome': 'Toggle metronome',
   'control.uploadFile': 'Upload MusicXML file',
   'control.options': 'Options',
+  'control.togglePiano': 'Show or hide the piano keyboard',
+  'piano.label': 'Piano keyboard',
 
   // Options panel
   'options.title': 'Options',
