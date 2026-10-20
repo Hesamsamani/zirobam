@@ -43,6 +43,24 @@ describe('formatNoteName', () => {
     expect(formatNoteName('c#', 'letters')).toBe('C♯');
   });
 
+  it('writes double signs', () => {
+    expect(formatNoteName('F##4', 'letters')).toBe('F♯♯');
+    expect(formatNoteName('Dbb4', 'letters')).toBe('D♭♭');
+    expect(formatNoteName('F##4', 'solfege')).toBe('Fa♯♯');
+    expect(formatNoteName('Bbb3', 'solfege')).toBe('Si♭♭');
+    expect(formatNoteName('F##4', 'solfege-fa')).toBe('فا دوبل دیز');
+    expect(formatNoteName('Dbb4', 'solfege-fa')).toBe('ر دوبل بمل');
+  });
+
+  it('writes koron and sori, the Persian quarter tones', () => {
+    expect(formatNoteName('Ek4', 'letters')).toBe('E koron');
+    expect(formatNoteName('Co4', 'letters')).toBe('C sori');
+    expect(formatNoteName('Ek4', 'solfege')).toBe('Mi koron');
+    expect(formatNoteName('Ek4', 'solfege-fa')).toBe('می کرن');
+    expect(formatNoteName('Co4', 'solfege-fa')).toBe('دو سری');
+    expect(formatNoteName('Ek', 'letters')).toBe('E koron');
+  });
+
   it('adds the octave only when asked', () => {
     expect(formatNoteName('C4', 'letters', { octave: true })).toBe('C4');
     expect(formatNoteName('C4', 'letters')).toBe('C');

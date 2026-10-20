@@ -149,6 +149,60 @@ describe('the song maker screen', () => {
     expect($('.maker-problem').textContent).toMatch(/at least one note/);
   });
 
+  describe('in 6/8', () => {
+    it('offers 6/8 next to the signatures in quarter notes', async () => {
+      const { view } = setup();
+      await view.show(null);
+      expect(Array.from($<HTMLSelectElement>('#makerTime').options).map((o) => o.textContent)).toEqual(['2/4', '3/4', '4/4', '6/8']);
+    });
+
+    it('closes the measure after six eighth notes', async () => {
+      const { view } = setup();
+      await view.show(null);
+      $<HTMLSelectElement>('#makerTime').value = '6';
+      chip('Eighth').click();
+      for (const letter of ['C', 'D', 'E', 'F', 'G', 'A']) note(letter);
+      expect($<HTMLTextAreaElement>('#makerNotes').value).toBe('C4e D4e E4e F4e G4e A4e |');
+    });
+
+    it('saves the song as 6/8, and opens it again as 6/8', async () => {
+      const { view, deps } = setup();
+      await view.show(null);
+      type('#makerName', 'A jig');
+      $<HTMLSelectElement>('#makerTime').value = '6';
+      type('#makerNotes', 'C4e D4e E4e F4e G4e A4e | G4h.');
+      $('.maker-save').click();
+      await vi.waitFor(() => expect(deps.save).toHaveBeenCalledOnce());
+      const xml = vi.mocked(deps.save).mock.calls[0][2];
+      expect(xml).toContain('<beat-type>8</beat-type>');
+
+      const again = setup({ open: vi.fn(async () => xml) });
+      await again.view.show('maker-jig');
+      expect($<HTMLSelectElement>('#makerTime').value).toBe('6');
+      expect($<HTMLTextAreaElement>('#makerNotes').value).toBe('C4e D4e E4e F4e G4e A4e | G4h.');
+    });
+
+    it('keeps an unfinished 6/8 song when the page is loaded again', async () => {
+      const first = setup();
+      await first.view.show(null);
+      type('#makerName', 'Jig');
+      $<HTMLSelectElement>('#makerTime').value = '6';
+      type('#makerNotes', 'C4e D4e');
+      const second = setup();
+      await second.view.show(null);
+      expect($<HTMLSelectElement>('#makerTime').value).toBe('6');
+      expect($<HTMLTextAreaElement>('#makerNotes').value).toBe('C4e D4e');
+    });
+
+    it('shows the staff in 6/8', async () => {
+      const { view, toolkit } = setup();
+      await view.show(null);
+      $<HTMLSelectElement>('#makerTime').value = '6';
+      type('#makerNotes', 'C4e D4e E4e F4e G4e A4e');
+      expect(String(toolkit.loadData.mock.calls.at(-1)?.[0])).toContain('<beat-type>8</beat-type>');
+    });
+  });
+
   it('saves the song and practises it', async () => {
     const { view, deps } = setup();
     await view.show(null);

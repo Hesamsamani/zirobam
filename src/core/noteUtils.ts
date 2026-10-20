@@ -8,19 +8,17 @@
  */
 
 import type { NoteData, ChordNote } from './types';
+import { keyName, noteString } from '../theory/pitch';
 
 // ============================================
 // NOTE NAME CONVERSION
 // ============================================
 
 /**
- * Convert NoteData to a display string like 'C4', 'F#5', 'Bb3'
+ * Convert NoteData to a display string like 'C4', 'F#5', 'Bb3' or 'Ek4' (a quarter tone)
  */
 export function noteDataToString(note: NoteData | ChordNote): string {
-  let name = note.step;
-  if (note.alter === 1) name += '#';
-  if (note.alter === -1) name += 'b';
-  return `${name}${note.octave}`;
+  return noteString(note.step, note.alter, note.octave);
 }
 
 /**
@@ -101,17 +99,10 @@ export function spellFromMidi(letter: string, octave: number, midi: number): str
 
 /**
  * Normalize enharmonic equivalents for comparison.
- * Converts flats to sharps: Db→C#, Eb→D#, etc.
+ * Writes the piano key with a sharp: Db→C#, Eb→D#, Cb5→B4, Ek4→E4, etc.
  */
 export function normalizeNoteName(note: string): string {
-  return note
-    .replace('Db', 'C#')
-    .replace('Eb', 'D#')
-    .replace('Fb', 'E')
-    .replace('Gb', 'F#')
-    .replace('Ab', 'G#')
-    .replace('Bb', 'A#')
-    .replace('Cb', 'B');
+  return keyName(note);
 }
 
 /**

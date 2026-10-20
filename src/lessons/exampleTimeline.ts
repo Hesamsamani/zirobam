@@ -8,23 +8,25 @@ export interface TimelineEvent {
   length: number;
 }
 
-/** The notes of one staff with their start times. Tied notes become one long sound. */
+/** The notes of one staff with their start times. A chord is several sounds at once; tied notes become one long sound. */
 function staffEvents(measures: ParsedNote[][]): TimelineEvent[] {
   const events: TimelineEvent[] = [];
   let time = 0;
-  let open: TimelineEvent | null = null; // the sound a tie is still adding to
+  let open = new Map<string, TimelineEvent>(); // the sounds a tie is still adding to, by pitch
   for (const note of measures.flat()) {
     const length = note.duration / 4;
-    if (!note.rest) {
-      if (open && open.pitch === note.pitch) {
-        open.length += length;
-      } else {
-        open = { pitch: note.pitch, start: time, length };
-        events.push(open);
-      }
-      if (!note.tie) open = null;
+    if (note.rest) {
+      open = new Map();
     } else {
-      open = null;
+      const next = new Map<string, TimelineEvent>();
+      for (const pitch of [note.pitch, ...note.chord.map((c) => c.pitch)]) {
+        const sounding = open.get(pitch);
+        if (sounding) sounding.length += length;
+        const event = sounding ?? { pitch, start: time, length };
+        if (!sounding) events.push(event);
+        if (note.tie) next.set(pitch, event);
+      }
+      open = next;
     }
     time += length;
   }
@@ -34,16 +36,18 @@ function staffEvents(measures: ParsedNote[][]): TimelineEvent[] {
 /** What a lesson picture sounds like, for the Play button. */
 export function exampleTimeline(spec: StaffExample): TimelineEvent[] {
   const beats = spec.beats ?? 4;
+  const beatType = spec.beatType ?? 4;
   const strict = !spec.free;
-  const events = staffEvents(parseMelody(spec.notes, beats, 4, strict));
-  if (spec.clef === 'grand' && spec.lower) events.push(...staffEvents(parseMelody(spec.lower, beats, 4, strict)));
+  const events = staffEvents(parseMelody(spec.notes, beats, beatType, strict));
+  if (spec.clef === 'grand' && spec.lower) events.push(...staffEvents(parseMelody(spec.lower, beats, beatType, strict)));
   return events.sort((a, b) => a.start - b.start);
 }
 
-/** How long the whole example lasts in beats, trailing rests included. */
+/** How long the whole example lasts in beats (quarter notes), trailing rests included. */
 export function exampleLength(spec: StaffExample): number {
   const beats = spec.beats ?? 4;
+  const beatType = spec.beatType ?? 4;
   const strict = !spec.free;
-  const total = (text: string) => parseMelody(text, beats, 4, strict).flat().reduce((sum, note) => sum + note.duration / 4, 0);
+  const total = (text: string) => parseMelody(text, beats, beatType, strict).flat().reduce((sum, note) => sum + note.duration / 4, 0);
   return Math.max(total(spec.notes), spec.clef === 'grand' && spec.lower ? total(spec.lower) : 0);
 }

@@ -33,6 +33,40 @@ describe('exampleTimeline', () => {
     ]);
   });
 
+  it('sounds the notes of a chord together, lowest first', () => {
+    const events = exampleTimeline({ clef: 'treble', notes: 'G4+C4+E4h D4h' });
+    expect(events).toEqual([
+      { pitch: 'C4', start: 0, length: 2 },
+      { pitch: 'E4', start: 0, length: 2 },
+      { pitch: 'G4', start: 0, length: 2 },
+      { pitch: 'D4', start: 2, length: 2 },
+    ]);
+  });
+
+  it('holds a tied chord as one long chord, and only the pitches that are tied', () => {
+    const events = exampleTimeline({ clef: 'treble', notes: 'C4+E4h~ C4+G4h' });
+    expect(events).toEqual([
+      { pitch: 'C4', start: 0, length: 4 },
+      { pitch: 'E4', start: 0, length: 2 },
+      { pitch: 'G4', start: 2, length: 2 },
+    ]);
+  });
+
+  it('counts a measure of 6/8 as three beats of a quarter note', () => {
+    const spec = { clef: 'treble' as const, notes: 'C4e D4e E4e F4e G4e A4e | G4h.', beats: 6 as const, beatType: 8 as const };
+    const events = exampleTimeline(spec);
+    expect(events.map((e) => [e.pitch, e.start, e.length])).toEqual([
+      ['C4', 0, 0.5],
+      ['D4', 0.5, 0.5],
+      ['E4', 1, 0.5],
+      ['F4', 1.5, 0.5],
+      ['G4', 2, 0.5],
+      ['A4', 2.5, 0.5],
+      ['G4', 3, 3],
+    ]);
+    expect(exampleLength(spec)).toBe(6);
+  });
+
   it('plays both staves of a grand staff together', () => {
     const events = exampleTimeline({ clef: 'grand', notes: 'E4h G4h', lower: 'C3w' });
     expect(events.filter((e) => e.start === 0).map((e) => e.pitch).sort()).toEqual(['C3', 'E4']);

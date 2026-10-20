@@ -2,9 +2,11 @@ import { describe, it, expect } from 'vitest';
 import {
   addToken,
   buildDraft,
+  draftFromData,
   MAKER_KEYS,
   MAX_MEASURES,
   MAX_TITLE,
+  measureBeats,
   newMakerId,
   noteToken,
   readDraft,
@@ -97,6 +99,72 @@ describe('readDraft', () => {
   });
 });
 
+describe('6/8', () => {
+  const jig: SongDraft = { title: 'A jig', fifths: 0, beats: 6, beatType: 8, melody: 'C4e D4e E4e F4e G4e A4e | G4h.' };
+
+  it('builds a song in 6/8, with a measure of six eighths', () => {
+    const result = buildDraft(jig);
+    if (!result.ok) throw new Error(JSON.stringify(result.problem));
+    expect(result.measures).toBe(2);
+    expect(result.xml).toContain('<beat-type>8</beat-type>');
+    expect(parseMusicXML(result.xml).timeSignature).toMatchObject({ beats: 6, beatType: 8 });
+  });
+
+  it('says which measure has the wrong length, counting in quarter notes', () => {
+    const result = buildDraft({ ...jig, melody: 'C4e D4e E4e | G4h.' });
+    expect(result).toEqual({ ok: false, problem: { kind: 'measure', measure: 1, beats: 1.5, expected: 3 } });
+  });
+
+  it('gets the song back out of its MusicXML with its time signature', () => {
+    const result = buildDraft(jig);
+    if (!result.ok) throw new Error('did not build');
+    expect(readDraft(result.xml)).toEqual(jig);
+  });
+
+  it('leaves the x/4 songs as they were: no beat type in the stored text', () => {
+    const result = buildDraft(draft);
+    if (!result.ok) throw new Error('did not build');
+    expect(result.xml).not.toContain('beatType');
+    expect(readDraft(result.xml)).toEqual(draft);
+  });
+});
+
+describe('measureBeats', () => {
+  it('is the length of a measure in quarter notes', () => {
+    expect(measureBeats({ beats: 4 })).toBe(4);
+    expect(measureBeats({ beats: 3 })).toBe(3);
+    expect(measureBeats({ beats: 2, beatType: 4 })).toBe(2);
+    expect(measureBeats({ beats: 6, beatType: 8 })).toBe(3);
+  });
+});
+
+describe('draftFromData', () => {
+  const good = { title: 'T', fifths: 2, beats: 3, melody: 'C4q D4q E4q' };
+
+  it('takes what the song maker stores', () => {
+    expect(draftFromData(good)).toEqual(good);
+    expect(draftFromData({ ...good, beats: 6, beatType: 8 })).toEqual({ ...good, beats: 6, beatType: 8 });
+  });
+
+  it('drops a beat type of 4, which is the default', () => {
+    expect(draftFromData({ ...good, beatType: 4 })).toEqual(good);
+    expect('beatType' in draftFromData({ ...good, beatType: 4 })!).toBe(false);
+  });
+
+  it('refuses a time signature the maker does not offer', () => {
+    expect(draftFromData({ ...good, beats: 6 })).toBeNull(); // six quarter notes
+    expect(draftFromData({ ...good, beats: 6, beatType: 4 })).toBeNull();
+    expect(draftFromData({ ...good, beats: 3, beatType: 8 })).toBeNull();
+    expect(draftFromData({ ...good, beats: 5 })).toBeNull();
+  });
+
+  it('refuses what is not a song', () => {
+    for (const bad of [null, undefined, 'text', 7, [], { ...good, title: 5 }, { ...good, melody: null }, { ...good, fifths: 8 }, { ...good, fifths: 1.5 }]) {
+      expect(draftFromData(bad)).toBeNull();
+    }
+  });
+});
+
 describe('the keys', () => {
   it('has the fifteen key signatures, from seven flats to seven sharps', () => {
     expect(MAKER_KEYS.map((k) => k.fifths)).toEqual([-7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7]);
@@ -128,6 +196,12 @@ describe('writing the notes with buttons', () => {
     expect(addToken('C4q D4q E4h |', 'F4w', 4)).toBe('C4q D4q E4h | F4w |');
     expect(addToken('C4q', 'D4q', 2)).toBe('C4q D4q |');
     expect(addToken('C4q D4q', 'E4q', 3)).toBe('C4q D4q E4q |');
+  });
+
+  it('adds the bar line of a 6/8 measure after six eighths (three quarter notes)', () => {
+    expect(addToken('C4e D4e E4e F4e G4e', 'A4e', 3)).toBe('C4e D4e E4e F4e G4e A4e |');
+    expect(addToken('C4e D4e E4e F4e', 'G4e', 3)).toBe('C4e D4e E4e F4e G4e');
+    expect(addToken('C4q.', 'D4q.', 3)).toBe('C4q. D4q. |');
   });
 
   it('does not close a measure that is too long, and the student sees the error', () => {

@@ -6,8 +6,10 @@ import { renderStaffPicture } from '../lessons/staffPicture';
 import {
   addToken,
   buildDraft,
+  draftFromData,
   MAKER_KEYS,
   MAX_TITLE,
+  measureBeats,
   noteToken,
   readDraft,
   removeLastToken,
@@ -135,10 +137,11 @@ export class SongMakerView {
     this.time.id = 'makerTime';
     this.time.className = 'maker-input';
     this.time.setAttribute('dir', 'ltr');
-    for (const beats of [2, 3, 4]) {
+    // the value is the number of beats; six beats are 6/8 (eighth notes), the others are quarter notes
+    for (const beats of [2, 3, 4, 6]) {
       const option = document.createElement('option');
       option.value = String(beats);
-      option.textContent = `${beats}/4`;
+      option.textContent = beats === 6 ? '6/8' : `${beats}/4`;
       this.time.appendChild(option);
     }
     this.time.value = '4';
@@ -263,24 +266,16 @@ export class SongMakerView {
 
   private read(): SongDraft {
     const beats = Number(this.time.value);
-    return {
-      title: this.name.value,
-      fifths: Number(this.key.value),
-      beats: beats === 2 || beats === 3 ? beats : 4,
-      melody: this.notes.value,
-    };
+    const common = { title: this.name.value, fifths: Number(this.key.value), melody: this.notes.value };
+    if (beats === 6) return { ...common, beats: 6, beatType: 8 };
+    return { ...common, beats: beats === 2 || beats === 3 ? beats : 4 };
   }
 
   private loadDraft(): SongDraft | null {
     const text = storageGet(DRAFT_KEY);
     if (!text) return null;
     try {
-      const data = JSON.parse(text) as Partial<SongDraft>;
-      const { title, fifths, beats, melody } = data;
-      if (typeof title !== 'string' || typeof melody !== 'string') return null;
-      if (typeof fifths !== 'number' || fifths < -7 || fifths > 7) return null;
-      if (beats !== 2 && beats !== 3 && beats !== 4) return null;
-      return { title, fifths, beats, melody };
+      return draftFromData(JSON.parse(text));
     } catch {
       return null;
     }
@@ -417,7 +412,7 @@ export class SongMakerView {
   }
 
   private add(token: string): void {
-    this.write(addToken(this.notes.value, token, this.read().beats));
+    this.write(addToken(this.notes.value, token, measureBeats(this.read())));
   }
 
   private write(text: string): void {
@@ -466,7 +461,7 @@ export class SongMakerView {
     try {
       renderStaffPicture(this.preview, {
         toolkit: this.deps.toolkit,
-        spec: { clef: 'treble', notes: shown, fifths: draft.fifths, beats: draft.beats, showTime: true, free: true },
+        spec: { clef: 'treble', notes: shown, fifths: draft.fifths, beats: draft.beats, beatType: draft.beatType, showTime: true, free: true },
         names: false,
         formatName: (note) => note,
         description: t('maker.preview'),

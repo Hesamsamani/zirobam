@@ -1,4 +1,5 @@
 import { buildKeyLayout, type PianoKey } from '../input/onScreenPiano';
+import { parsePitch, pianoMidi } from '../theory/pitch';
 
 export interface KeysPictureOptions {
   from: string;
@@ -14,13 +15,13 @@ export interface KeysPictureOptions {
   ariaLabel: string;
 }
 
-const SEMITONE: Readonly<Record<string, number>> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
 const FLAT_NAME: Readonly<Record<string, string>> = { 'C#': 'Db', 'D#': 'Eb', 'F#': 'Gb', 'G#': 'Ab', 'A#': 'Bb' };
 
+/** The key a note is struck on, whatever its spelling (B#3 is the key of C4). */
 function midiOf(note: string): number {
-  const match = /^([A-G])(#?)(\d)$/.exec(note);
-  if (!match) throw new Error(`Cannot read the note "${note}"`);
-  return (Number(match[3]) + 1) * 12 + SEMITONE[match[1]] + (match[2] ? 1 : 0);
+  const pitch = parsePitch(note);
+  if (!pitch) throw new Error(`Cannot read the note "${note}"`);
+  return pianoMidi(pitch);
 }
 
 function nameSpan(text: string): HTMLSpanElement {

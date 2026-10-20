@@ -2,7 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { LessonPlayer, type PlayerBackend } from '../lessons/lessonPlayer';
 
 function fakeBackend(ready = true) {
-  const played: Array<{ note: string; seconds: number; startsIn: number }> = [];
+  // a quarter tone is given as a frequency in Hz, so a note may be a number
+  const played: Array<{ note: string | number; seconds: number; startsIn: number }> = [];
   const backend: PlayerBackend = {
     ready: vi.fn(async () => ready),
     play: vi.fn((note, seconds, startsIn) => void played.push({ note, seconds, startsIn })),
@@ -109,5 +110,30 @@ describe('LessonPlayer', () => {
     new LessonPlayer(backend, 60).playExample({ clef: 'treble', notes: 'Bb4q F#4q rh' }, () => {});
     await flush();
     expect(played.map((p) => p.note)).toEqual(['A#4', 'F#4']);
+  });
+
+  it('gives the sampler the key for a double sign or a flat C', async () => {
+    const { backend, played } = fakeBackend();
+    new LessonPlayer(backend, 60).playExample({ clef: 'treble', notes: 'Dbb4q Cb5q F##4h' }, () => {});
+    await flush();
+    expect(played.map((p) => p.note)).toEqual(['C4', 'B4', 'G4']);
+  });
+
+  it('plays a quarter tone as a frequency, between its two neighbours', async () => {
+    const { backend, played } = fakeBackend();
+    new LessonPlayer(backend, 60).playExample({ clef: 'treble', notes: 'Ek4q Fo4q rh' }, () => {});
+    await flush();
+    const [koron, sori] = played.map((p) => p.note) as number[];
+    expect(koron).toBeCloseTo(320.24, 1); // between D sharp 311.13 and E 329.63
+    expect(sori).toBeGreaterThan(349.23); // above F
+    expect(sori).toBeLessThan(369.99); // below F sharp
+  });
+
+  it('sounds the notes of a chord together', async () => {
+    const { backend, played } = fakeBackend();
+    new LessonPlayer(backend, 60).playExample({ clef: 'treble', notes: 'C4+E4+G4w' }, () => {});
+    await flush();
+    expect(played.map((p) => p.note)).toEqual(['C4', 'E4', 'G4']);
+    expect(played.every((p) => p.startsIn === 0)).toBe(true);
   });
 });

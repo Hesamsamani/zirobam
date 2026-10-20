@@ -114,6 +114,82 @@ describe('ties and accidentals', () => {
   });
 });
 
+describe('quarter tones and double signs', () => {
+  it('draws koron and sori with their sign, and keeps the alteration', () => {
+    const d = doc(buildExampleXml({ clef: 'treble', notes: 'Ek4q Fo4q G4q A4q' }));
+    expect(texts(d, 'alter')).toEqual(['-0.5', '0.5']);
+    expect(Array.from(d.getElementsByTagName('accidental')).map((a) => a.textContent)).toEqual(['koron', 'sori']);
+  });
+
+  it('draws double sharp and double flat', () => {
+    const d = doc(buildExampleXml({ clef: 'treble', notes: 'F##4q Dbb4q G4h' }));
+    expect(texts(d, 'alter')).toEqual(['2', '-2']);
+    expect(Array.from(d.getElementsByTagName('accidental')).map((a) => a.textContent)).toEqual(['double-sharp', 'flat-flat']);
+  });
+
+  it('draws a natural to cancel a quarter tone that is still in force', () => {
+    const d = doc(buildExampleXml({ clef: 'treble', notes: 'Ek4q En4q F4h' }));
+    expect(Array.from(d.getElementsByTagName('accidental')).map((a) => a.textContent)).toEqual(['koron', 'natural']);
+  });
+
+  it('writes no sign for the repeat of a quarter tone in the same measure', () => {
+    const d = doc(buildExampleXml({ clef: 'treble', notes: 'Ek4q Ek4q Ek4q Ek4q' }));
+    expect(Array.from(d.getElementsByTagName('accidental')).map((a) => a.textContent)).toEqual(['koron']);
+  });
+
+  it('lists the written pitches of a quarter tone scale for the labels', () => {
+    expect(exampleNoteNames({ clef: 'treble', notes: 'D4q Ek4q F4q G4q' })).toEqual(['D4', 'Ek4', 'F4', 'G4']);
+  });
+});
+
+describe('chords', () => {
+  it('stacks the notes of a chord with <chord/> after the first', () => {
+    const d = doc(buildExampleXml({ clef: 'treble', notes: 'C4+E4+G4w' }));
+    const notes = Array.from(d.getElementsByTagName('note'));
+    expect(notes).toHaveLength(3);
+    expect(notes.map((n) => n.getElementsByTagName('chord').length)).toEqual([0, 1, 1]);
+    expect(texts(d, 'step')).toEqual(['C', 'E', 'G']);
+    expect(texts(d, 'duration')).toEqual(['16', '16', '16']);
+  });
+
+  it('counts a chord once in the length of the measure', () => {
+    expect(() => buildExampleXml({ clef: 'treble', notes: 'C4+E4+G4h C4+G4h | C4w' })).not.toThrow();
+    expect(() => buildExampleXml({ clef: 'treble', notes: 'C4+E4+G4h C4+G4q' })).toThrow(/measure 1/i);
+  });
+
+  it('draws a chord in each hand of the grand staff', () => {
+    const d = doc(buildExampleXml({ clef: 'grand', notes: 'E4+G4+C5w', lower: 'C3+G3w' }));
+    const staffs = Array.from(d.getElementsByTagName('note')).map((n) => n.getElementsByTagName('staff')[0].textContent);
+    expect(staffs).toEqual(['1', '1', '1', '2', '2']);
+  });
+
+  it('lists every pitch of a chord for the labels, lowest first', () => {
+    expect(exampleNoteNames({ clef: 'treble', notes: 'G4+C4+E4w' })).toEqual(['C4', 'E4', 'G4']);
+  });
+});
+
+describe('6/8', () => {
+  it('writes the 6/8 time signature, and counts six eighths as a measure', () => {
+    const spec = { clef: 'treble' as const, notes: 'C4e D4e E4e F4e G4e A4e', beats: 6 as const, beatType: 8 as const, showTime: true };
+    const d = doc(buildExampleXml(spec));
+    expect(texts(d, 'beats')).toEqual(['6']);
+    expect(texts(d, 'beat-type')).toEqual(['8']);
+    expect(() => buildExampleXml({ ...spec, notes: 'C4e D4e E4e F4e G4e' })).toThrow(/measure 1/i);
+  });
+
+  it('gives a whole-measure rest to the empty lower staff', () => {
+    const d = doc(buildExampleXml({ clef: 'grand', notes: 'C4q. D4q.', beats: 6, beatType: 8 }));
+    const rest = Array.from(d.getElementsByTagName('note')).find((n) => n.getElementsByTagName('rest').length > 0)!;
+    expect(rest.getElementsByTagName('rest')[0].getAttribute('measure')).toBe('yes');
+    expect(rest.getElementsByTagName('duration')[0].textContent).toBe('12');
+  });
+
+  it('keeps the time signature of the x/4 examples', () => {
+    const d = doc(buildExampleXml({ clef: 'treble', notes: 'C4w', showTime: true }));
+    expect(texts(d, 'beat-type')).toEqual(['4']);
+  });
+});
+
 describe('exampleNoteNames', () => {
   it('lists the written pitches in order, skipping rests, for labelling the notes', () => {
     expect(exampleNoteNames({ clef: 'treble', notes: 'C4q rq E4h | G4w' , free: true })).toEqual(['C4', 'E4', 'G4']);

@@ -1,3 +1,4 @@
+import { soundOf } from '../theory/pitch';
 import { exampleLength, exampleTimeline } from './exampleTimeline';
 import type { StaffExample } from './exampleXml';
 
@@ -5,19 +6,16 @@ import type { StaffExample } from './exampleXml';
 export interface PlayerBackend {
   /** Loads the sound if needed; false when it is not available (offline, blocked). */
   ready(): Promise<boolean>;
-  /** Sounds a note for `seconds`, starting `startsIn` seconds from now. */
-  play(note: string, seconds: number, startsIn: number): void;
+  /** Sounds a note for `seconds`, starting `startsIn` seconds from now. The note is a sampler name, or a frequency in Hz for a quarter tone. */
+  play(note: string | number, seconds: number, startsIn: number): void;
   stopAll(): void;
 }
 
-const FLAT_TO_SHARP: Readonly<Record<string, string>> = { Db: 'C#', Eb: 'D#', Gb: 'F#', Ab: 'G#', Bb: 'A#' };
 /** A note ends a little before the next one starts, so repeated notes are heard as separate notes. */
 const GAP = 0.05;
 
-function samplerName(note: string): string {
-  const match = /^([A-G]b)(\d)$/.exec(note);
-  return match ? `${FLAT_TO_SHARP[match[1]]}${match[2]}` : note;
-}
+/** What the sampler is given for a note: a sharp name (Bb4 is A#4), or a frequency for a quarter tone. */
+const samplerName = soundOf;
 
 /** Plays single keys and lesson examples. A new example is the caller's job to stop first. */
 export class LessonPlayer {

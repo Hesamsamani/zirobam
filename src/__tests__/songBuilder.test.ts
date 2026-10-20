@@ -72,6 +72,141 @@ describe('parseMelody', () => {
   });
 });
 
+describe('double signs and quarter tones', () => {
+  it('reads ## bb, and k (koron) and o (sori) for the quarter tones', () => {
+    const [m] = parseMelody('F##4q Dbb4q Ek4q Co4q', 4, 4);
+    expect(m.map((n) => n.alter)).toEqual([2, -2, -0.5, 0.5]);
+    expect(m.map((n) => n.pitch)).toEqual(['F##4', 'Dbb4', 'Ek4', 'Co4']);
+  });
+
+  it('keeps B flat apart from B double flat', () => {
+    const [m] = parseMelody('Bb3q Bbb3q rh', 4, 4);
+    expect(m.filter((n) => !n.rest).map((n) => n.alter)).toEqual([-1, -2]);
+  });
+
+  it('still refuses what is not a note', () => {
+    expect(() => parseMelody('C4x C4q C4h', 4, 4)).toThrow(/C4x/);
+    expect(() => parseMelody('C###4q C4q C4h', 4, 4)).toThrow(/C###4q/);
+    expect(() => parseMelody('Ckk4q C4q C4h', 4, 4)).toThrow(/Ckk4q/);
+  });
+
+  it('draws each sign: koron, sori, double sharp and double flat', () => {
+    const xml = buildSongXml({ ...base, melody: 'Ek4q Fo4q G##4q Abb4q | C5w' });
+    expect(xml).toContain('<alter>-0.5</alter>');
+    expect(xml).toContain('<accidental>koron</accidental>');
+    expect(xml).toContain('<alter>0.5</alter>');
+    expect(xml).toContain('<accidental>sori</accidental>');
+    expect(xml).toContain('<alter>2</alter>');
+    expect(xml).toContain('<accidental>double-sharp</accidental>');
+    expect(xml).toContain('<alter>-2</alter>');
+    expect(xml).toContain('<accidental>flat-flat</accidental>');
+  });
+
+  it('writes a quarter tone once per measure and pitch, like any other sign', () => {
+    const xml = buildSongXml({ ...base, melody: 'Ek4q Ek4q Ek5q Ek4q | C5w' });
+    expect(xml.match(/<accidental>koron<\/accidental>/g)).toHaveLength(2); // E4 once, E5 once
+  });
+
+  it('wants a natural to cancel a quarter tone that is still in force, and says so', () => {
+    const problem = (fn: () => unknown) => {
+      try {
+        fn();
+      } catch (error) {
+        return error instanceof MelodyError ? error.problem : undefined;
+      }
+      return undefined;
+    };
+    expect(problem(() => buildSongXml({ ...base, melody: 'Ek4q E4q F4h | C5w' }))).toEqual({ kind: 'carried', token: 'E4q', needed: 'Ek4', natural: 'En4' });
+    expect(() => buildSongXml({ ...base, melody: 'Ek4q En4q F4h | C5w' })).not.toThrow();
+  });
+
+  it('the app reads a quarter tone back as the same note', () => {
+    const parsed = parseMusicXML(buildSongXml({ ...base, melody: 'Ek4q Fo4q G4h | C5w' }));
+    expect(parsed.measures[0].rightHand.map((n) => noteDataToString(n))).toEqual(['Ek4', 'Fo4', 'G4']);
+  });
+});
+
+describe('chords', () => {
+  it('reads several pitches joined by + as one chord with one length', () => {
+    const [m] = parseMelody('C4+E4+G4h rh', 4, 4);
+    expect(m[0].pitch).toBe('C4');
+    expect(m[0].chord.map((c) => c.pitch)).toEqual(['E4', 'G4']);
+    expect(m[0].duration).toBe(8);
+    expect(m[1].chord).toEqual([]);
+  });
+
+  it('takes a chord as a set: the lowest note comes first however it is written', () => {
+    const [m] = parseMelody('G4+C4+E4w', 4, 4);
+    expect(m[0].pitch).toBe('C4');
+    expect(m[0].chord.map((c) => c.pitch)).toEqual(['E4', 'G4']);
+  });
+
+  it('allows signs inside a chord', () => {
+    const [m] = parseMelody('C4+Eb4+G4w', 4, 4);
+    expect(m[0].chord[0]).toMatchObject({ step: 'E', alter: -1, octave: 4, pitch: 'Eb4' });
+  });
+
+  it('refuses a rest or a missing length inside a chord', () => {
+    expect(() => parseMelody('r+C4q C4h C4q', 4, 4)).toThrow(/r\+C4q/);
+    expect(() => parseMelody('C4+E4 C4h', 4, 4)).toThrow(/C4\+E4/);
+  });
+
+  it('writes the first note, then <chord/> notes, all with the same length', () => {
+    const xml = buildSongXml({ ...base, melody: 'C4+E4+G4h rh | C4+G4w' });
+    expect(xml.match(/<chord\/>/g)).toHaveLength(3);
+    expect(xml.match(/<step>/g)).toHaveLength(5);
+    const first = xml.indexOf('<step>C</step>');
+    expect(xml.indexOf('<chord/>')).toBeGreaterThan(first);
+  });
+
+  it('draws a sign on the note of a chord that needs one, once', () => {
+    const xml = buildSongXml({ ...base, melody: 'C4+Eb4+G4h C4+Eb4+G4h | C5w' });
+    expect(xml.match(/<accidental>flat<\/accidental>/g)).toHaveLength(1);
+  });
+
+  it('ties every note of a chord to the same chord that follows', () => {
+    const xml = buildSongXml({ ...base, melody: 'C4+E4+G4h~ C4+E4+G4h | C5w' });
+    expect(xml.match(/<tie type="start"\/>/g)).toHaveLength(3);
+    expect(xml.match(/<tie type="stop"\/>/g)).toHaveLength(3);
+  });
+
+  it('the app reads a chord back with its notes together', () => {
+    const parsed = parseMusicXML(buildSongXml({ ...base, melody: 'C4+E4+G4w' }));
+    const note = parsed.measures[0].rightHand[0];
+    expect(noteDataToString(note)).toBe('C4');
+    expect((note.chordNotes ?? []).map((c) => `${c.step}${c.octave}`)).toEqual(['E4', 'G4']);
+  });
+});
+
+describe('6/8', () => {
+  const sixEight: SongSpec = { ...base, beats: 6, beatType: 8, melody: 'C4e D4e E4e F4e G4e A4e | G4h.' };
+
+  it('counts the measure in eighths: six of them, or a dotted half', () => {
+    expect(() => buildSongXml(sixEight)).not.toThrow();
+    expect(() => buildSongXml({ ...sixEight, melody: 'C4e D4e E4e F4e G4e | G4h.' })).toThrow(/measure 1/i);
+  });
+
+  it('writes 6/8 and a whole-measure rest for the left hand', () => {
+    const xml = buildSongXml(sixEight);
+    expect(xml).toContain('<beats>6</beats>');
+    expect(xml).toContain('<beat-type>8</beat-type>');
+    expect(xml).toContain('<rest measure="yes"/><duration>12</duration><staff>2</staff>');
+  });
+
+  it('the app reads it as 6/8 with two measures', () => {
+    const parsed = parseMusicXML(buildSongXml(sixEight));
+    expect(parsed.timeSignature).toMatchObject({ beats: 6, beatType: 8 });
+    expect(parsed.measures).toHaveLength(2);
+  });
+
+  it('leaves the x/4 songs exactly as they were', () => {
+    const xml = buildSongXml(base);
+    expect(xml).toContain('<beat-type>4</beat-type>');
+    expect(xml).toContain('<rest/><duration>16</duration><type>whole</type><staff>2</staff>');
+    expect(xml).not.toContain('measure="yes"');
+  });
+});
+
 describe('buildSongXml', () => {
   it('writes MusicXML that the app reads back as the same tune', () => {
     const xml = buildSongXml(base);

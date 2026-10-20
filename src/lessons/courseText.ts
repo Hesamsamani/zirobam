@@ -3,8 +3,8 @@ import { toPersianDigits } from '../i18n/digits';
 import { formatNoteName, getNoteNameSystem, type NoteNameSystem } from '../i18n/noteNames';
 import type { Bi } from './types';
 
-/** {C}, {F#}, {Bb}, and with an octave number {C4}. */
-const TOKEN = /\{([A-G][#b]?)(\d)?\}/g;
+/** {C}, {F#}, {Bb}, {F##}, {Bbb}, {Ek} (koron), {Co} (sori), and with an octave number {C4}. */
+const TOKEN = /\{([A-G](?:##|bb|[#bko])?)(\d)?\}/g;
 
 /** Replaces the note tokens with names in the student's note-name system. */
 export function resolveNoteTokens(text: string, system: NoteNameSystem = getNoteNameSystem()): string {

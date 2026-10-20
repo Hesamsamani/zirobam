@@ -53,6 +53,8 @@ import { SongMakerView } from './songs/songMakerView';
 import { EarView } from './ear/earView';
 import { ScalesView } from './scales/scalesView';
 import { buildTimingEventList, effectiveHand, normalizeNote, type TimingEvent } from './practice/timingEvents';
+import { soundOf } from './theory/pitch';
+import { beatsPerMeasure, countInBeats } from './core/timeSignature';
 import { WaitSession, countWaitNotes } from './practice/waitMode';
 import { PracticeOptionsStore, nextLadderBpm } from './practice/practiceOptions';
 import { PracticeAids } from './practice/practiceAids';
@@ -1248,7 +1250,8 @@ function setupNavigation(learn: LearnHandle) {
       await initAudio();
       return Boolean(sampler?.loaded);
     },
-    play: (note: string, seconds: number, startsIn: number) => void sampler?.triggerAttackRelease(note, seconds, Tone.now() + 0.05 + startsIn),
+    play: (note: string | number, seconds: number, startsIn: number) =>
+      void sampler?.triggerAttackRelease(typeof note === 'number' ? note : soundOf(note), seconds, Tone.now() + 0.05 + startsIn),
     stopAll: () => sampler?.releaseAll(),
   };
   const lessonPlayer = new LessonPlayer(pianoVoice);
@@ -1481,7 +1484,7 @@ function showWaitTarget(first = false) {
   for (const id of noteIds) document.getElementById(id)?.classList.add('current');
 
   if (sampler && sampler.loaded) {
-    for (const pitch of event.accompaniment ?? []) sampler.triggerAttackRelease(pitch, '2n');
+    for (const pitch of event.accompaniment ?? []) sampler.triggerAttackRelease(soundOf(pitch), '2n');
   }
   const needed = session.expected();
   if (first && waitHintPending) {
@@ -2040,7 +2043,7 @@ async function start() {
   lastMetronomeTime = 0;
   lastAdvanceBeatTime = 0;
 
-  const countoffTotal = currentTimeSig.beats;
+  const countoffTotal = countInBeats(currentTimeSig);
   isCountingOff = true;
   countoffBeats = 0;
   // Don't show initial number - it will appear on first beat
@@ -2073,7 +2076,7 @@ function scheduleMusic(countoffTotal: number) {
     const eventId = Tone.getTransport().schedule((time) => {
       playMetronomeClick(subInBeat, time);
       if (subInBeat === 0) {
-        metronomePanel?.pulse(beatNumber % currentTimeSig.beats, currentTimeSig.beats);
+        metronomePanel?.pulse(beatNumber % countInBeats(currentTimeSig), countInBeats(currentTimeSig));
       }
 
       // Handle countoff display updates
@@ -2171,7 +2174,7 @@ function onPieceComplete() {
         currentBeatIndex = 0;
         isCountingOff = true;
         countoffBeats = 0;
-        beginRound(currentTimeSig.beats);
+        beginRound(countInBeats(currentTimeSig));
         return;
       }
       const hasMore = practiceSession.nextStep();
@@ -2194,7 +2197,7 @@ function onPieceComplete() {
         currentBeatIndex = 0;
         isCountingOff = true;
         countoffBeats = 0;
-        beginRound(currentTimeSig.beats);
+        beginRound(countInBeats(currentTimeSig));
       } else {
         // Practice complete - show celebration!
         stop();
@@ -2224,7 +2227,7 @@ function onPieceComplete() {
       const needsCountoff = currentMeasureCount >= 4;
       isCountingOff = needsCountoff;
       countoffBeats = 0;
-      beginRound(needsCountoff ? currentTimeSig.beats : 0);
+      beginRound(needsCountoff ? countInBeats(currentTimeSig) : 0);
     }
   } else {
     // Level mode: the piece must have been played, not merely allowed to run to the end
@@ -2255,7 +2258,7 @@ function onPieceComplete() {
 
     isCountingOff = true;
     countoffBeats = 0;
-    const countoffTotal = currentTimeSig.beats;
+    const countoffTotal = countInBeats(currentTimeSig);
     // Don't show initial number - it will appear on first beat
 
     scheduleMusic(countoffTotal);
@@ -2379,7 +2382,7 @@ function advanceBeat(time: number) {
 
   if (sampler && sampler.loaded && pitchesToPlay.length > 0) {
     for (const pitch of pitchesToPlay) {
-      sampler.triggerAttackRelease(pitch, '2n', time);
+      sampler.triggerAttackRelease(soundOf(pitch), '2n', time);
     }
   }
 
@@ -2403,8 +2406,7 @@ function advanceBeat(time: number) {
  * Returns 0-indexed measure number.
  */
 function getMeasureFromTime(time: number): number {
-  const beatsPerMeasure = currentTimeSig.beats;
-  return Math.floor(time / beatsPerMeasure);
+  return Math.floor(time / beatsPerMeasure(currentTimeSig));
 }
 
 /**

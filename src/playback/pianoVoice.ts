@@ -2,6 +2,7 @@
 export interface PianoVoice {
   /** Loads the sounds; false when they cannot be loaded. */
   ready(): Promise<boolean>;
-  play(note: string, seconds: number, startsIn: number): void;
+  /** A note name as the app writes it (Bb4, Ek4), or a frequency in Hz. */
+  play(note: string | number, seconds: number, startsIn: number): void;
   stopAll(): void;
 }

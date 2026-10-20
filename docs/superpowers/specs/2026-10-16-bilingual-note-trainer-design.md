@@ -7,7 +7,7 @@ A web app in which the owner learns to read music notes, with the interface in *
 
 ## Decisions
 - Base app: `ftrain/sightreading`. Reason: it is the only candidate with an open license that teaches reading notes on the staff (see `research/candidates.md`).
-- Persian note names: solfège and letters, switchable. No quarter-tones in this version.
+- Persian note names: solfège and letters, switchable. No quarter-tones in this version. **Reversed 2026-10-21:** koron and sori are now part of the core (`src/theory/pitch.ts`), for the scale and chord dictionary and the Persian music path; see `docs/superpowers/plans/2026-10-20-scale-dictionary-and-practice-tools.md`.
 - Practice inputs: on-screen piano and computer keyboard, MIDI, microphone. The microphone arrives in milestone 2.
 - Code stays local. No fork, push or published repo.
 

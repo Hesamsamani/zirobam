@@ -1,5 +1,6 @@
 import { getLocale, onLocaleChange, t, type Locale } from './index';
 import { EventEmitter } from '../core/events';
+import { parseNoteName, type Alter } from '../theory/pitch';
 
 export type NoteNameSystem = 'letters' | 'solfege' | 'solfege-fa';
 export const NOTE_NAME_SYSTEMS: readonly NoteNameSystem[] = ['letters', 'solfege', 'solfege-fa'];
@@ -12,10 +13,13 @@ const STEP_NAMES: Record<NoteNameSystem, Record<string, string>> = {
   'solfege-fa': { C: 'دو', D: 'ر', E: 'می', F: 'فا', G: 'سل', A: 'لا', B: 'سی' },
 };
 
-const ACCIDENTALS: Record<NoteNameSystem, { sharp: string; flat: string }> = {
-  letters: { sharp: '♯', flat: '♭' },
-  solfege: { sharp: '♯', flat: '♭' },
-  'solfege-fa': { sharp: ' دیز', flat: ' بمل' },
+// What follows the letter for each alteration. Double signs are written ♯♯ and ♭♭ (the single-symbol
+// double sharp and flat are missing from most fonts). Koron and sori are the Persian quarter tones.
+const LATIN_SIGNS: Readonly<Record<Alter, string>> = { [-2]: '♭♭', [-1]: '♭', [-0.5]: ' koron', [0]: '', [0.5]: ' sori', [1]: '♯', [2]: '♯♯' };
+const SIGNS: Record<NoteNameSystem, Readonly<Record<Alter, string>>> = {
+  letters: LATIN_SIGNS,
+  solfege: LATIN_SIGNS,
+  'solfege-fa': { [-2]: ' دوبل بمل', [-1]: ' بمل', [-0.5]: ' کرن', [0]: '', [0.5]: ' سری', [1]: ' دیز', [2]: ' دوبل دیز' },
 };
 
 let chosen: NoteNameSystem | null = null;
@@ -65,14 +69,12 @@ export function formatNoteName(
   system: NoteNameSystem,
   options: { octave?: boolean } = {}
 ): string {
-  const match = /^([A-Ga-g])([#b♯♭]?)(-?\d+)?$/.exec(note.trim());
-  if (!match) return note;
-  const step = match[1].toUpperCase();
-  const accidental = match[2];
-  let name = STEP_NAMES[system][step];
-  if (accidental === '#' || accidental === '♯') name += ACCIDENTALS[system].sharp;
-  else if (accidental === 'b' || accidental === '♭') name += ACCIDENTALS[system].flat;
-  if (options.octave && match[3] !== undefined) name += match[3];
+  const trimmed = note.trim();
+  // the letter may be lower case ("c#")
+  const parsed = parseNoteName(trimmed.charAt(0).toUpperCase() + trimmed.slice(1));
+  if (!parsed) return note;
+  let name = STEP_NAMES[system][parsed.step] + SIGNS[system][parsed.alter];
+  if (options.octave && parsed.octave !== null) name += parsed.octave;
   return name;
 }
 

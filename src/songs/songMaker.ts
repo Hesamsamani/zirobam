@@ -1,3 +1,4 @@
+import { beatsPerMeasure } from '../core/timeSignature';
 import { buildSongXml, MelodyError, parseMelody, type MelodyProblem } from './songBuilder';
 
 export const MAX_MEASURES = 64;
@@ -10,8 +11,28 @@ export interface SongDraft {
   title: string;
   /** Key signature: sharps (positive) or flats (negative). */
   fifths: number;
-  beats: 2 | 3 | 4;
+  /** Beats per measure: 2, 3 or 4 quarter notes, or 6 eighth notes (6/8). */
+  beats: 2 | 3 | 4 | 6;
+  /** 8 for 6/8; left out for the songs in x/4. */
+  beatType?: 8;
   melody: string;
+}
+
+/** The length of a measure in quarter notes: 4 in 4/4, 3 in 3/4 and in 6/8. */
+export function measureBeats(draft: { beats: number; beatType?: 4 | 8 }): number {
+  return beatsPerMeasure({ beats: draft.beats, beatType: draft.beatType ?? 4 });
+}
+
+/** A song from stored data (the maker's own text, or the field in its MusicXML); null when the data is not a song of the maker. */
+export function draftFromData(data: unknown): SongDraft | null {
+  if (typeof data !== 'object' || data === null) return null;
+  const { title, fifths, beats, beatType, melody } = data as Record<string, unknown>;
+  if (typeof title !== 'string' || typeof melody !== 'string') return null;
+  if (typeof fifths !== 'number' || !Number.isInteger(fifths) || fifths < -7 || fifths > 7) return null;
+  // six beats only make sense as 6/8; the others are counted in quarter notes
+  if (beats === 6 && beatType === 8) return { title, fifths, beats, beatType, melody };
+  if ((beats === 2 || beats === 3 || beats === 4) && (beatType === undefined || beatType === 4)) return { title, fifths, beats, melody };
+  return null;
 }
 
 export type DraftProblem = MelodyProblem | { kind: 'empty' } | { kind: 'name' } | { kind: 'tooLong'; max: number };
@@ -38,7 +59,8 @@ export function buildDraft(draft: SongDraft): DraftResult {
   if (title.length === 0 || title.length > MAX_TITLE) return { ok: false, problem: { kind: 'name' } };
   const melody = draft.melody.trim();
   try {
-    const measures = parseMelody(melody, draft.beats, 4);
+    const beatType = draft.beatType ?? 4;
+    const measures = parseMelody(melody, draft.beats, beatType);
     if (measures.length === 0) return { ok: false, problem: { kind: 'empty' } };
     if (measures.length > MAX_MEASURES) return { ok: false, problem: { kind: 'tooLong', max: MAX_MEASURES } };
     const xml = buildSongXml({
@@ -49,9 +71,11 @@ export function buildDraft(draft: SongDraft): DraftResult {
       category: 'folk',
       fifths: draft.fifths,
       beats: draft.beats,
+      beatType,
       melody,
     });
-    const source = JSON.stringify({ v: 1, title, fifths: draft.fifths, beats: draft.beats, melody });
+    // the beat type is stored only for 6/8, so the text of the songs in x/4 stays what it was
+    const source = JSON.stringify({ v: 1, title, fifths: draft.fifths, beats: draft.beats, ...(draft.beatType ? { beatType: draft.beatType } : {}), melody });
     const field = `<miscellaneous><miscellaneous-field name="${SOURCE_FIELD}">${escapeXml(source)}</miscellaneous-field></miscellaneous>`;
     return { ok: true, xml: xml.replace('</identification>', `${field}</identification>`), measures: measures.length };
   } catch (error) {
@@ -67,12 +91,7 @@ export function readDraft(xml: string): SongDraft | null {
   const field = Array.from(doc.getElementsByTagName('miscellaneous-field')).find((el) => el.getAttribute('name') === SOURCE_FIELD);
   if (!field?.textContent) return null;
   try {
-    const data = JSON.parse(field.textContent) as Record<string, unknown>;
-    const { title, fifths, beats, melody } = data;
-    if (typeof title !== 'string' || typeof melody !== 'string') return null;
-    if (typeof fifths !== 'number' || !Number.isInteger(fifths) || fifths < -7 || fifths > 7) return null;
-    if (beats !== 2 && beats !== 3 && beats !== 4) return null;
-    return { title, fifths, beats, melody };
+    return draftFromData(JSON.parse(field.textContent));
   } catch {
     return null;
   }

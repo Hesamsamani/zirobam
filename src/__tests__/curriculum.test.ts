@@ -106,6 +106,9 @@ describe('the words', () => {
     expect(resolveNoteTokens('{E} و {G}', 'solfege-fa')).toBe('می و سل');
     expect(resolveNoteTokens('{C4}', 'letters')).toBe('C4');
     expect(resolveNoteTokens('{F#3}', 'solfege')).toBe('Fa♯3');
+    // double signs and the Persian quarter tones
+    expect(resolveNoteTokens('{F##} {Bbb} {Ek} {Co}', 'letters')).toBe('F♯♯ B♭♭ E koron C sori');
+    expect(resolveNoteTokens('{Ek} {Co}', 'solfege-fa')).toBe('می کرن دو سری');
     expect(courseText({ en: 'a {C}', fa: 'ب {C}' }, 'fa', 'solfege-fa')).toBe('ب دو');
   });
 });

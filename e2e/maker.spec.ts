@@ -94,6 +94,72 @@ test.describe('Song maker', () => {
     await expect(page.locator('#makerName')).toBeFocused();
   });
 
+  test('quarter tones: koron and sori are drawn with their own signs', async ({ page }) => {
+    await openMaker(page);
+    await page.locator('#makerName').fill('Persian turn');
+    await notes(page).fill('Ek4q Fo4q G4q A4q | C5w');
+    await expect(page.locator('.maker-problem')).toHaveText('');
+    await expect(page.locator('.maker-preview svg .note')).toHaveCount(5);
+    await expect(page.locator('.maker-preview svg .accid')).toHaveCount(2);
+    // SMuFL: U+E460 is koron and U+E461 is sori
+    const glyphs = await page.locator('.maker-preview svg .accid use').evaluateAll((uses) => uses.map((u) => u.getAttribute('xlink:href') ?? u.getAttribute('href') ?? ''));
+    expect(glyphs[0]).toContain('E460');
+    expect(glyphs[1]).toContain('E461');
+  });
+
+  test('a sign still in force needs a natural, for a quarter tone as for any other', async ({ page }) => {
+    await openMaker(page);
+    await notes(page).fill('Ek4q E4q F4h | C5w');
+    await expect(page.locator('.maker-problem')).toContainText('En4');
+    await notes(page).fill('Ek4q En4q F4h | C5w');
+    await expect(page.locator('.maker-problem')).toHaveText('');
+  });
+
+  test('6/8: the staff has the signature, the song is saved and practised in 6/8', async ({ page }) => {
+    await openMaker(page);
+    await page.locator('#makerTime').selectOption('6');
+    await page.locator('#makerName').fill('A jig');
+    await notes(page).fill('C4e D4e E4e F4e G4e A4e | G4h.');
+    await expect(page.locator('.maker-problem')).toHaveText('');
+    await expect(page.locator('.maker-preview svg .note')).toHaveCount(7);
+    // SMuFL: U+E086 is the digit 6 and U+E088 the digit 8 of a time signature
+    const sig = await page.locator('.maker-preview svg .meterSig use').evaluateAll((uses) => uses.map((u) => u.getAttribute('xlink:href') ?? u.getAttribute('href') ?? ''));
+    expect(sig.some((href) => href.includes('E086'))).toBe(true);
+    expect(sig.some((href) => href.includes('E088'))).toBe(true);
+
+    await page.locator('.maker-save').click();
+    await expect(page.locator('.maker-status')).toHaveText('Saved in My scores.');
+    await page.locator('.maker-practise').click();
+    await expect(page).toHaveURL(/#\/practice$/);
+    await expect(page.locator('.pp-measure')).toHaveCount(2);
+    await expect(page.locator('#notation svg .note').first()).toBeVisible();
+  });
+
+  test('6/8: the count-in is three beats, the length of the bar', async ({ page }) => {
+    await openMaker(page);
+    await page.locator('#makerTime').selectOption('6');
+    await page.locator('#makerName').fill('A jig');
+    await notes(page).fill('C4e D4e E4e F4e G4e A4e | G4h.');
+    await page.locator('.maker-practise').click();
+    await expect(page).toHaveURL(/#\/practice$/);
+    await expect(page.locator('#notation svg .note').first()).toBeVisible();
+
+    // every number the count-in shows, in order
+    await page.evaluate(() => {
+      const counts: string[] = [];
+      (window as unknown as { __counts: string[] }).__counts = counts;
+      const el = document.getElementById('countoff')!;
+      new MutationObserver(() => {
+        const text = el.textContent?.trim();
+        if (text) counts.push(text);
+      }).observe(el, { childList: true, characterData: true, subtree: true });
+    });
+    await page.locator('#playPause').click();
+    const counts = () => page.evaluate(() => (window as unknown as { __counts: string[] }).__counts);
+    await expect.poll(async () => (await counts()).length, { timeout: 40000 }).toBeGreaterThanOrEqual(3);
+    expect(await counts()).toEqual(['3', '2', '1']);
+  });
+
   test('the key and the time signature change the staff and the checks', async ({ page }) => {
     await openMaker(page);
     await page.locator('#makerTime').selectOption('3');

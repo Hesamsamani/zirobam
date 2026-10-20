@@ -1,56 +1,19 @@
-import { keyAlter, parseMelody, type ParsedNote } from '../songs/songBuilder';
+import { measuresXml, parseMelody, type ParsedNote } from '../songs/songBuilder';
 
 export interface StaffExample {
   clef: 'treble' | 'bass' | 'grand';
-  /** The notes, in the notation of the songs (`E4q F4h | G4w`); the upper staff for a grand staff. */
+  /** The notes, in the notation of the songs (`E4q F4h | G4w`, chords `C4+E4+G4w`); the upper staff for a grand staff. */
   notes: string;
   /** For a grand staff: the notes of the lower staff, with the same measures. */
   lower?: string;
   fifths?: number;
-  /** Beats per measure (default 4). */
-  beats?: 2 | 3 | 4;
+  /** Beats per measure (default 4): quarter notes, or eighth notes with `beatType: 8` (6/8). */
+  beats?: 2 | 3 | 4 | 6;
+  /** What a beat is: 4 for a quarter note (default), 8 for an eighth note. */
+  beatType?: 4 | 8;
   showTime?: boolean;
   /** Notes that do not have to fill their measures (charts of note lengths). */
   free?: boolean;
-}
-
-/**
- * What to draw next to a note. A sign is needed when the pitch differs from what is in force: the key
- * signature at the start of a measure, then whatever the earlier notes of the same pitch in the measure set.
- */
-function accidentalXml(note: ParsedNote, inForce: number): string {
-  if (note.natural) return '<accidental>natural</accidental>';
-  if (note.alter === inForce) return '';
-  return note.alter > 0 ? '<accidental>sharp</accidental>' : note.alter < 0 ? '<accidental>flat</accidental>' : '<accidental>natural</accidental>';
-}
-
-/** One note. `tieIn` is true when the note before it was tied to this one. */
-function noteXml(note: ParsedNote, staff: number, inForce: number, tieIn: boolean): string {
-  const dot = note.dotted ? '<dot/>' : '';
-  if (note.rest) return `<note><rest/><duration>${note.duration}</duration><type>${note.type}</type>${dot}<staff>${staff}</staff></note>`;
-  const alter = note.alter !== 0 ? `<alter>${note.alter}</alter>` : '';
-  const ties = (tieIn ? '<tie type="stop"/>' : '') + (note.tie ? '<tie type="start"/>' : '');
-  const tied = (tieIn ? '<tied type="stop"/>' : '') + (note.tie ? '<tied type="start"/>' : '');
-  const notations = tied ? `<notations>${tied}</notations>` : '';
-  return `<note><pitch><step>${note.step}</step>${alter}<octave>${note.octave}</octave></pitch><duration>${note.duration}</duration>${ties}<type>${note.type}</type>${dot}${accidentalXml(note, inForce)}<staff>${staff}</staff>${notations}</note>`;
-}
-
-/** The notes of one staff as XML, tracking ties from one note (or measure) to the next. */
-function staffXml(measures: ParsedNote[][], staff: number, fifths: number): string[] {
-  let tieIn = false;
-  return measures.map((notes) => {
-    const changed = new Map<string, number>(); // step + octave -> the alteration in force, for this measure
-    return notes
-      .map((note) => {
-        const id = `${note.step}${note.octave}`;
-        const inForce = changed.get(id) ?? keyAlter(note.step, fifths);
-        const xml = noteXml(note, staff, inForce, tieIn && !note.rest);
-        if (!note.rest) changed.set(id, note.alter);
-        tieIn = note.tie;
-        return xml;
-      })
-      .join('');
-  });
 }
 
 function measureLength(notes: ParsedNote[]): number {
@@ -60,9 +23,10 @@ function measureLength(notes: ParsedNote[]): number {
 /** MusicXML for a lesson picture: one treble staff, one bass staff, or the grand staff. */
 export function buildExampleXml(spec: StaffExample): string {
   const beats = spec.beats ?? 4;
-  const upper = parseMelody(spec.notes, beats, 4, !spec.free);
+  const beatType = spec.beatType ?? 4;
+  const upper = parseMelody(spec.notes, beats, beatType, !spec.free);
   const grand = spec.clef === 'grand';
-  const lower = grand && spec.lower ? parseMelody(spec.lower, beats, 4, !spec.free) : null;
+  const lower = grand && spec.lower ? parseMelody(spec.lower, beats, beatType, !spec.free) : null;
   if (lower && lower.length !== upper.length) throw new Error('The lower staff needs the same number of measures as the upper one');
 
   const timeAttr = spec.showTime ? '' : ' print-object="no"';
@@ -72,13 +36,13 @@ export function buildExampleXml(spec: StaffExample): string {
       ? '<clef><sign>F</sign><line>4</line></clef>'
       : '<clef><sign>G</sign><line>2</line></clef>';
   const fifths = spec.fifths ?? 0;
-  const upperXml = staffXml(upper, 1, fifths);
-  const lowerXmlParts = lower ? staffXml(lower, 2, fifths) : null;
+  const upperXml = measuresXml(upper, { fifths, staff: 1, kind: 'picture' });
+  const lowerXmlParts = lower ? measuresXml(lower, { fifths, staff: 2, kind: 'picture' }) : null;
 
   const measures = upper.map((notes, index) => {
     const attributes =
       index === 0
-        ? `<attributes><divisions>4</divisions><key><fifths>${spec.fifths ?? 0}</fifths></key><time${timeAttr}><beats>${beats}</beats><beat-type>4</beat-type></time>${clefXml}</attributes>`
+        ? `<attributes><divisions>4</divisions><key><fifths>${spec.fifths ?? 0}</fifths></key><time${timeAttr}><beats>${beats}</beats><beat-type>${beatType}</beat-type></time>${clefXml}</attributes>`
         : '';
     let body = upperXml[index];
     if (grand) {
@@ -105,8 +69,10 @@ export function buildExampleXml(spec: StaffExample): string {
 /** The written pitches of an example in the order Verovio draws the notes (upper staff first), for labelling. */
 export function exampleNoteNames(spec: StaffExample): string[] {
   const beats = spec.beats ?? 4;
-  const pitches = (measure: ParsedNote[] | undefined) => (measure ?? []).filter((n) => !n.rest).map((n) => n.pitch);
-  const upper = parseMelody(spec.notes, beats, 4, !spec.free);
-  const lower = spec.clef === 'grand' && spec.lower ? parseMelody(spec.lower, beats, 4, !spec.free) : [];
+  const beatType = spec.beatType ?? 4;
+  // every pitch of a chord, lowest first
+  const pitches = (measure: ParsedNote[] | undefined) => (measure ?? []).filter((n) => !n.rest).flatMap((n) => [n.pitch, ...n.chord.map((c) => c.pitch)]);
+  const upper = parseMelody(spec.notes, beats, beatType, !spec.free);
+  const lower = spec.clef === 'grand' && spec.lower ? parseMelody(spec.lower, beats, beatType, !spec.free) : [];
   return upper.flatMap((measure, index) => [...pitches(measure), ...pitches(lower[index])]);
 }

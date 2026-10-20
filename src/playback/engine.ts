@@ -12,6 +12,7 @@ import type { NoteData, TimingEvent, PlaybackState, TimeSignature } from '../cor
 import { EventEmitter, type PlaybackBeatEvent, type PlaybackStateEvent, type PieceCompleteEvent } from '../core/events';
 import { PianoSampler, playMetronomeClick } from './sampler';
 import { buildTimingEvents, beatsToSeconds, shouldAllowMetronomeClick, getTotalDuration } from './scheduler';
+import { noteString } from '../theory/pitch';
 
 // ============================================
 // TYPES
@@ -401,10 +402,7 @@ export class PlaybackEngine {
 
   private noteDataToPitch(note: NoteData): string | null {
     if (note.isRest) return null;
-    let name = note.step;
-    if (note.alter === 1) name += '#';
-    if (note.alter === -1) name += 'b';
-    return `${name}${note.octave}`;
+    return noteString(note.step, note.alter, note.octave);
   }
 
   // ============================================

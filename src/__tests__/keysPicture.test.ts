@@ -16,6 +16,14 @@ function make(overrides: Partial<KeysPictureOptions> = {}): HTMLElement {
 const keyOf = (root: HTMLElement, note: string) => root.querySelector<HTMLButtonElement>(`[data-note="${note}"]`)!;
 
 describe('buildKeysPicture', () => {
+  it('takes the range in any spelling: B sharp is C, and D double flat is C', () => {
+    const root = make({ from: 'B#3', to: 'Dbb5' });
+    const keys = Array.from(root.querySelectorAll<HTMLElement>('.lk-key'));
+    expect(keys).toHaveLength(13);
+    expect(keys[0].dataset.note).toBe('C4');
+    expect(keys[12].dataset.note).toBe('C5');
+  });
+
   it('draws one octave as seven white and five black keys, left to right', () => {
     const root = make();
     expect(root.querySelectorAll('.lk-key.white')).toHaveLength(7);

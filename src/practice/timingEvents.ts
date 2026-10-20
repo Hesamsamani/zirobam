@@ -1,4 +1,5 @@
 import type { NoteData } from '../musicGenerator';
+import { keyName, noteString } from '../theory/pitch';
 
 /** Which hand the student practises: the other one is played by the app. */
 export type HandChoice = 'both' | 'right' | 'left';
@@ -19,13 +20,10 @@ export interface TimingEvent {
   accompaniment?: string[];
 }
 
-/** A pitch string like 'C4', 'F#5' or 'Bb3', or null for a rest. */
+/** A pitch string like 'C4', 'F#5', 'Bb3' or 'Ek4' (a quarter tone), or null for a rest. */
 export function noteDataToPitch(note: NoteData): string | null {
   if (note.isRest) return null;
-  let name = note.step;
-  if (note.alter === 1) name += '#';
-  else if (note.alter === -1) name += 'b';
-  return `${name}${note.octave}`;
+  return noteString(note.step, note.alter, note.octave);
 }
 
 /** All pitches of a note, including the notes of a chord. */
@@ -34,25 +32,13 @@ export function getAllPitchesFromNote(note: NoteData): string[] {
   const pitches: string[] = [];
   const main = noteDataToPitch(note);
   if (main) pitches.push(main);
-  for (const chordNote of note.chordNotes ?? []) {
-    let name = chordNote.step;
-    if (chordNote.alter === 1) name += '#';
-    else if (chordNote.alter === -1) name += 'b';
-    pitches.push(`${name}${chordNote.octave}`);
-  }
+  for (const chordNote of note.chordNotes ?? []) pitches.push(noteString(chordNote.step, chordNote.alter, chordNote.octave));
   return pitches;
 }
 
-/** The same key written with sharps, so that a flat and its sharp compare as equal. */
+/** The same key written with sharps, so that a flat and its sharp compare as equal (Cb5 is B4, Ek4 is E4). */
 export function normalizeNote(note: string): string {
-  return note
-    .replace('Db', 'C#')
-    .replace('Eb', 'D#')
-    .replace('Fb', 'E')
-    .replace('Gb', 'F#')
-    .replace('Ab', 'G#')
-    .replace('Bb', 'A#')
-    .replace('Cb', 'B');
+  return keyName(note);
 }
 
 const hasPitches = (notes: readonly NoteData[]): boolean => notes.some((n) => !n.isRest);
