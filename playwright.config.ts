@@ -2,6 +2,9 @@ import { defineConfig, devices } from '@playwright/test';
 
 // the offline tests need the production build (it has the service worker); everything else runs on the dev server
 const OFFLINE = /offline\.spec\.ts/;
+// screenshot baselines: desktop Chrome only, run on purpose (`--project=visual`), not with the default projects
+const VISUAL = /visual\.spec\.ts/;
+const NOT_DEFAULT = [OFFLINE, VISUAL];
 
 export default defineConfig({
   testDir: './e2e',
@@ -19,20 +22,25 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      testIgnore: OFFLINE,
+      testIgnore: NOT_DEFAULT,
       use: { ...devices['Desktop Chrome'] },
     },
     {
       name: 'Mobile Chrome',
-      testIgnore: OFFLINE,
+      testIgnore: NOT_DEFAULT,
       use: { ...devices['Pixel 5'] },
     },
     {
       name: 'Mobile Chrome Landscape',
-      testIgnore: OFFLINE,
+      testIgnore: NOT_DEFAULT,
       use: {
         ...devices['Pixel 5 landscape'],
       },
+    },
+    {
+      name: 'visual',
+      testMatch: VISUAL,
+      use: { ...devices['Desktop Chrome'] },
     },
     {
       name: 'offline',

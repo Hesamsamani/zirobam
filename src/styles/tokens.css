@@ -1,0 +1,85 @@
+/* ============================================
+   DESIGN TOKENS
+   The one place for colours, type, spacing, radii, shadows and lines.
+   Loaded before style.css and the feature sheets in src/styles/.
+   ============================================ */
+
+:root {
+  /* Warm, musical color palette */
+  --bg: #1a1a1a;
+  --bg-warm: #1e1d1b;
+  --surface: #242424;
+
+  /* Surface levels: page (--bg), card, control, raised (dialogs, menus) */
+  --surface-1: var(--bg-warm);
+  --surface-2: var(--surface);
+  --surface-3: #2c2b29;
+
+  /* Sheet music paper colors */
+  --paper: #f8f5f0;
+  --paper-shadow: rgba(0, 0, 0, 0.15);
+  --ink: #1a1a1a;
+
+  /* Accent colors - subtle and musical */
+  --accent: #8b7355;
+  --accent-light: #a08060;
+  --accent-glow: rgba(139, 115, 85, 0.3);
+
+  /* Feedback colors */
+  --current: #c9a227;
+  --correct: #5a9a6e;
+  --wrong: #b54a4a;
+
+  /* Quarter tones (koron, sori) and nothing else. Never the only signal: the sign is always drawn too. */
+  --quarter: #3fb8a8; /* 7.2:1 on --bg, 5.8:1 on --surface-3 */
+  --quarter-ink: #0d6b63; /* on --paper (staves, cards): 5.9:1 */
+  --quarter-soft: rgba(63, 184, 168, 0.16);
+
+  /* Text. --text-subtle is 2.4:1 on --bg: decoration only, never for words that matter. */
+  --text: #e8e4e0;
+  --text-muted: #8a8580;
+  --text-subtle: #5a5550;
+
+  /* Lines (borders and dividers on dark surfaces), from faint to strong */
+  --line-faint: rgba(255, 255, 255, 0.08);
+  --line-soft: rgba(255, 255, 255, 0.1);
+  --line: rgba(255, 255, 255, 0.15);
+  --line-medium: rgba(255, 255, 255, 0.22);
+  --line-strong: rgba(255, 255, 255, 0.3);
+
+  /* Typography */
+  --font-serif: 'Crimson Pro', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* Spacing */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+
+  /* Radii: controls use md, cards xl, panels 3xl, chips and buttons pill */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+  --radius-2xl: 14px;
+  --radius-3xl: 16px;
+  --radius-pill: 999px;
+  --radius-round: 50%;
+
+  /* Elevation: 1 resting card, 2 lifted, 3 dialog or popover */
+  --shadow-1: 0 2px 12px var(--paper-shadow);
+  --shadow-2: 0 6px 18px rgba(0, 0, 0, 0.4);
+  --shadow-3: 0 8px 32px rgba(0, 0, 0, 0.4);
+
+  /* Targets and focus */
+  --tap-min: 44px;
+  --focus-ring: 2px solid var(--accent);
+  --focus-offset: 2px;
+
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-med: 0.25s ease;
+}

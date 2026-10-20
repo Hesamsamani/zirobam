@@ -1,4 +1,5 @@
 import type { MessageKey } from './en';
+import { uiFa } from './parts/ui.fa';
 
 export const fa: Record<MessageKey, string> = {
   // App
@@ -646,4 +647,7 @@ export const fa: Record<MessageKey, string> = {
   'scales.keys': 'کلیدهای این گام یا آکورد',
   'scales.staff': 'نت‌های این گام یا آکورد روی خط حامل',
   'catalog.cat.mine': 'نت‌های من',
+
+  // Feature parts (src/i18n/locales/parts)
+  ...uiFa,
 };

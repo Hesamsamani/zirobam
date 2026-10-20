@@ -1,3 +1,5 @@
+import { uiEn } from './parts/ui.en';
+
 export const en = {
   // App
   'app.title': 'Sight Reading',
@@ -645,6 +647,9 @@ export const en = {
   'scales.keys': 'The keys of this scale or chord',
   'scales.staff': 'The notes of this scale or chord on the staff',
   'catalog.cat.mine': 'My scores',
+
+  // Feature parts (src/i18n/locales/parts)
+  ...uiEn,
 } as const;
 
 export type MessageKey = keyof typeof en;

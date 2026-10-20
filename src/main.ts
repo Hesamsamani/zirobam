@@ -1,4 +1,6 @@
+import './styles/tokens.css';
 import './style.css';
+import './styles/dialog.css';
 import createVerovioModule from 'verovio/wasm';
 import { VerovioToolkit } from 'verovio/esm';
 import * as Tone from 'tone';

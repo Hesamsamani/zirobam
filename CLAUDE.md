@@ -137,6 +137,9 @@ This is the owner's personal fork. Design: `docs/superpowers/specs/2026-10-16-bi
 | `src/input/shortcuts.ts` | `isSpaceReserved`: where the global Space shortcut must stay out of the way |
 | `src/metronome/clickVoice.ts` | The metronome click: one reusable synth, scheduled at the Transport time |
 | `src/ui/notice.ts` | `showNotice(text)`: a polite status message (replaces `alert()`; never use blocking dialogs) |
+| `src/ui/dialog.ts` | `openDialog({ title, body, className?, onClose? })`: a modal `<dialog>` (native `showModal()`, `open` attribute where there is none, as in jsdom) that traps Tab, closes on Escape, Close or the backdrop, calls `onClose` once and returns the focus to its opener. Styles in `src/styles/dialog.css` |
+| `src/styles/` | `tokens.css` is the one place for design tokens (colours, `--surface-1..3`, `--line-*`, `--radius-*`, `--shadow-1..3`, `--tap-min`, `--focus-ring`, and `--quarter`, a teal reserved for koron and sori); it loads before `style.css`. Feature sheets (`dialog.css`, later one per feature) load after it and use logical properties only. `--text-subtle` is 2.4:1 on `--bg`: decoration, never words that matter |
+| `src/i18n/locales/parts/` | Per-feature strings: `<feature>.en.ts` (`as const`) and `<feature>.fa.ts` (typed `Record<keyof typeof part, string>`), spread into `en.ts` and `fa.ts`, so the parity tests cover them. `ui.*` holds `dialog.close` |
 
 `main.ts` only wires these together (`setupPiano`, `setupLearnMode`, the language block at the end of `setupControls`).
 
@@ -176,4 +179,6 @@ This is the owner's personal fork. Design: `docs/superpowers/specs/2026-10-16-bi
 ### Tooling notes
 
 - Vite's dev server can serve stale CSS after quick edits; restart it if a rule seems missing.
-- Source files use CRLF on this machine; patch scripts must preserve it (scratch `patchlib` approach), and long `node -e` / heredoc one-liners lose backslashes in Git Bash. Write scripts to a file instead.
+- Line endings (checked 2026-10-20 by counting bytes): only `src/style.css` is CRLF; every other file is LF. Patch scripts for `style.css` must preserve CRLF. `grep` and `od` in Git Bash hide or mangle carriage returns, so count bytes with Node instead.
+- Heredoc and `node -e` scripts lose backslashes in Git Bash (`\\(` becomes `(`, so a regex silently matches nothing). Write scripts with the Write tool, use regex literals, and check the match count before replacing.
+- Visual guard: `npx playwright test --project=visual` compares six screens pixel for pixel (zero tolerance, desktop Chrome, `e2e/visual.spec.ts-snapshots/`). It is not part of the default run. Run it after any CSS refactor; accept a deliberate change with `--update-snapshots`. Re-measure geometry only after `document.getAnimations()` has finished.
