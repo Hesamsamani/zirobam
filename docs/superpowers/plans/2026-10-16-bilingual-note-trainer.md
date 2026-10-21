@@ -1344,7 +1344,7 @@ Extract the Persian values to a temporary markdown file and lint it (do not run 
 
 ```bash
 node -e "const s=require('fs').readFileSync('src/i18n/locales/fa.ts','utf8');const v=[...s.matchAll(/: '(.*)',?\r?\n/g)].map(m=>m[1]);require('fs').writeFileSync(process.env.TEMP+'/fa-values.md',v.join('\n\n'))"
-python C:\Users\hesam\.claude\skills\persian-writing\scripts\fa_lint.py --check %TEMP%\fa-values.md
+python <skills>\persian-writing\scripts\fa_lint.py --check %TEMP%\fa-values.md
 ```
 Fix every reported issue by hand in `fa.ts`, then:
 
@@ -1368,7 +1368,7 @@ git commit -m "feat(i18n): translate the interface, add language and note-name s
 
 ```powershell
 New-Item -ItemType Directory -Force public/fonts | Out-Null
-foreach ($w in 'Regular','Medium','SemiBold') { Copy-Item "C:\Users\hesam\.claude\skills\persian-writing\assets\fonts\Vazirmatn-$w.ttf" public/fonts/ }
+foreach ($w in 'Regular','Medium','SemiBold') { Copy-Item "<skills>\persian-writing\assets\fonts\Vazirmatn-$w.ttf" public/fonts/ }
 ```
 
 `public/fonts/README.md`:
@@ -4193,7 +4193,7 @@ git commit -m "feat(learn): Name the note quiz and short bilingual lessons"
 **Files:**
 - Create: `e2e/bilingual.spec.ts`
 - Modify: `README.md`, `README.fa.md`, `CLAUDE.md`, `docs/superpowers/specs/2026-10-16-bilingual-note-trainer-design.md`
-- Modify (outside the repo): `C:\AI\Projects\README.md`; memory files `ai-projects-hub.md`, new `music-notes-trainer.md`, `MEMORY.md` in `C:\Users\hesam\.claude\projects\C--Windows-System32\memory\`
+- Modify (outside the repo): `C:\AI\Projects\README.md`; memory files `ai-projects-hub.md`, new `music-notes-trainer.md`, `MEMORY.md` in `<the memory folder>`
 
 - [ ] **Step 1: Write the end-to-end spec** (`e2e/bilingual.spec.ts`)
 

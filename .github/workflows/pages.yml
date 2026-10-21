@@ -1,0 +1,49 @@
+# Builds ZiroBam and publishes it to GitHub Pages whenever `main` changes (or by hand from the Actions tab).
+# The site is served at https://hesamsamani.me/zirobam/ (the user site has the custom domain hesamsamani.me, so this
+# repository's Pages site lives under it). `base` in vite.config.ts is the /zirobam/ path.
+#
+# The unit tests run first, so a broken change is never published. There is no .nojekyll and no CNAME file on
+# purpose: the site is uploaded as an artifact (not through Jekyll), and the repository has no domain of its own.
+name: Publish to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# one publish at a time; a publish that is running is allowed to finish
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

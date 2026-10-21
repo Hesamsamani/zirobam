@@ -9,6 +9,8 @@ const NOT_DEFAULT = [OFFLINE, VISUAL];
 const BASE = '/zirobam/';
 const DEV_URL = `http://localhost:5173${BASE}`;
 const PREVIEW_URL = `http://localhost:4173${BASE}`;
+// the published site: `LIVE_URL=https://hesamsamani.me/zirobam/ npx playwright test --project=live` runs the offline tests against it
+const LIVE_URL = process.env.LIVE_URL;
 
 export default defineConfig({
   testDir: './e2e',
@@ -51,9 +53,11 @@ export default defineConfig({
       testMatch: OFFLINE,
       use: { ...devices['Desktop Chrome'], baseURL: PREVIEW_URL },
     },
+    ...(LIVE_URL ? [{ name: 'live', testMatch: OFFLINE, use: { ...devices['Desktop Chrome'], baseURL: LIVE_URL } }] : []),
   ],
 
-  webServer: [
+  // nothing to start when the tests run against the published site
+  webServer: LIVE_URL ? undefined : [
     {
       command: 'npm run dev',
       url: DEV_URL,

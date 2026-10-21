@@ -25,11 +25,12 @@ async function waitUntilSaved(page: Page) {
 }
 
 test.describe('Without internet', () => {
-  test('makes no request to any other site, even on the first visit', async ({ page }) => {
+  test('makes no request to any other site, even on the first visit', async ({ page, baseURL }) => {
+    const home = new URL(baseURL!).hostname;
     const outside: string[] = [];
     page.on('request', (request) => {
       const url = new URL(request.url());
-      if (/^https?:$/.test(url.protocol) && url.hostname !== 'localhost') outside.push(request.url());
+      if (/^https?:$/.test(url.protocol) && url.hostname !== home) outside.push(request.url());
     });
     await page.goto('./');
     await expect(page.locator('#mainMenu')).toBeVisible();
