@@ -37,8 +37,19 @@ describe('the chord quiz in the game', () => {
     expect(new GameStore({ storage, now: () => new Date('2026-10-21T12:00:00'), beginnerSongIds: [] }).stats().chordsCorrect).toBe(0);
   });
 
-  it('is one of nineteen badges', () => {
-    expect(BADGES).toHaveLength(19);
+  it('is one of twenty badges', () => {
+    expect(BADGES).toHaveLength(20);
     expect(BADGES.map((b) => b.id)).toContain('chords-25');
+  });
+});
+
+describe('the rhythm trainer in the game', () => {
+  it('pays 5 XP for a piece tapped on time, counts it, and earns the badge at five', () => {
+    const { game } = store();
+    expect(game.recordRhythmPassed().xp).toBe(5);
+    expect(game.stats().rhythmPassed).toBe(1);
+    expect(game.hasBadge('rhythm-5')).toBe(false);
+    for (let i = 0; i < 3; i++) game.recordRhythmPassed();
+    expect(game.recordRhythmPassed().newBadges).toContain('rhythm-5');
   });
 });

@@ -3,6 +3,7 @@ import { generatorEn } from './parts/generator.en';
 import { finderEn } from './parts/finder.en';
 import { chordsEn } from './parts/chords.en';
 import { tunerEn } from './parts/tuner.en';
+import { rhythmEn } from './parts/rhythm.en';
 import { dictionaryEn } from './parts/dictionary.en';
 import { theoryEn } from './parts/theory.en';
 import { uiEn } from './parts/ui.en';
@@ -576,6 +577,8 @@ export const en = {
   'badge.ear.desc': 'Give 25 right answers in ear training.',
   'badge.chords.title': 'Chord reader',
   'badge.chords.desc': 'Play 25 chords right in the chord quiz.',
+  'badge.rhythm.title': 'In time',
+  'badge.rhythm.desc': 'Tap 5 rhythms on time in the rhythm trainer.',
   'badge.scales.title': 'Scale player',
   'badge.scales.desc': 'Play along with 5 scales or chords.',
   'game.stat.ear': 'Ear training answers',
@@ -650,6 +653,7 @@ export const en = {
   ...finderEn,
   ...chordsEn,
   ...tunerEn,
+  ...rhythmEn,
 } as const;
 
 export type MessageKey = keyof typeof en;

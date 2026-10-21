@@ -6,6 +6,7 @@ import './styles/chordDialog.css';
 import './styles/generator.css';
 import './styles/chords.css';
 import './styles/tuner.css';
+import './styles/rhythm.css';
 import createVerovioModule from 'verovio/wasm';
 import { VerovioToolkit } from 'verovio/esm';
 import * as Tone from 'tone';
@@ -1308,6 +1309,17 @@ function setupNavigation(learn: LearnHandle) {
       // the band and the stand sound through the speakers: the microphone would hear them
       isAppSounding: () => Tone.getTransport().state === 'started',
     }),
+    rhythmAudio: {
+      ready: async () => (await Tone.start(), true),
+      clicks: (count, intervalMs, accentEvery, leadMs) => {
+        const first = Tone.now() + leadMs / 1000;
+        for (let i = 0; i < count; i++) clickVoice.playBeat(i % accentEvery === 0, metronomeVolume, first + (i * intervalMs) / 1000);
+        return performance.now() + leadMs;
+      },
+      stop: () => undefined,
+    },
+    onRhythmPassed: () => void game.rhythmPassed(),
+    onRhythmVerdict: (verdict) => practiceMemory.log.recordRhythm(verdict),
     hub: noteInput,
     onChordAnswer: (correct) => void game.chordAnswer(correct),
     goHome: () => appShell.navigate('home'),

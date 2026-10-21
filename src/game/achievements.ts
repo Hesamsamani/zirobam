@@ -16,6 +16,7 @@ export type BadgeId =
   | 'xylo-3stars'
   | 'ear-25'
   | 'chords-25'
+  | 'rhythm-5'
   | 'scales-5'
   | 'goal-first'
   | 'streak-3'
@@ -35,6 +36,7 @@ export interface BadgeContext {
     xyloThreeStars: number;
     earCorrect: number;
     chordsCorrect: number;
+    rhythmPassed: number;
     scalesPlayed: number;
     lessonsRead: number;
     lessonsTotal: number;
@@ -81,6 +83,7 @@ export const BADGES: readonly Badge[] = [
   { id: 'xylo-3stars', title: 'badge.xylo3.title', desc: 'badge.xylo3.desc', icon: 'star', earned: (c) => c.counters.xyloThreeStars >= 1 },
   { id: 'ear-25', title: 'badge.ear.title', desc: 'badge.ear.desc', icon: 'note', earned: (c) => c.counters.earCorrect >= 25 },
   { id: 'chords-25', title: 'badge.chords.title', desc: 'badge.chords.desc', icon: 'bars', earned: (c) => c.counters.chordsCorrect >= 25 },
+  { id: 'rhythm-5', title: 'badge.rhythm.title', desc: 'badge.rhythm.desc', icon: 'target', earned: (c) => c.counters.rhythmPassed >= 5 },
   { id: 'scales-5', title: 'badge.scales.title', desc: 'badge.scales.desc', icon: 'bars', earned: (c) => c.counters.scalesPlayed >= 5 },
   { id: 'goal-first', title: 'badge.goalFirst.title', desc: 'badge.goalFirst.desc', icon: 'target', earned: (c) => c.daysGoalMet >= 1 },
   { id: 'streak-3', title: 'badge.streak3.title', desc: 'badge.streak3.desc', icon: 'flame', earned: (c) => c.streak >= 3 },

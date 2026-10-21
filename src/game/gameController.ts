@@ -30,6 +30,10 @@ export class GameController {
     return this.announce(this.store.recordChordAnswer(correct));
   }
 
+  rhythmPassed(): Award {
+    return this.announce(this.store.recordRhythmPassed());
+  }
+
   scalePlayed(): Award {
     return this.announce(this.store.recordScalePlayed());
   }

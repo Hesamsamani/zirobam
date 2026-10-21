@@ -2,6 +2,8 @@ import type { BandBackend } from '../band/bandPlayer';
 import type { MicSource } from '../tuner/tunerView';
 import { TunerView } from '../tuner/tunerView';
 import { ChordsView } from '../chords/chordsView';
+import { RhythmView, type RhythmAudio } from '../rhythm/rhythmView';
+import type { RhythmVerdict } from '../stats/mistakeLog';
 import type { NoteInputHub } from '../input/noteInput';
 import { NoteStats } from '../learn/noteStats';
 import { GeneratorView } from '../generator/generatorView';
@@ -39,6 +41,12 @@ export interface FeatureDeps {
   onChordAnswer(correct: boolean): void;
   /** The microphone. */
   mic: MicSource;
+  /** The clicks of the rhythm trainer. */
+  rhythmAudio: RhythmAudio;
+  /** A piece of the rhythm trainer was tapped on time (for the rewards). */
+  onRhythmPassed(): void;
+  /** One note of the rhythm trainer was on time, early, late or missed (for the practice memory). */
+  onRhythmVerdict(verdict: RhythmVerdict): void;
   goHome(): void;
   /** Opens a score (MusicXML) on the practice stand. */
   practiseXml(xml: string, title: string): void;
@@ -64,6 +72,16 @@ export function createFeatureViews(deps: FeatureDeps): FeatureView[] {
       stats: new NoteStats(undefined, 'chords.stats.v1'),
       onBack: deps.goHome,
       onAnswer: (correct) => deps.onChordAnswer(correct),
+    }),
+    new RhythmView({
+      hub: deps.hub,
+      toolkit: deps.newToolkit(),
+      audio: deps.rhythmAudio,
+      clock: () => performance.now(),
+      stats: new NoteStats(undefined, 'rhythm.stats.v1'),
+      onBack: deps.goHome,
+      onPassed: deps.onRhythmPassed,
+      onVerdict: deps.onRhythmVerdict,
     }),
     new TunerView({ mic: deps.mic, hub: deps.hub, formatName: deps.formatNameWithOctave, onBack: deps.goHome }),
   ];

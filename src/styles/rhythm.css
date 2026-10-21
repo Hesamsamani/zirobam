@@ -1,0 +1,121 @@
+/* ============================================
+   RHYTHM TRAINER (src/rhythm)
+   The rhythm on one line of the staff, a big pad to tap, and colours for how each note went.
+   The staff stays left to right. Colour is never the only signal: the result is also written.
+   ============================================ */
+
+.rhythm-view {
+  flex: 1;
+  inline-size: 100%;
+  max-inline-size: 820px;
+  margin-inline: auto;
+  padding: var(--space-xl) var(--space-lg);
+}
+
+@media (max-width: 560px) {
+  .rhythm-view {
+    padding: var(--space-lg) var(--space-md);
+  }
+}
+
+.rh-levels {
+  margin-block: var(--space-md);
+}
+
+.rh-staff {
+  margin-block: var(--space-md);
+}
+
+.rh-state {
+  min-block-size: 1.5em;
+  margin: 0 0 var(--space-sm);
+  color: var(--text-soft);
+}
+
+.rh-pad {
+  display: block;
+  inline-size: 100%;
+  min-block-size: 120px;
+  margin-block: var(--space-md);
+  background: var(--surface-2);
+  border: 2px solid var(--line-medium);
+  border-radius: var(--radius-3xl);
+  color: var(--text);
+  font: inherit;
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  touch-action: manipulation;
+  cursor: pointer;
+  user-select: none;
+}
+
+.rh-pad:active,
+.rh-pad[data-phase='tap'] {
+  border-color: var(--current);
+}
+
+.rh-pad:active {
+  background: var(--surface-3);
+}
+
+.rh-result {
+  min-block-size: 3em;
+  margin: 0;
+}
+
+.rh-result[data-tone='good'] {
+  color: var(--correct);
+}
+
+.rh-result[data-tone='bad'] {
+  color: #e69a9a;
+}
+
+.rh-calibration {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm) var(--space-md);
+  margin-block-start: var(--space-lg);
+  color: var(--text-soft);
+}
+
+.rh-delay {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* how each note went: a colour on the notehead (the numbers are in the line of text above) */
+.rh-staff .rh-perfect,
+.rh-staff .rh-good {
+  fill: #2f7d4a;
+  color: #2f7d4a;
+}
+
+.rh-staff .rh-early,
+.rh-staff .rh-late {
+  fill: #b07a00;
+  color: #b07a00;
+}
+
+.rh-staff .rh-missed {
+  fill: #b03a3a;
+  color: #b03a3a;
+}
+
+.rh-staff .rh-perfect *,
+.rh-staff .rh-good * {
+  fill: #2f7d4a;
+  stroke: #2f7d4a;
+}
+
+.rh-staff .rh-early *,
+.rh-staff .rh-late * {
+  fill: #b07a00;
+  stroke: #b07a00;
+}
+
+.rh-staff .rh-missed * {
+  fill: #b03a3a;
+  stroke: #b03a3a;
+}
