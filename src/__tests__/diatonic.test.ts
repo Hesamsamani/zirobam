@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { CHORD_DEFS, getChord, type ChordFamily } from '../theory/chordCatalog';
-import { chordsOfScale, inversionsOf } from '../theory/diatonic';
+import { chordsOfScale, inversionsOf, rootPositionOf } from '../theory/diatonic';
 import { spellScale } from '../theory/spell';
 
 const symbols = (scale: ReturnType<typeof spellScale>, filter?: Parameters<typeof chordsOfScale>[1]) => chordsOfScale(scale, filter).map((c) => c.symbol);
@@ -148,5 +148,24 @@ describe('inversionsOf', () => {
     expect(first.def).toBe(getChord('major'));
     expect(c.inversion).toBe(0);
     expect(c.bass).toBeUndefined();
+  });
+});
+
+describe('rootPositionOf', () => {
+  const c = chordsOfScale(spellScale(0, 'major'), { families: ['triad'] })[0];
+
+  it('gives a chord in root position back as it is', () => {
+    expect(rootPositionOf(c)).toBe(c);
+  });
+
+  it('puts a turned chord back: C over G is C, E, G again', () => {
+    const [, second] = inversionsOf(c);
+    expect(rootPositionOf(second)).toMatchObject({ symbol: 'C', notes: ['C', 'E', 'G'], inversion: 0, bass: undefined });
+  });
+
+  it('lets any turn give every turn of the chord', () => {
+    const seventh = chordsOfScale(spellScale(0, 'major'), { families: ['seventh'] })[0];
+    const third = inversionsOf(seventh)[2];
+    expect(inversionsOf(third).map((i) => i.symbol)).toEqual(['Cmaj7/E', 'Cmaj7/G', 'Cmaj7/B']);
   });
 });

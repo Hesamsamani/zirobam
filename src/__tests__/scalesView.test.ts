@@ -169,11 +169,14 @@ describe('ScalesView: the chords tab', () => {
     expect(savedChoice(storage)).toMatchObject({ tab: 'chords', family: 'triad', primaryOnly: true });
   });
 
-  it('hears a chord when its card is pressed', async () => {
+  it('opens the dialog of a chord when its card is pressed, and the dialog hears it', async () => {
     const { voice } = setup();
     $('.sc-tabs [data-tab="chords"]').click();
     $('.dict-families [data-family="triad"]').click();
     $('.dict-card').click();
+    expect(document.querySelector('dialog.chord-dialog .app-dialog-title')!.textContent).toBe('C');
+    expect(voice.play).not.toHaveBeenCalled();
+    $('.chord-dialog .cd-arpeggio').click();
     await flush();
     expect(vi.mocked(voice.play).mock.calls.slice(0, 3).map((c) => c[0])).toEqual(['C4', 'E4', 'G4']);
   });

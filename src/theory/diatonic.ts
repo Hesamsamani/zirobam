@@ -67,11 +67,18 @@ export function chordsOfScale(scale: SpelledScale, filter: ChordFilter = {}): Sc
   return found;
 }
 
+/** The chord with its root lowest again, whichever turn it is in. */
+export function rootPositionOf(chord: ScaleChord): ScaleChord {
+  if (chord.inversion === 0) return chord;
+  const count = chord.notes.length;
+  const notes = [...chord.notes.slice(count - chord.inversion), ...chord.notes.slice(0, count - chord.inversion)];
+  return { ...chord, notes, inversion: 0, bass: undefined, symbol: `${chord.root}${chord.def.symbol}` };
+}
+
 /** Each turn of a chord, one for each note but the root: C is C/E and C/G, a seventh chord has three. */
 export function inversionsOf(chord: ScaleChord): ScaleChord[] {
-  const count = chord.notes.length;
-  const rootPosition = [...chord.notes.slice(count - chord.inversion), ...chord.notes.slice(0, count - chord.inversion)];
-  return Array.from({ length: count - 1 }, (_, i) => {
+  const rootPosition = rootPositionOf(chord).notes;
+  return Array.from({ length: rootPosition.length - 1 }, (_, i) => {
     const turn = i + 1;
     const notes = [...rootPosition.slice(turn), ...rootPosition.slice(0, turn)];
     return { ...chord, symbol: `${chord.root}${chord.def.symbol}/${notes[0]}`, notes, inversion: turn, bass: notes[0] };

@@ -3,6 +3,7 @@ import type { PianoVoice } from '../playback/pianoVoice';
 import { CHORD_FAMILIES } from '../theory/chordCatalog';
 import { chordsOfScale, inversionsOf, type ScaleChord } from '../theory/diatonic';
 import { ascendFrom, type SpelledScale } from '../theory/spell';
+import { chordSymbol } from './chordSymbol';
 import type { Choice } from './dictionaryState';
 import { stepsOf } from './stairs';
 
@@ -142,10 +143,8 @@ export class ChordSection {
     this.quarterNote.textContent = quarter === 0 ? '' : t('dict.chords.quarter', { count: formatNumber(quarter) });
   }
 
-  /** The name of a chord as it is read: `Bbm7`, `C/E`, with the note names the student has chosen. */
   private symbolOf(chord: ScaleChord): string {
-    const { formatName } = this.deps;
-    return `${formatName(chord.root)}${chord.def.symbol}${chord.bass ? `/${formatName(chord.bass)}` : ''}`;
+    return chordSymbol(chord, this.deps.formatName);
   }
 
   private card(chord: ScaleChord): HTMLButtonElement {

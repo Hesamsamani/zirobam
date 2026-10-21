@@ -1,3 +1,4 @@
+import { chordDialogEn } from './parts/chordDialog.en';
 import { dictionaryEn } from './parts/dictionary.en';
 import { theoryEn } from './parts/theory.en';
 import { uiEn } from './parts/ui.en';
@@ -638,6 +639,7 @@ export const en = {
   ...uiEn,
   ...theoryEn,
   ...dictionaryEn,
+  ...chordDialogEn,
 } as const;
 
 export type MessageKey = keyof typeof en;

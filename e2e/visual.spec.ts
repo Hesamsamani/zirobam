@@ -45,6 +45,17 @@ test.describe('Visual baseline', () => {
     await shot(page, 'scales-chords');
   });
 
+  test('dictionary: the chord dialog', async ({ page }) => {
+    await open(page, 'scales/c-major', '.sc-staff svg .note');
+    await page.locator('.sc-tab[data-tab="chords"]').click();
+    await page.locator('.dict-families [data-family="seventh"]').click();
+    await page.locator('.dict-card').first().click();
+    await expect(page.locator('.cd-staff svg .note').first()).toBeVisible();
+    await page.evaluate(() => document.fonts.ready);
+    await page.waitForTimeout(400);
+    await shot(page, 'scales-chord-dialog');
+  });
+
   test('dictionary in Persian', async ({ page }) => {
     await open(page, 'scales/ek-segah', '.sc-staff svg .note', 'fa');
     await shot(page, 'scales-segah-fa');

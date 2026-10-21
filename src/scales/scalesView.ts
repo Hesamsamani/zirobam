@@ -5,6 +5,7 @@ import { createBackButton } from '../menu/backButton';
 import type { PianoVoice } from '../playback/pianoVoice';
 import { getScale } from '../theory/scaleCatalog';
 import { spellScale, type SpelledScale } from '../theory/spell';
+import { openChordDialog } from './chordDialog';
 import { ChordSection } from './chordSection';
 import { formatParam, parseParam, readChoice, rootChipPc, writeChoice, type Choice, type ChoiceStorage, type Tab } from './dictionaryState';
 import { ScalePanel } from './scalePanel';
@@ -90,7 +91,12 @@ export class ScalesView {
       onAnswer: deps.onAnswer,
       onLabels: (labels) => this.set({ labels }),
     });
-    this.chords = new ChordSection({ voice: deps.voice, formatName: deps.formatName, onChange: (patch) => this.set(patch) });
+    this.chords = new ChordSection({
+      voice: deps.voice,
+      formatName: deps.formatName,
+      onChange: (patch) => this.set(patch),
+      onOpen: (chord) => openChordDialog(chord, { toolkit: deps.toolkit, voice: deps.voice, formatName: deps.formatName }),
+    });
 
     const main = make('div', 'dict-main');
     main.append(this.tabs, this.panel.element, this.chords.element);

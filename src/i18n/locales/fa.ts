@@ -1,4 +1,5 @@
 import type { MessageKey } from './en';
+import { chordDialogFa } from './parts/chordDialog.fa';
 import { dictionaryFa } from './parts/dictionary.fa';
 import { theoryFa } from './parts/theory.fa';
 import { uiFa } from './parts/ui.fa';
@@ -638,4 +639,5 @@ export const fa: Record<MessageKey, string> = {
   ...uiFa,
   ...theoryFa,
   ...dictionaryFa,
+  ...chordDialogFa,
 };

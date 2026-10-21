@@ -1,0 +1,222 @@
+/* ============================================
+   CHORD DIALOG (src/scales/chordDialog.ts)
+   Inside the dark dialog panel: the chord on paper (staff, keys, guitar diagrams) and quiet controls around it.
+   Logical properties only; the staff, the keys and the diagrams stay left to right.
+   ============================================ */
+
+.chord-dialog {
+  inline-size: min(94vw, 760px);
+}
+
+.cd {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.cd-kind {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.cd-sub {
+  margin: calc(-1 * var(--space-sm)) 0 0;
+  color: var(--text-soft);
+  font-size: 0.9rem;
+}
+
+.cd-notes-row {
+  margin: 0;
+}
+
+.cd-notes {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  letter-spacing: 0.02em;
+}
+
+.cd-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cd-btn {
+  min-block-size: var(--tap-min);
+  padding-inline: 20px;
+  background: transparent;
+  border: 1px solid var(--line-medium);
+  border-radius: var(--radius-pill);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.cd-btn:hover {
+  border-color: var(--accent-light);
+}
+
+.cd-btn-primary {
+  background: var(--paper);
+  border-color: transparent;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.cd-btn:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+.cd-status {
+  min-block-size: 1.4em;
+  margin: 0;
+  color: #e69a9a;
+  font-size: 0.92rem;
+}
+
+.cd-staff {
+  display: flex;
+  justify-content: center;
+  min-block-size: 110px;
+  padding: 14px;
+  background: var(--paper);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-1);
+}
+
+.cd-staff svg {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+}
+
+.cd-keys .lk-key.lk-root::after {
+  content: '';
+  position: absolute;
+  inset-inline: 22%;
+  inset-block-end: 2px;
+  block-size: 4px;
+  background: #7a5f10;
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+/* ----- the guitar ----- */
+
+.cd-guitar-title {
+  margin: var(--space-sm) 0 4px;
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+.cd-tuning,
+.cd-guitar-none {
+  margin: 0 0 var(--space-sm);
+  color: var(--text-soft);
+  font-size: 0.88rem;
+}
+
+.cd-shapes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: var(--space-sm);
+}
+
+.cd-shape {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  margin: 0;
+  padding: var(--space-sm);
+  background: var(--paper);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-1);
+  color: var(--ink);
+}
+
+.cd-shape .fretboard {
+  inline-size: 100%;
+  max-inline-size: 118px;
+  block-size: auto;
+}
+
+.cd-shape-caption {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px 8px;
+  font-size: 0.82rem;
+  color: #3d3832;
+}
+
+.cd-shape-kind {
+  font-weight: 600;
+}
+
+.cd-shape-pos {
+  color: #5b554d;
+}
+
+.cd-shape .cd-btn {
+  min-block-size: var(--tap-min);
+  inline-size: 100%;
+  border-color: rgba(26, 26, 26, 0.3);
+  color: var(--ink);
+}
+
+.cd-shape .cd-btn:hover {
+  border-color: var(--ink);
+}
+
+/* the diagram: ink on paper; the root is brass, a muted string is a cross and an open one a ring */
+.fretboard {
+  overflow: visible;
+}
+
+.fretboard .fb-string,
+.fretboard .fb-fret {
+  stroke: #3d3832;
+  stroke-width: 1;
+}
+
+.fretboard .fb-nut {
+  stroke: var(--ink);
+}
+
+.fretboard .fb-dot {
+  fill: var(--ink);
+}
+
+.fretboard .fb-dot.fb-root {
+  fill: #7a5f10;
+}
+
+.fretboard .fb-barre {
+  fill: var(--ink);
+}
+
+.fretboard .fb-barre-root {
+  fill: #e0b83c;
+}
+
+.fretboard .fb-muted {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+.fretboard .fb-open {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.6;
+}
+
+.fretboard .fb-base {
+  fill: var(--ink);
+  font-size: 11px;
+  font-family: var(--font-sans);
+}
