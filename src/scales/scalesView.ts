@@ -7,6 +7,7 @@ import { getScale } from '../theory/scaleCatalog';
 import type { SpelledScale } from '../theory/spell';
 import { openChordDialog } from './chordDialog';
 import { ChordSection } from './chordSection';
+import { FinderPanel } from './finderPanel';
 import { formatParam, parseParam, readChoice, spellChoice, writeChoice, type Choice, type ChoiceStorage, type Tab } from './dictionaryState';
 import { ScalePanel } from './scalePanel';
 import { ScalePicker } from './scalePicker';
@@ -51,6 +52,8 @@ export class ScalesView {
   private readonly picker: ScalePicker;
   private readonly panel: ScalePanel;
   private readonly chords: ChordSection;
+  private readonly finder: FinderPanel;
+  private readonly layout: HTMLElement;
 
   private choice: Choice;
   private spelled: SpelledScale;
@@ -98,14 +101,21 @@ export class ScalesView {
       onOpen: (chord) => openChordDialog(chord, { toolkit: deps.toolkit, voice: deps.voice, formatName: deps.formatName }),
     });
 
+    this.finder = new FinderPanel({
+      formatName: deps.formatName,
+      onChoose: (root, scale) => this.set({ tab: 'scales', root, scale, category: getScale(scale).category }),
+    });
+
     const main = make('div', 'dict-main');
-    main.append(this.tabs, this.panel.element, this.chords.element);
-    const layout = make('div', 'dict-layout');
-    layout.append(this.aside, main);
-    this.element.append(header, layout);
+    main.append(this.tabs, this.panel.element, this.chords.element, this.finder.element);
+    this.layout = make('div', 'dict-layout');
+    this.layout.append(this.aside, main);
+    this.element.append(header, this.layout);
 
     deps.hub.onNoteOn.on(({ noteName }) => {
-      if (this.active && this.choice.tab === 'scales') this.panel.keyPressed(noteName);
+      if (!this.active) return;
+      if (this.choice.tab === 'scales') this.panel.keyPressed(noteName);
+      else if (this.choice.tab === 'find') this.finder.keyPressed(noteName);
     });
     this.refresh();
   }
@@ -144,11 +154,15 @@ export class ScalesView {
     this.picker.render(this.choice);
     this.toggle.textContent = this.summary();
     this.drawTabs();
-    const scalesTab = this.choice.tab === 'scales';
-    this.panel.element.hidden = !scalesTab;
-    this.chords.element.hidden = scalesTab;
-    if (scalesTab) this.panel.show(this.spelled, this.choice.labels);
-    else this.chords.show(this.spelled, this.choice);
+    const tab = this.choice.tab;
+    this.layout.dataset.tab = tab;
+    this.panel.element.hidden = tab !== 'scales';
+    this.chords.element.hidden = tab !== 'chords';
+    this.finder.element.hidden = tab !== 'find';
+    this.aside.hidden = tab === 'find';
+    if (tab === 'scales') this.panel.show(this.spelled, this.choice.labels);
+    else if (tab === 'chords') this.chords.show(this.spelled, this.choice);
+    else this.finder.render();
   }
 
   // ----- the choice -----
@@ -183,7 +197,7 @@ export class ScalesView {
 
   private drawTabs(): void {
     this.tabs.replaceChildren(
-      ...(['scales', 'chords'] as const).map((tab) => {
+      ...(['scales', 'chords', 'find'] as const).map((tab) => {
         const button = make('button', 'sc-chip sc-tab');
         button.type = 'button';
         button.textContent = t(`dict.tab.${tab}` as MessageKey);

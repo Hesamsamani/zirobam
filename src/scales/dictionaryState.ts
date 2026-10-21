@@ -4,7 +4,7 @@ import { STEP_SEMITONES, parseNoteName, type Alter } from '../theory/pitch';
 import { SCALE_CATEGORIES, SCALE_IDS, getScale, type ScaleCategory, type ScaleId } from '../theory/scaleCatalog';
 import { spellScale, type SpelledScale } from '../theory/spell';
 
-export type Tab = 'scales' | 'chords';
+export type Tab = 'scales' | 'chords' | 'find';
 export type Labels = 'names' | 'right' | 'left';
 /** A group of scales, or all of them. */
 export type CategoryChoice = ScaleCategory | 'all';
@@ -63,7 +63,7 @@ function validRoot(value: unknown): number | string | null {
 function fromRecord(data: Record<string, unknown>): Choice {
   const degree = data.degree;
   return {
-    tab: data.tab === 'chords' ? 'chords' : 'scales',
+    tab: data.tab === 'chords' ? 'chords' : data.tab === 'find' ? 'find' : 'scales',
     root: validRoot(data.root) ?? DEFAULT_CHOICE.root,
     scale: oneOf(SCALE_IDS, data.scale) ?? DEFAULT_CHOICE.scale,
     category: oneOf(CATEGORY_CHOICES, data.category) ?? DEFAULT_CHOICE.category,

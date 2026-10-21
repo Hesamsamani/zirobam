@@ -436,3 +436,139 @@
     transition: none;
   }
 }
+
+/* ----- the finder and the circle of fifths ----- */
+
+.dict-layout[data-tab='find'] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.dict-finder {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.fd-title {
+  margin: var(--space-sm) 0 0;
+  font-family: var(--font-serif);
+  font-size: 1.4rem;
+  font-weight: 500;
+}
+
+.fd-hint,
+.fd-status {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.9rem;
+}
+
+.fd-clear {
+  justify-self: start;
+}
+
+.fd-clear:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.fd-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: var(--space-sm);
+}
+
+.fd-result {
+  display: grid;
+  gap: 2px;
+  min-block-size: var(--tap-min);
+  padding: 8px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-xl);
+  color: var(--text);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.fd-result:hover {
+  background: var(--surface-3);
+}
+
+.fd-result[data-exact='true'] {
+  border-color: var(--current);
+}
+
+.fd-result-name {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+}
+
+.fd-result-fit {
+  color: var(--text-soft);
+  font-size: 0.8rem;
+}
+
+.fd-circle {
+  display: grid;
+  justify-items: center;
+}
+
+.circle {
+  position: relative;
+  inline-size: min(100%, 440px);
+  aspect-ratio: 1;
+  margin-block: var(--space-sm);
+}
+
+.circle-ring {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  fill: none;
+  stroke: var(--line-soft);
+  stroke-width: 0.4;
+}
+
+.circle-key {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  align-content: center;
+  inline-size: var(--tap-min);
+  block-size: var(--tap-min);
+  padding: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--line-medium);
+  border-radius: var(--radius-round);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.circle-key:hover {
+  background: var(--surface-3);
+  border-color: var(--accent-light);
+}
+
+.circle-major {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+}
+
+.circle-minor {
+  inline-size: 38px;
+  block-size: 38px;
+  background: transparent;
+  color: var(--text-soft);
+  font-size: 0.85rem;
+}
+
+.circle-sign {
+  color: var(--text-soft);
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  line-height: 1;
+}
