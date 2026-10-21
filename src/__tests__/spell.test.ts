@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { scaleOf, type ScaleType } from '../scales/scaleData';
 import { parseNoteName, parsePitch, pianoMidi, pitchMidi } from '../theory/pitch';
 import { SCALES, scalesOfCategory, type ScaleId } from '../theory/scaleCatalog';
-import { spellAbove, spellScale } from '../theory/spell';
+import { ascendFrom, spellAbove, spellScale } from '../theory/spell';
 
 describe('spellScale: the notes', () => {
   it('writes C major with no signs, from C4 up to C5', () => {
@@ -205,6 +205,23 @@ describe('spellScale: the six scales the screen has always had', () => {
       expect(spelled.pitches, `${id} ${pc}`).toEqual(old.notes);
       expect(spelled.fifths, `${id} ${pc}`).toBe(old.fifths);
     }
+  });
+});
+
+describe('ascendFrom', () => {
+  it('puts each note in the first octave that lies above the one before', () => {
+    expect(ascendFrom(['C', 'E', 'G'])).toEqual(['C4', 'E4', 'G4']);
+    expect(ascendFrom(['A', 'C', 'E'])).toEqual(['A4', 'C5', 'E5']);
+    expect(ascendFrom(['G', 'B', 'D', 'F', 'A'], 3)).toEqual(['G3', 'B3', 'D4', 'F4', 'A4']);
+  });
+
+  it('counts a flat C as the key below, and a quarter tone as it sounds', () => {
+    expect(ascendFrom(['Ab', 'Cb', 'Eb'])).toEqual(['Ab4', 'Cb5', 'Eb5']);
+    expect(ascendFrom(['Dk', 'F', 'Ao'])).toEqual(['Dk4', 'F4', 'Ao4']);
+  });
+
+  it('is empty for nothing', () => {
+    expect(ascendFrom([])).toEqual([]);
   });
 });
 

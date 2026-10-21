@@ -15,6 +15,42 @@ function make(overrides: Partial<KeysPictureOptions> = {}): HTMLElement {
 
 const keyOf = (root: HTMLElement, note: string) => root.querySelector<HTMLButtonElement>(`[data-note="${note}"]`)!;
 
+describe('buildKeysPicture: the root and the quarter tones', () => {
+  it('marks the key of the root of a scale', () => {
+    const root = make({ marks: { C4: '', E4: '', G4: '' }, rootNotes: ['C4'] });
+    expect(keyOf(root, 'C4').classList.contains('lk-root')).toBe(true);
+    expect(keyOf(root, 'E4').classList.contains('lk-root')).toBe(false);
+    expect(root.querySelectorAll('.lk-root')).toHaveLength(1);
+  });
+
+  it('marks the root in every octave it is given', () => {
+    const root = make({ from: 'C4', to: 'C6', rootNotes: ['C4', 'C5', 'C6'] });
+    expect(root.querySelectorAll('.lk-root')).toHaveLength(3);
+  });
+
+  it('flags a key that stands for a quarter tone, says which, and names it for a screen reader', () => {
+    const root = make({ marks: { E4: '' }, quarter: { E4: { kind: 'koron', label: 'koron' } } });
+    const key = keyOf(root, 'E4');
+    expect(key.classList.contains('lk-quarter')).toBe(true);
+    expect(key.dataset.quarter).toBe('koron');
+    expect(key.querySelector('.lk-quarter-label')!.textContent).toBe('koron');
+    expect(key.getAttribute('aria-label')).toBe('E koron');
+    expect(keyOf(root, 'F4').classList.contains('lk-quarter')).toBe(false);
+  });
+
+  it('can flag a sori too, on a black key', () => {
+    const root = make({ quarter: { 'C#4': { kind: 'sori', label: 'sori' } } });
+    expect(keyOf(root, 'C#4').dataset.quarter).toBe('sori');
+    expect(keyOf(root, 'C#4').getAttribute('aria-label')).toBe('C# sori');
+  });
+
+  it('changes nothing for a picture without these options', () => {
+    const root = make({ marks: { C4: '' } });
+    expect(root.querySelectorAll('.lk-root, .lk-quarter, .lk-quarter-label')).toHaveLength(0);
+    expect(keyOf(root, 'C4').getAttribute('aria-label')).toBe('C');
+  });
+});
+
 describe('buildKeysPicture', () => {
   it('takes the range in any spelling: B sharp is C, and D double flat is C', () => {
     const root = make({ from: 'B#3', to: 'Dbb5' });

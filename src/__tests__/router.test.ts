@@ -161,6 +161,16 @@ describe('Router', () => {
     expect(seen).toEqual([['lessons', null], ['lessons', 'staff'], ['lessons', 'clefs']]);
   });
 
+  it('opens a scale of the dictionary by its root and name', () => {
+    expect(parseLocation('#/scales')).toEqual({ view: 'scales', param: null });
+    expect(parseLocation('#/scales/d-shur')).toEqual({ view: 'scales', param: 'd-shur' });
+    expect(parseLocation('#/scales/fs-natural-minor')).toEqual({ view: 'scales', param: 'fs-natural-minor' });
+    expect(parseLocation('#/scales/ek-segah')).toEqual({ view: 'scales', param: 'ek-segah' });
+    expect(formatRoute('scales', 'd-shur')).toBe('#/scales/d-shur');
+    expect(parseLocation('#/scales/D-Shur')).toEqual({ view: 'home', param: null });
+    expect(parseLocation('#/ear/d-shur').view).toBe('home'); // only the screens that take a name
+  });
+
   it('opens the song maker, with the name of the song to edit', () => {
     expect(parseLocation('#/maker')).toEqual({ view: 'maker', param: null });
     expect(parseLocation('#/maker/maker-lk3j2a')).toEqual({ view: 'maker', param: 'maker-lk3j2a' });

@@ -1,4 +1,5 @@
 import type { MessageKey } from './en';
+import { dictionaryFa } from './parts/dictionary.fa';
 import { theoryFa } from './parts/theory.fa';
 import { uiFa } from './parts/ui.fa';
 
@@ -564,8 +565,8 @@ export const fa: Record<MessageKey, string> = {
   // Ear training, scales and chords
   'menu.ear.title': 'تمرین گوش',
   'menu.ear.desc': 'دو نت یا یک آکورد را بشنوید و بگویید چیستند.',
-  'menu.scales.title': 'گام‌ها و آکوردها',
-  'menu.scales.desc': 'هر گام یا آکوردی را ببینید، بشنوید و بنوازید، همراه با انگشت‌گذاری.',
+  'menu.scales.title': 'فرهنگ‌نامه گام و آکورد',
+  'menu.scales.desc': 'همه گام‌ها و دستگاه‌های ایرانی با آکوردهایشان: ببینید، بشنوید و همراهشان بنوازید.',
   'badge.ear.title': 'گوش خوب',
   'badge.ear.desc': 'در تمرین گوش ۲۵ پاسخ درست بدهید.',
   'badge.scales.title': 'نوازنده‌ی گام',
@@ -614,22 +615,6 @@ export const fa: Record<MessageKey, string> = {
   'ear.noSound': 'صدای پیانو بارگذاری نشد، پس چیزی برای شنیدن نیست.',
   'ear.keyboard': 'کلیدهای پیانو برای پاسخ دادن',
   'ear.melodyProgress': 'نت {n} از {total}',
-  'scales.title': 'گام‌ها و آکوردها',
-  'scales.subtitle': 'یک نت آغاز و یک نوع انتخاب کنید. آن را روی خط حامل و کلیدها ببینید، بشنوید و همراهش بنوازید.',
-  'scales.tab.scales': 'گام‌ها',
-  'scales.tab.chords': 'آکوردها',
-  'scales.root': 'نت آغاز',
-  'scales.type': 'نوع',
-  'scales.scale.major': 'ماژور',
-  'scales.scale.minor': 'مینور طبیعی',
-  'scales.scale.harmonic': 'مینور هارمونیک',
-  'scales.scale.melodic': 'مینور ملودیک (صعودی)',
-  'scales.scale.pentaMajor': 'پنتاتونیک ماژور',
-  'scales.scale.pentaMinor': 'پنتاتونیک مینور',
-  'scales.chord.major': 'ماژور',
-  'scales.chord.minor': 'مینور',
-  'scales.chord.dim': 'کاهش‌یافته',
-  'scales.chord.aug': 'افزوده',
   'scales.chord.maj7': 'ماژور هفتم',
   'scales.chord.m7': 'مینور هفتم',
   'scales.chord.dom7': 'هفتم دامیننت',
@@ -652,4 +637,5 @@ export const fa: Record<MessageKey, string> = {
   // Feature parts (src/i18n/locales/parts)
   ...uiFa,
   ...theoryFa,
+  ...dictionaryFa,
 };

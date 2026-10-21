@@ -1,3 +1,4 @@
+import { dictionaryEn } from './parts/dictionary.en';
 import { theoryEn } from './parts/theory.en';
 import { uiEn } from './parts/ui.en';
 
@@ -564,8 +565,8 @@ export const en = {
   // Ear training, scales and chords
   'menu.ear.title': 'Ear training',
   'menu.ear.desc': 'Hear two notes or a chord and say what they are.',
-  'menu.scales.title': 'Scales and chords',
-  'menu.scales.desc': 'See, hear and play any scale or chord, with fingering.',
+  'menu.scales.title': 'Scale and chord dictionary',
+  'menu.scales.desc': 'Every scale and Persian mode, with its chords: see them, hear them and play along.',
   'badge.ear.title': 'Good ear',
   'badge.ear.desc': 'Give 25 right answers in ear training.',
   'badge.scales.title': 'Scale player',
@@ -614,22 +615,6 @@ export const en = {
   'ear.noSound': 'The piano sounds could not be loaded, so there is nothing to listen to.',
   'ear.keyboard': 'Piano keys to answer with',
   'ear.melodyProgress': 'Note {n} of {total}',
-  'scales.title': 'Scales and chords',
-  'scales.subtitle': 'Choose a starting note and a kind. See it on the staff and the keys, hear it, and play along.',
-  'scales.tab.scales': 'Scales',
-  'scales.tab.chords': 'Chords',
-  'scales.root': 'Starting note',
-  'scales.type': 'Kind',
-  'scales.scale.major': 'Major',
-  'scales.scale.minor': 'Natural minor',
-  'scales.scale.harmonic': 'Harmonic minor',
-  'scales.scale.melodic': 'Melodic minor (going up)',
-  'scales.scale.pentaMajor': 'Major pentatonic',
-  'scales.scale.pentaMinor': 'Minor pentatonic',
-  'scales.chord.major': 'Major',
-  'scales.chord.minor': 'Minor',
-  'scales.chord.dim': 'Diminished',
-  'scales.chord.aug': 'Augmented',
   'scales.chord.maj7': 'Major 7th',
   'scales.chord.m7': 'Minor 7th',
   'scales.chord.dom7': 'Dominant 7th',
@@ -652,6 +637,7 @@ export const en = {
   // Feature parts (src/i18n/locales/parts)
   ...uiEn,
   ...theoryEn,
+  ...dictionaryEn,
 } as const;
 
 export type MessageKey = keyof typeof en;

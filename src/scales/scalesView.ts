@@ -1,47 +1,30 @@
-import { storageGet, storageSet } from '../core/safeStorage';
-import { formatNumber, t, type MessageKey } from '../i18n';
+import { t, type MessageKey } from '../i18n';
 import type { NoteInputHub } from '../input/noteInput';
 import type { NotationToolkit } from '../learn/noteCard';
-import { buildKeysPicture } from '../lessons/keysPicture';
-import { renderStaffPicture } from '../lessons/staffPicture';
 import { createBackButton } from '../menu/backButton';
 import type { PianoVoice } from '../playback/pianoVoice';
-import { normalizeNote } from '../practice/timingEvents';
-import { WaitSession } from '../practice/waitMode';
-import {
-  CHORD_TYPES,
-  ROOT_PITCH_CLASSES,
-  SCALE_TYPES,
-  chordOf,
-  fingering,
-  scaleOf,
-  type ChordType,
-  type ScaleType,
-  type Spelled,
-} from './scaleData';
-
-const STORAGE_KEY = 'scales.v1';
-type Tab = 'scales' | 'chords';
-type Labels = 'names' | 'right' | 'left';
-
-interface Choice {
-  tab: Tab;
-  root: number;
-  scale: ScaleType;
-  chord: ChordType;
-  labels: Labels;
-}
-
-const DEFAULT_CHOICE: Choice = { tab: 'scales', root: 0, scale: 'major', chord: 'major', labels: 'names' };
+import { getScale } from '../theory/scaleCatalog';
+import { spellScale, type SpelledScale } from '../theory/spell';
+import { ChordSection } from './chordSection';
+import { formatParam, parseParam, readChoice, rootChipPc, writeChoice, type Choice, type ChoiceStorage, type Tab } from './dictionaryState';
+import { ScalePanel } from './scalePanel';
+import { ScalePicker } from './scalePicker';
 
 export interface ScalesViewDeps {
   toolkit: NotationToolkit;
   voice: PianoVoice;
   hub: NoteInputHub;
+  /** A note name, with or without an octave, as the student has chosen to read it. */
   formatName(note: string): string;
   onBack(): void;
-  /** A scale or chord was played along to the end (for the rewards). */
+  /** A scale was played along to the end (for the rewards). */
   onPlayed(): void;
+  /** A key was pressed while playing along: the note the scale asked for, and whether the key was right. */
+  onAnswer?(note: string, correct: boolean): void;
+  /** Puts the root and the scale into the address (`d-shur`). Without this, the address is changed in place. */
+  writeAddress?(param: string): void;
+  /** Where the choice is kept; the browser's, without this. */
+  storage?: ChoiceStorage;
 }
 
 function make<K extends keyof HTMLElementTagNameMap>(tag: K, className: string): HTMLElementTagNameMap[K] {
@@ -50,49 +33,33 @@ function make<K extends keyof HTMLElementTagNameMap>(tag: K, className: string):
   return el;
 }
 
-function readChoice(): Choice {
-  const text = storageGet(STORAGE_KEY);
-  if (!text) return { ...DEFAULT_CHOICE };
-  try {
-    const data = JSON.parse(text) as Partial<Record<keyof Choice, unknown>> | null;
-    if (typeof data !== 'object' || data === null) return { ...DEFAULT_CHOICE };
-    return {
-      tab: data.tab === 'chords' ? 'chords' : 'scales',
-      root: typeof data.root === 'number' && ROOT_PITCH_CLASSES.includes(data.root) ? data.root : 0,
-      scale: SCALE_TYPES.includes(data.scale as ScaleType) ? (data.scale as ScaleType) : 'major',
-      chord: CHORD_TYPES.includes(data.chord as ChordType) ? (data.chord as ChordType) : 'major',
-      labels: data.labels === 'right' || data.labels === 'left' ? data.labels : 'names',
-    };
-  } catch {
-    return { ...DEFAULT_CHOICE };
-  }
+/** Changes the address without a new step in the history, so that Back still leaves the screen. */
+function replaceAddress(param: string): void {
+  history.replaceState(null, '', `#/scales/${param}`);
 }
 
-/** The scales and chords screen: pick a starting note and a kind, see it, hear it, and play along. */
+/** The scale and chord dictionary: pick a scale, see and hear it, and find the chords that belong to it. */
 export class ScalesView {
   readonly element: HTMLElement;
   private readonly deps: ScalesViewDeps;
   private readonly title: HTMLElement;
   private readonly subtitle: HTMLElement;
+  private readonly aside: HTMLElement;
+  private readonly toggle: HTMLButtonElement;
   private readonly tabs: HTMLElement;
-  private readonly roots: HTMLElement;
-  private readonly types: HTMLElement;
-  private readonly labelRow: HTMLElement;
-  private readonly staff: HTMLElement;
-  private readonly noFingering: HTMLElement;
-  private readonly keysHolder: HTMLElement;
-  private readonly notesLine: HTMLElement;
-  private readonly hearButton: HTMLButtonElement;
-  private readonly alongButton: HTMLButtonElement;
-  private readonly status: HTMLElement;
+  private readonly picker: ScalePicker;
+  private readonly panel: ScalePanel;
+  private readonly chords: ChordSection;
 
-  private choice: Choice = readChoice();
-  private spelled: Spelled = scaleOf(0, 'major');
-  private session: WaitSession | null = null;
+  private choice: Choice;
+  private spelled: SpelledScale;
   private active = false;
 
   constructor(deps: ScalesViewDeps) {
     this.deps = deps;
+    this.choice = readChoice(deps.storage);
+    this.spelled = this.spell(this.choice);
+
     this.element = make('section', 'scales-view');
     this.element.id = 'scalesView';
     this.element.dataset.views = 'scales';
@@ -102,273 +69,133 @@ export class ScalesView {
     this.subtitle = make('p', 'view-subtitle');
     header.append(createBackButton(deps.onBack), this.title, this.subtitle);
 
+    this.picker = new ScalePicker({ onChange: (patch) => this.set(patch), formatName: deps.formatName });
+    this.aside = make('aside', 'dict-aside');
+    this.aside.id = 'dictAside';
+    this.aside.dataset.open = 'false';
+    this.toggle = make('button', 'dict-toggle');
+    this.toggle.type = 'button';
+    this.toggle.setAttribute('aria-controls', this.aside.id);
+    this.toggle.setAttribute('aria-expanded', 'false');
+    this.toggle.addEventListener('click', () => this.setAsideOpen(this.aside.dataset.open !== 'true'));
+    this.aside.append(this.toggle, this.picker.element);
+
     this.tabs = make('div', 'sc-tabs');
     this.tabs.setAttribute('role', 'group');
-    this.roots = make('div', 'sc-chips sc-roots');
-    this.roots.setAttribute('role', 'group');
-    this.types = make('div', 'sc-chips sc-types');
-    this.types.setAttribute('role', 'group');
-    this.labelRow = make('div', 'sc-chips sc-labels');
-    this.labelRow.setAttribute('role', 'group');
-    this.staff = make('div', 'sc-staff');
-    this.staff.setAttribute('dir', 'ltr');
-    this.noFingering = make('p', 'sc-note');
-    this.keysHolder = make('div', 'sc-keys');
-    this.keysHolder.setAttribute('dir', 'ltr');
-    this.notesLine = make('p', 'sc-notes');
-    this.hearButton = make('button', 'sc-hear');
-    this.hearButton.type = 'button';
-    this.hearButton.addEventListener('click', () => void this.hear());
-    this.alongButton = make('button', 'sc-along');
-    this.alongButton.type = 'button';
-    this.alongButton.addEventListener('click', () => this.toggleAlong());
-    this.status = make('p', 'sc-status');
-    this.status.setAttribute('role', 'status');
+    this.panel = new ScalePanel({
+      toolkit: deps.toolkit,
+      voice: deps.voice,
+      formatName: deps.formatName,
+      onPlayed: deps.onPlayed,
+      onAnswer: deps.onAnswer,
+      onLabels: (labels) => this.set({ labels }),
+    });
+    this.chords = new ChordSection({ voice: deps.voice, formatName: deps.formatName, onChange: (patch) => this.set(patch) });
 
-    const actions = make('div', 'sc-actions');
-    actions.append(this.hearButton, this.alongButton);
-    this.element.append(header, this.tabs, this.roots, this.types, this.labelRow, this.staff, this.noFingering, this.keysHolder, this.notesLine, actions, this.status);
+    const main = make('div', 'dict-main');
+    main.append(this.tabs, this.panel.element, this.chords.element);
+    const layout = make('div', 'dict-layout');
+    layout.append(this.aside, main);
+    this.element.append(header, layout);
 
     deps.hub.onNoteOn.on(({ noteName }) => {
-      if (this.active) this.pressed(noteName, false);
+      if (this.active && this.choice.tab === 'scales') this.panel.keyPressed(noteName);
     });
     this.refresh();
   }
 
-  activate(): void {
+  /** What is on the screen (for tests and the end-to-end hook). */
+  current(): { tab: Tab; spelled: SpelledScale; along: boolean } {
+    return { tab: this.choice.tab, spelled: this.spelled, along: this.panel.current().along };
+  }
+
+  /** The screen is shown. An address such as `d-shur` chooses the scale it names. */
+  activate(param: string | null = null): void {
     this.active = true;
-    this.refresh();
+    this.panel.activate();
+    const named = param ? parseParam(param) : null;
+    if (named) this.apply(named);
+    else this.refresh();
   }
 
   deactivate(): void {
     this.active = false;
-    this.deps.voice.stopAll();
-    if (this.session) {
-      this.stopAlong();
-      this.refresh(); // the button says "Play along" again
+    this.panel.deactivate();
+    this.chords.deactivate();
+  }
+
+  /** The address changed while the screen was open. An address that names nothing changes nothing. */
+  applyParam(param: string | null): void {
+    const named = param ? parseParam(param) : null;
+    if (named) this.apply(named);
+  }
+
+  /** Draws the screen again, for a new language or a new way of writing the notes. */
+  refresh(): void {
+    this.title.textContent = t('dict.title');
+    this.subtitle.textContent = t('dict.subtitle');
+    this.spelled = this.spell(this.choice);
+    this.picker.render(this.choice);
+    this.toggle.textContent = this.summary();
+    this.drawTabs();
+    const scalesTab = this.choice.tab === 'scales';
+    this.panel.element.hidden = !scalesTab;
+    this.chords.element.hidden = scalesTab;
+    if (scalesTab) this.panel.show(this.spelled, this.choice.labels);
+    else this.chords.show(this.spelled, this.choice);
+  }
+
+  // ----- the choice -----
+
+  /** The scale of a choice. A root that cannot be written (it would need a triple sign) is taken as its note of the piano. */
+  private spell(choice: Choice): SpelledScale {
+    try {
+      return spellScale(choice.root, choice.scale);
+    } catch {
+      return spellScale(rootChipPc(choice.root), choice.scale);
     }
   }
 
-  /** What is on the screen (for tests and the end-to-end hook). */
-  current(): { tab: Tab; spelled: Spelled; along: boolean } {
-    return { tab: this.choice.tab, spelled: this.spelled, along: this.session !== null };
-  }
-
-  private save(): void {
-    storageSet(STORAGE_KEY, JSON.stringify(this.choice));
+  private summary(): string {
+    return t('dict.scale.title', { root: this.deps.formatName(this.spelled.root), scale: t(`scale.name.${this.choice.scale}` as MessageKey) });
   }
 
   private set(patch: Partial<Choice>): void {
-    this.stopAlong();
     this.deps.voice.stopAll();
     this.choice = { ...this.choice, ...patch };
-    this.save();
+    writeChoice(this.choice, this.deps.storage);
+    this.refresh();
+    if ('scale' in patch) this.setAsideOpen(false);
+    // the address holds the root and the scale, nothing else
+    if (this.active && ('root' in patch || 'scale' in patch)) (this.deps.writeAddress ?? replaceAddress)(formatParam(this.spelled.root, this.choice.scale));
+  }
+
+  /** The scale an address named: no new address is written, it is the address that changed. */
+  private apply(named: { root: string; scale: Choice['scale'] }): void {
+    this.choice = { ...this.choice, root: named.root, scale: named.scale, category: getScale(named.scale).category };
+    writeChoice(this.choice, this.deps.storage);
     this.refresh();
   }
 
-  // ----- drawing -----
+  // ----- the parts -----
 
-  refresh(): void {
-    const { tab, root, scale, chord } = this.choice;
-    this.title.textContent = t('scales.title');
-    this.subtitle.textContent = t('scales.subtitle');
-    this.spelled = tab === 'scales' ? scaleOf(root, scale) : chordOf(root, chord);
-
-    this.buildTabs();
-    this.buildRoots();
-    this.buildTypes();
-    this.buildLabels();
-    this.drawStaff();
-    this.drawKeys();
-    this.notesLine.textContent = t('scales.notes', { notes: this.spelled.notes.map((n) => this.deps.formatName(n.replace(/\d$/, ''))).join(' ') });
-    this.hearButton.textContent = t('scales.play');
-    this.alongButton.textContent = t(this.session ? 'scales.stopAlong' : 'scales.playAlong');
-    this.alongButton.setAttribute('aria-pressed', String(this.session !== null));
-  }
-
-  private chip(text: string, pressed: boolean, onClick: () => void): HTMLButtonElement {
-    const chip = make('button', 'sc-chip');
-    chip.type = 'button';
-    chip.textContent = text;
-    chip.setAttribute('aria-pressed', String(pressed));
-    chip.addEventListener('click', onClick);
-    return chip;
-  }
-
-  private buildTabs(): void {
-    this.tabs.replaceChildren();
-    for (const tab of ['scales', 'chords'] as const) {
-      const button = this.chip(t(`scales.tab.${tab}` as MessageKey), this.choice.tab === tab, () => this.set({ tab }));
-      button.classList.add('sc-tab');
-      button.dataset.tab = tab;
-      this.tabs.appendChild(button);
-    }
-  }
-
-  private buildRoots(): void {
-    this.roots.replaceChildren();
-    this.roots.setAttribute('aria-label', t('scales.root'));
-    for (const pc of ROOT_PITCH_CLASSES) {
-      const spelled = this.choice.tab === 'scales' ? scaleOf(pc, this.choice.scale) : chordOf(pc, this.choice.chord);
-      const button = this.chip(this.deps.formatName(spelled.root), this.choice.root === pc, () => this.set({ root: pc }));
-      button.dataset.root = String(pc);
-      this.roots.appendChild(button);
-    }
-  }
-
-  private buildTypes(): void {
-    this.types.replaceChildren();
-    this.types.setAttribute('aria-label', t('scales.type'));
-    if (this.choice.tab === 'scales') {
-      for (const type of SCALE_TYPES) {
-        const button = this.chip(t(`scales.scale.${type}` as MessageKey), this.choice.scale === type, () => this.set({ scale: type }));
-        button.dataset.type = type;
-        this.types.appendChild(button);
-      }
-    } else {
-      for (const type of CHORD_TYPES) {
-        const button = this.chip(t(`scales.chord.${type}` as MessageKey), this.choice.chord === type, () => this.set({ chord: type }));
-        button.dataset.type = type;
-        this.types.appendChild(button);
-      }
-    }
-  }
-
-  private buildLabels(): void {
-    this.labelRow.replaceChildren();
-    this.labelRow.hidden = this.choice.tab !== 'scales';
-    this.labelRow.setAttribute('aria-label', t('scales.labels'));
-    if (this.choice.tab !== 'scales') return;
-    for (const labels of ['names', 'right', 'left'] as const) {
-      const button = this.chip(t(`scales.labels.${labels}` as MessageKey), this.choice.labels === labels, () => this.set({ labels }));
-      button.dataset.labels = labels;
-      this.labelRow.appendChild(button);
-    }
-  }
-
-  /** The text under the notes of the staff: the note names or the fingers, and whether there is fingering. */
-  private labelTexts(): { texts: string[]; missing: boolean } {
-    const { tab, labels } = this.choice;
-    if (tab === 'scales' && labels !== 'names') {
-      const fingers = fingering(this.spelled, labels);
-      if (fingers) return { texts: fingers.map((f) => formatNumber(f)), missing: false };
-      return { texts: this.spelled.notes.map((n) => this.deps.formatName(n.replace(/\d$/, ''))), missing: true };
-    }
-    return { texts: this.spelled.notes.map((n) => this.deps.formatName(n.replace(/\d$/, ''))), missing: false };
-  }
-
-  private drawStaff(): void {
-    const { texts, missing } = this.labelTexts();
-    this.noFingering.hidden = !missing;
-    this.noFingering.textContent = missing ? t('scales.noFingering') : '';
-    const notes = this.spelled.notes;
-    const four = this.choice.tab === 'scales' || notes.length === 4;
-    const beats: 3 | 4 = four ? 4 : 3;
-    const tokens = notes.map((note) => `${note}q`);
-    // measures of the length of the time signature (the last one may be shorter)
-    const measures: string[] = [];
-    for (let i = 0; i < tokens.length; i += beats) measures.push(tokens.slice(i, i + beats).join(' '));
-    let index = 0;
-    try {
-      renderStaffPicture(this.staff, {
-        toolkit: this.deps.toolkit,
-        spec: { clef: 'treble', notes: measures.join(' | '), fifths: this.spelled.fifths ?? 0, beats, free: true },
-        names: true,
-        formatName: () => texts[index++] ?? '',
-        description: t('scales.staff'),
-      });
-    } catch {
-      this.staff.replaceChildren();
-    }
-  }
-
-  private drawKeys(): void {
-    const marks: Record<string, string> = {};
-    for (const note of this.spelled.notes) marks[normalizeNote(note)] = '';
-    this.keysHolder.replaceChildren(
-      buildKeysPicture({
-        from: 'C4',
-        to: 'C6',
-        names: 'white',
-        marks,
-        formatName: (note) => this.deps.formatName(note),
-        formatMark: (text) => text,
-        onPlay: (note) => this.pressed(note, true),
-        ariaLabel: t('scales.keys'),
+  private drawTabs(): void {
+    this.tabs.replaceChildren(
+      ...(['scales', 'chords'] as const).map((tab) => {
+        const button = make('button', 'sc-chip sc-tab');
+        button.type = 'button';
+        button.textContent = t(`dict.tab.${tab}` as MessageKey);
+        button.dataset.tab = tab;
+        button.setAttribute('aria-pressed', String(this.choice.tab === tab));
+        button.addEventListener('click', () => this.set({ tab }));
+        return button;
       }),
     );
-    this.markNext();
   }
 
-  /** The key to play next is marked while playing along. */
-  private markNext(): void {
-    this.keysHolder.querySelectorAll('.lk-key').forEach((key) => key.classList.remove('next-key'));
-    const session = this.session;
-    if (!session || session.finished()) return;
-    const note = normalizeNote(this.spelled.notes[session.index()]);
-    this.keysHolder.querySelector(`.lk-key[data-note="${note}"]`)?.classList.add('next-key');
-  }
-
-  // ----- hearing and playing along -----
-
-  private async hear(): Promise<void> {
-    const { voice } = this.deps;
-    if (!(await voice.ready())) {
-      this.setStatus(t('ear.noSound'), 'bad');
-      return;
-    }
-    voice.stopAll();
-    const notes = this.spelled.notes;
-    if (this.choice.tab === 'scales') {
-      const path = [...notes, ...notes.slice(0, -1).reverse()];
-      path.forEach((note, i) => voice.play(note, 0.55, 0.05 + i * 0.4));
-    } else {
-      notes.forEach((note, i) => voice.play(note, 0.9, 0.05 + i * 0.4));
-      const start = 0.05 + notes.length * 0.4 + 0.3;
-      for (const note of notes) voice.play(note, 1.8, start);
-    }
-  }
-
-  private toggleAlong(): void {
-    if (this.session) {
-      this.stopAlong();
-      this.refresh();
-      return;
-    }
-    this.session = new WaitSession(this.spelled.notes.map((note) => ({ pitches: [note] })));
-    this.setStatus(t('scales.along.hint'), '');
-    this.refresh();
-  }
-
-  private stopAlong(): void {
-    this.session = null;
-    this.setStatus('', '');
-  }
-
-  /** A key was played (on the picture or on a MIDI keyboard). */
-  private pressed(note: string, fromScreen: boolean): void {
-    if (fromScreen) void this.deps.voice.ready().then((ok) => ok && this.deps.voice.play(note, 0.9, 0));
-    const session = this.session;
-    if (!session) return;
-    const press = session.press(note);
-    if (press.result === 'ignored') return;
-    if (press.result === 'wrong') {
-      this.setStatus(t('scales.along.wrong'), 'bad');
-      return;
-    }
-    if (press.result === 'done') {
-      this.session = null;
-      this.setStatus(t('scales.along.done'), 'good');
-      this.deps.onPlayed();
-      this.refresh();
-      return;
-    }
-    this.setStatus(t('scales.along.hint'), '');
-    this.markNext();
-  }
-
-  private setStatus(text: string, tone: 'good' | 'bad' | ''): void {
-    this.status.textContent = text;
-    this.status.dataset.tone = tone;
+  /** On a phone the picker is folded away behind the button that names the scale. */
+  private setAsideOpen(open: boolean): void {
+    this.aside.dataset.open = String(open);
+    this.toggle.setAttribute('aria-expanded', String(open));
   }
 }

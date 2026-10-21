@@ -74,11 +74,11 @@ function cost(names: readonly string[], fifths: number | null): number {
   return (doubles ? 1000 : 0) + signs;
 }
 
-/** Each note in the first octave, counting from `octave`, that lies above the note before it; the root comes round again at the end. */
-function withOctaves(names: readonly string[], root: string, octave: number): string[] {
+/** Each note in the first octave, counting from `octave`, that lies above the note before it: `['C', 'E', 'G']` from 4 is C4, E4, G4. */
+export function ascendFrom(names: readonly string[], octave = 4): string[] {
   const out: string[] = [];
   let previous = -Infinity;
-  for (const name of [...names, root]) {
+  for (const name of names) {
     let at = octave;
     while (out.length > 0 && pitchMidi(parsePitch(`${name}${at}`)!) <= previous) at++;
     out.push(`${name}${at}`);
@@ -112,7 +112,7 @@ export function spellScale(root: number | string, id: ScaleId, octave = 4): Spel
     id,
     root: best.root,
     names: best.names,
-    pitches: withOctaves(best.names, best.root, octave),
+    pitches: ascendFrom([...best.names, best.root], octave),
     offsets: notes.map((note) => note.offset),
     fifths: best.fifths,
     hasQuarterTones: best.names.some((name) => /[ko]$/.test(name)),

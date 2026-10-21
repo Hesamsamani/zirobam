@@ -1,0 +1,438 @@
+/* ============================================
+   SCALE AND CHORD DICTIONARY (src/scales)
+   A picker on one side, the scale or its chords on the other. The scale is shown as stairs whose steps are as
+   wide as the gaps between the notes, so a quarter tone is a step you can see. Cream "paper" is used only for
+   what is music: the staff, the keys and the chord cards. Logical properties only; the staff, the keys and the
+   stairs stay left to right in every language.
+   ============================================ */
+
+.scales-view {
+  max-width: 1180px;
+}
+
+.dict-layout {
+  display: grid;
+  gap: var(--space-lg);
+  align-items: start;
+}
+
+.dict-main {
+  min-inline-size: 0;
+}
+
+/* ----- the picker ----- */
+
+.dict-aside {
+  padding: var(--space-md);
+  background: var(--surface-1);
+  border: 1px solid var(--line-faint);
+  border-radius: var(--radius-3xl);
+}
+
+.dict-picker {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.dict-toggle {
+  display: flex;
+  align-items: center;
+  inline-size: 100%;
+  min-block-size: var(--tap-min);
+  padding: 0 var(--space-md);
+  background: transparent;
+  border: 1px solid var(--line-medium);
+  border-radius: var(--radius-pill);
+  color: var(--text);
+  font: inherit;
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  cursor: pointer;
+}
+
+.dict-toggle::after {
+  content: '';
+  inline-size: 0.55em;
+  block-size: 0.55em;
+  margin-inline-start: auto;
+  /* a shape, not text: physical edges so the arrow points down in both directions */
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+}
+
+.dict-toggle[aria-expanded='true']::after {
+  transform: rotate(-135deg);
+}
+
+.dict-aside[data-open='true'] .dict-toggle {
+  margin-block-end: var(--space-md);
+}
+
+.dict-search {
+  inline-size: 100%;
+  min-block-size: var(--tap-min);
+  padding: 0 var(--space-md);
+  background: var(--bg);
+  border: 1px solid var(--line-medium);
+  border-radius: var(--radius-pill);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.95rem;
+}
+
+.dict-search::placeholder {
+  color: var(--text-soft);
+}
+
+.dict-search-status {
+  min-block-size: 1.3em;
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.85rem;
+}
+
+.dict-picker .sc-chips {
+  margin-block-end: var(--space-sm);
+}
+
+.dict-root-label {
+  margin: var(--space-xs) 0 0;
+  color: var(--text-soft);
+  font-size: 0.9rem;
+}
+
+.dict-aside .sc-roots {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+  margin-block-end: var(--space-sm);
+}
+
+.dict-aside .sc-roots .sc-chip {
+  justify-content: center;
+  padding: 0;
+}
+
+.dict-koron {
+  justify-content: center;
+}
+
+.dict-koron[aria-pressed='true'] {
+  background: var(--quarter-soft);
+  border-color: var(--quarter);
+  color: var(--text);
+}
+
+.dict-koron:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+@media (max-width: 899px) {
+  .dict-aside[data-open='false'] .dict-picker {
+    display: none;
+  }
+}
+
+@media (min-width: 900px) {
+  .dict-layout {
+    grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+  }
+
+  .dict-toggle {
+    display: none;
+  }
+}
+
+/* ----- the scale ----- */
+
+.dict-scale-title,
+.dict-chords-title {
+  margin: 0 0 var(--space-sm);
+  font-family: var(--font-serif);
+  font-weight: 500;
+  line-height: 1.15;
+}
+
+.dict-scale-title {
+  font-size: clamp(1.7rem, 4vw, 2.3rem);
+}
+
+.dict-persian,
+.dict-chords-quarter {
+  margin-block: var(--space-sm) var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--quarter-soft);
+  border-inline-start: 3px solid var(--quarter);
+  border-radius: var(--radius-lg);
+}
+
+.dict-persian-line,
+.dict-chords-quarter {
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.dict-persian-line {
+  margin: 0;
+}
+
+.dict-persian-line + .dict-persian-line {
+  margin-block-start: 4px;
+  color: var(--text-soft);
+}
+
+.dict-chords-quarter {
+  margin-block-start: 0;
+}
+
+/* The stairs: each step is as wide as the gap from its note to the next (the width comes from flex-grow, set in
+   the page). The root has a brass top edge and a quarter tone a teal one. */
+.dict-stairs {
+  display: flex;
+  gap: 3px;
+  margin-block: var(--space-md);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.dict-step {
+  flex: 1 1 0;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  justify-items: center;
+  gap: 2px;
+  /* narrower than --tap-min on purpose: the width is the interval, and a half step must look narrower than a
+     whole one. The step is 96px tall, so it stays an easy target. */
+  min-inline-size: 30px;
+  min-block-size: 96px;
+  padding: var(--space-sm) 2px;
+  background: var(--surface-2);
+  border: 1px solid var(--line-soft);
+  border-block-start: 4px solid var(--line-medium);
+  border-radius: var(--radius-lg);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.dict-step:hover {
+  background: var(--surface-3);
+}
+
+.dict-step[data-tonic='true'] {
+  background: rgba(201, 162, 39, 0.12);
+  border-block-start-color: var(--current);
+}
+
+.dict-step[data-quarter='true'] {
+  background: var(--quarter-soft);
+  border-block-start-color: var(--quarter);
+}
+
+.dict-step-degree,
+.dict-step-tones {
+  color: var(--text-soft);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.dict-step-name {
+  align-self: center;
+  max-inline-size: 100%;
+  font-family: var(--font-serif);
+  font-size: 1.35rem;
+  line-height: 1.1;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+/* "E koron" is a letter and a word: the word is smaller so it fits the step. */
+.dict-step[data-quarter='true'] .dict-step-name {
+  font-size: 1.05rem;
+}
+
+/* A three-quarter step on a phone is about 43px wide */
+@media (max-width: 599px) {
+  .dict-step[data-quarter='true'] .dict-step-name {
+    font-size: 0.85rem;
+  }
+}
+
+/* The keys: the root has a brass bar, a quarter tone a teal one on top and its word. */
+.sc-keys .lk-key.lk-root::after {
+  content: '';
+  position: absolute;
+  inset-inline: 22%;
+  inset-block-end: 2px;
+  block-size: 4px;
+  background: #7a5f10;
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.sc-keys .lk-key.lk-quarter::before {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: 0;
+  block-size: 5px;
+  background: var(--quarter-ink);
+  pointer-events: none;
+}
+
+.lk-quarter-label {
+  color: var(--quarter-ink);
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* On a phone a white key is about 24px wide: the word is a little smaller there (the teal bar stays). */
+@media (max-width: 599px) {
+  .lk-quarter-label {
+    font-size: 0.5rem;
+    letter-spacing: -0.02em;
+  }
+}
+
+/* ----- the chords ----- */
+
+.dict-chords-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.dict-chords-title {
+  font-size: clamp(1.4rem, 3vw, 1.8rem);
+}
+
+.dict-chords-count {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.dict-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-block: var(--space-sm) var(--space-md);
+}
+
+.dict-degree {
+  min-block-size: var(--tap-min);
+  padding-inline: 14px;
+  background: transparent;
+  border: 1px solid var(--line-medium);
+  border-radius: var(--radius-pill);
+  color: var(--text);
+  color-scheme: dark;
+  font: inherit;
+  font-size: 0.92rem;
+}
+
+.dict-primary[aria-pressed='true'],
+.dict-inversions[aria-pressed='true'] {
+  border-color: var(--current);
+  background: rgba(201, 162, 39, 0.16);
+  color: #fff;
+}
+
+.dict-chords-empty,
+.dict-chords-status {
+  margin-block: var(--space-sm);
+  color: var(--text-soft);
+}
+
+.dict-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: var(--space-sm);
+}
+
+/* A card is a flashcard of the chord, so it is on paper like the staff. */
+.dict-card {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  min-block-size: 136px;
+  padding: var(--space-md);
+  background: var(--paper);
+  border: 1px solid transparent;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-1);
+  color: var(--ink);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition: filter var(--transition-fast);
+}
+
+.dict-card:hover {
+  filter: brightness(0.95);
+}
+
+.dict-card[data-primary='true'] {
+  border-color: var(--current);
+  box-shadow: 0 0 0 1px var(--current), var(--shadow-1);
+}
+
+.dict-card:not([data-inversion='0']) {
+  background: #efeae2;
+}
+
+.dict-card-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  color: #5b554d;
+  font-size: 0.78rem;
+}
+
+.dict-card-roman {
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.dict-card-symbol {
+  font-family: var(--font-serif);
+  font-size: 1.9rem;
+  font-weight: 500;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.dict-card-name {
+  color: #3d3832;
+  font-size: 0.9rem;
+}
+
+.dict-card-notes {
+  color: #5b554d;
+  font-size: 0.85rem;
+}
+
+.dict-card-main {
+  color: #6b5410;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dict-step,
+  .dict-card {
+    transition: none;
+  }
+}

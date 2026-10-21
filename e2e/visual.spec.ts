@@ -28,9 +28,26 @@ test.describe('Visual baseline', () => {
     await shot(page, 'home-fa');
   });
 
-  test('scales and chords', async ({ page }) => {
-    await open(page, 'scales', '.sc-staff svg .note');
+  test('scale and chord dictionary', async ({ page }) => {
+    await open(page, 'scales/c-major', '.sc-staff svg .note');
     await shot(page, 'scales');
+  });
+
+  test('dictionary: a Persian mode with its quarter tone', async ({ page }) => {
+    await open(page, 'scales/d-shur', '.sc-staff svg .note');
+    await shot(page, 'scales-shur');
+  });
+
+  test('dictionary: the chords of a scale', async ({ page }) => {
+    await open(page, 'scales/c-major', '.sc-staff svg .note');
+    await page.locator('.sc-tab[data-tab="chords"]').click();
+    await expect(page.locator('.dict-card').first()).toBeVisible();
+    await shot(page, 'scales-chords');
+  });
+
+  test('dictionary in Persian', async ({ page }) => {
+    await open(page, 'scales/ek-segah', '.sc-staff svg .note', 'fa');
+    await shot(page, 'scales-segah-fa');
   });
 
   test('songs', async ({ page }) => {

@@ -7,6 +7,10 @@ export interface KeysPictureOptions {
   names: 'none' | 'white' | 'all';
   /** A short label per key (a finger number, a computer key). An empty text only highlights the key. */
   marks?: Record<string, string>;
+  /** Keys (`C4`) that are the root of the scale shown: they get a mark of their own. */
+  rootNotes?: readonly string[];
+  /** Keys that stand for a quarter tone, by key name: the kind, and the word that names it (shown on the key and read out). */
+  quarter?: Readonly<Record<string, { kind: 'koron' | 'sori'; label: string }>>;
   /** A note with its octave ("C#4") to the name shown on the key ("C♯"). */
   formatName(note: string): string;
   /** Fills in note tokens and digits of a mark. */
@@ -64,7 +68,13 @@ export function buildKeysPicture(options: KeysPictureOptions): HTMLElement {
     button.className = `lk-key ${key.isBlack ? 'black' : 'white'}`;
     button.dataset.note = key.noteName;
     button.tabIndex = buttons.length === 0 ? 0 : -1;
-    button.setAttribute('aria-label', options.formatName(key.noteName));
+    const quarter = options.quarter?.[key.noteName];
+    button.setAttribute('aria-label', quarter ? `${options.formatName(key.noteName)} ${quarter.label}` : options.formatName(key.noteName));
+    if (options.rootNotes?.includes(key.noteName)) button.classList.add('lk-root');
+    if (quarter) {
+      button.classList.add('lk-quarter');
+      button.dataset.quarter = quarter.kind;
+    }
 
     if (key.isBlack) {
       const width = (0.6 / whiteCount) * 100;
@@ -86,6 +96,12 @@ export function buildKeysPicture(options: KeysPictureOptions): HTMLElement {
       mark.className = 'lk-mark';
       mark.textContent = options.formatMark(marks[key.noteName]);
       button.append(mark);
+    }
+    if (quarter) {
+      const word = document.createElement('span');
+      word.className = 'lk-quarter-label';
+      word.textContent = quarter.label;
+      button.append(word);
     }
 
     button.addEventListener('pointerdown', (event) => {

@@ -1,6 +1,7 @@
 import './styles/tokens.css';
 import './style.css';
 import './styles/dialog.css';
+import './styles/dictionary.css';
 import createVerovioModule from 'verovio/wasm';
 import { VerovioToolkit } from 'verovio/esm';
 import * as Tone from 'tone';
@@ -1278,6 +1279,7 @@ function setupNavigation(learn: LearnHandle) {
     formatName: (note) => formatNoteName(note, getNoteNameSystem()),
     onBack: () => appShell.navigate('home'),
     onPlayed: () => game.scalePlayed(),
+    onAnswer: (note, correct) => practiceMemory.noteAnswered(note, correct),
   });
   onLocaleChange(() => {
     ear.refresh();
@@ -1348,6 +1350,7 @@ function setupNavigation(learn: LearnHandle) {
     change: (view, param) => {
       if (view === 'lessons') lessons.show(param);
       if (view === 'maker') void maker.show(param);
+      if (view === 'scales') scales.applyParam(param);
     },
     enter: (view, previous, param) => {
       if (STAND_VIEWS.includes(view)) pianoKeyboard?.attach();
@@ -1389,7 +1392,7 @@ function setupNavigation(learn: LearnHandle) {
           ear.activate();
           break;
         case 'scales':
-          scales.activate();
+          scales.activate(param);
           break;
         case 'progress':
           progress.refresh();
