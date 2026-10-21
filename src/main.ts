@@ -5,6 +5,7 @@ import './styles/dictionary.css';
 import './styles/chordDialog.css';
 import './styles/generator.css';
 import './styles/chords.css';
+import './styles/tuner.css';
 import createVerovioModule from 'verovio/wasm';
 import { VerovioToolkit } from 'verovio/esm';
 import * as Tone from 'tone';
@@ -70,6 +71,7 @@ import { downloadTextFile } from './backup/download';
 import { buildDraft, newMakerId } from './songs/songMaker';
 import { createFeatureViews } from './app/featureViews';
 import { createToneBackend } from './band/toneBackend';
+import { MicInput, type AudioContextLike } from './audio/micInput';
 import { XylophoneView } from './xylophone/xylophoneView';
 import { PracticePanel } from './practice/practicePanel';
 import { songTitle } from './songs/songText';
@@ -1292,10 +1294,19 @@ function setupNavigation(learn: LearnHandle) {
     newToolkit: () => new VerovioToolkit(verovioModule) as unknown as NotationToolkit,
     voice: { ...pianoVoice, ready: async () => (await Tone.start(), pianoVoice.ready()) },
     formatName: (note) => formatNoteName(note, getNoteNameSystem()),
+    formatNameWithOctave: (note) => formatNoteName(note, getNoteNameSystem(), { octave: true }),
     band: createToneBackend(Tone, {
       ready: async () => (await Tone.start(), pianoVoice.ready()),
       trigger: (frequency, seconds, time, velocity) => void sampler?.triggerAttackRelease(frequency, seconds, time, velocity),
       releaseAll: () => void sampler?.releaseAll(),
+    }),
+    mic: new MicInput({
+      getUserMedia: navigator.mediaDevices?.getUserMedia?.bind(navigator.mediaDevices),
+      createContext: () => new AudioContext() as unknown as AudioContextLike,
+      setInterval: (handler, ms) => window.setInterval(handler, ms),
+      clearInterval: (id) => window.clearInterval(id),
+      // the band and the stand sound through the speakers: the microphone would hear them
+      isAppSounding: () => Tone.getTransport().state === 'started',
     }),
     hub: noteInput,
     onChordAnswer: (correct) => void game.chordAnswer(correct),

@@ -4,6 +4,7 @@ import { dictionaryFa } from './parts/dictionary.fa';
 import { generatorFa } from './parts/generator.fa';
 import { finderFa } from './parts/finder.fa';
 import { chordsFa } from './parts/chords.fa';
+import { tunerFa } from './parts/tuner.fa';
 import { theoryFa } from './parts/theory.fa';
 import { uiFa } from './parts/ui.fa';
 
@@ -648,4 +649,5 @@ export const fa: Record<MessageKey, string> = {
   ...generatorFa,
   ...finderFa,
   ...chordsFa,
+  ...tunerFa,
 };

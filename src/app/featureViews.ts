@@ -1,4 +1,6 @@
 import type { BandBackend } from '../band/bandPlayer';
+import type { MicSource } from '../tuner/tunerView';
+import { TunerView } from '../tuner/tunerView';
 import { ChordsView } from '../chords/chordsView';
 import type { NoteInputHub } from '../input/noteInput';
 import { NoteStats } from '../learn/noteStats';
@@ -27,12 +29,16 @@ export interface FeatureDeps {
   voice: PianoVoice;
   /** A note name, with or without an octave, as the student has chosen to read it. */
   formatName(note: string): string;
+  /** The same, with the octave kept (`A4`). */
+  formatNameWithOctave(note: string): string;
   /** The backing band's sounds. */
   band: BandBackend;
   /** Where the notes the student plays come from. */
   hub: NoteInputHub;
   /** A chord of the chord quiz was answered (for the rewards). */
   onChordAnswer(correct: boolean): void;
+  /** The microphone. */
+  mic: MicSource;
   goHome(): void;
   /** Opens a score (MusicXML) on the practice stand. */
   practiseXml(xml: string, title: string): void;
@@ -59,5 +65,6 @@ export function createFeatureViews(deps: FeatureDeps): FeatureView[] {
       onBack: deps.goHome,
       onAnswer: (correct) => deps.onChordAnswer(correct),
     }),
+    new TunerView({ mic: deps.mic, hub: deps.hub, formatName: deps.formatNameWithOctave, onBack: deps.goHome }),
   ];
 }

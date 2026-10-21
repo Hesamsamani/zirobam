@@ -2,6 +2,7 @@ import { chordDialogEn } from './parts/chordDialog.en';
 import { generatorEn } from './parts/generator.en';
 import { finderEn } from './parts/finder.en';
 import { chordsEn } from './parts/chords.en';
+import { tunerEn } from './parts/tuner.en';
 import { dictionaryEn } from './parts/dictionary.en';
 import { theoryEn } from './parts/theory.en';
 import { uiEn } from './parts/ui.en';
@@ -648,6 +649,7 @@ export const en = {
   ...generatorEn,
   ...finderEn,
   ...chordsEn,
+  ...tunerEn,
 } as const;
 
 export type MessageKey = keyof typeof en;

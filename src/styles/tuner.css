@@ -1,0 +1,133 @@
+/* ============================================
+   TUNER (src/tuner)
+   The note that is heard, a meter of cents with a needle, and the settings. The meter stays left to right:
+   flat is to the left, sharp to the right, in every language.
+   ============================================ */
+
+.tuner-view {
+  flex: 1;
+  inline-size: 100%;
+  max-inline-size: 640px;
+  margin-inline: auto;
+  padding: var(--space-xl) var(--space-lg);
+}
+
+@media (max-width: 560px) {
+  .tuner-view {
+    padding: var(--space-lg) var(--space-md);
+  }
+}
+
+.tn-toggle {
+  margin-block: var(--space-md);
+}
+
+.tn-status {
+  min-block-size: 1.5em;
+  margin: 0 0 var(--space-md);
+  color: var(--text-soft);
+}
+
+.tn-status[data-state='denied'],
+.tn-status[data-state='unavailable'] {
+  color: #e69a9a;
+}
+
+.tn-note {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: clamp(4rem, 18vw, 7rem);
+  font-weight: 500;
+  line-height: 1;
+  text-align: center;
+  transition: opacity var(--transition-med);
+}
+
+.tuner-view[data-live='false'] .tn-note,
+.tuner-view[data-live='false'] .tn-cents,
+.tuner-view[data-live='false'] .tn-hz {
+  opacity: 0.35;
+}
+
+.tn-meter {
+  position: relative;
+  block-size: 44px;
+  margin-block: var(--space-md);
+  background: var(--surface-2);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-pill);
+}
+
+.tn-centre {
+  position: absolute;
+  inset-block: 6px;
+  inset-inline-start: 50%;
+  inline-size: 2px;
+  background: var(--line-strong);
+  transform: translateX(-50%);
+}
+
+.tn-needle {
+  position: absolute;
+  inset-block: 4px;
+  inset-inline-start: 50%;
+  inline-size: 6px;
+  background: var(--text);
+  border-radius: 3px;
+  transform: translateX(-50%);
+  transition: inset-inline-start 0.08s linear;
+}
+
+.tn-meter[data-tune='in'] .tn-needle {
+  background: var(--correct);
+}
+
+.tn-meter[data-tune='flat'] .tn-needle,
+.tn-meter[data-tune='sharp'] .tn-needle {
+  background: var(--current);
+}
+
+.tn-cents,
+.tn-hz {
+  margin: 0;
+  text-align: center;
+  color: var(--text-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.tn-cents {
+  color: var(--text);
+  font-size: 1.15rem;
+}
+
+.tn-settings {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--space-md);
+  margin-block-start: var(--space-lg);
+}
+
+.tn-field {
+  display: grid;
+  gap: 6px;
+}
+
+.tn-a4 {
+  min-block-size: var(--tap-min);
+  inline-size: 7rem;
+  padding-inline: 14px;
+  background: var(--bg);
+  border: 1px solid var(--line-medium);
+  border-radius: var(--radius-pill);
+  color: var(--text);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tn-needle,
+  .tn-note {
+    transition: none;
+  }
+}
