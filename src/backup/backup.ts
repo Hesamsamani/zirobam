@@ -23,7 +23,25 @@ const EXACT_KEYS: ReadonlySet<string> = new Set([
   'maker.draft.v1',
   'earStats.v1',
 ]);
-const KEY_PREFIXES: readonly string[] = ['ui.', 'xylo.', 'learn.', 'metronome.', 'practice.', 'ear.', 'scales.'];
+const KEY_PREFIXES: readonly string[] = [
+  'ui.',
+  'xylo.',
+  'learn.',
+  'metronome.',
+  'practice.',
+  'ear.',
+  'scales.',
+  // the practice tools and generators of the dictionary plan; listed now so that what they keep is saved from the first day
+  'generator.',
+  'band.',
+  'chords.',
+  'mic.',
+  'rhythm.',
+  'persian.',
+  'srs.',
+  'mistakes.',
+  'today.',
+];
 
 /** True for the browser keys that belong in a backup; everything else (other sites' data, devices) stays out. */
 export function isBackupKey(key: string): boolean {

@@ -55,6 +55,7 @@ import { ScalesView } from './scales/scalesView';
 import { buildTimingEventList, effectiveHand, normalizeNote, type TimingEvent } from './practice/timingEvents';
 import { soundOf } from './theory/pitch';
 import { beatsPerMeasure, countInBeats } from './core/timeSignature';
+import { PracticeMemory } from './stats/practiceMemory';
 import { WaitSession, countWaitNotes } from './practice/waitMode';
 import { PracticeOptionsStore, nextLadderBpm } from './practice/practiceOptions';
 import { PracticeAids } from './practice/practiceAids';
@@ -196,6 +197,8 @@ const gameStore = new GameStore({
   beginnerSongIds: BUILT_IN_SONGS.filter((s) => s.difficulty === 'beginner' && s.category !== 'exercise').map((s) => s.id),
 });
 const game = new GameController({ store: gameStore, toasts: new ToastCenter() });
+// what the student gets right and wrong, for the heat map and the daily plan
+const practiceMemory = new PracticeMemory();
 let gameHud: GameHud | null = null;
 let progressView: ProgressView | null = null;
 const scoreStore = new ScoreStore();
@@ -1009,6 +1012,7 @@ function setupLearnMode(): LearnHandle {
     onExit: () => shell?.navigate(learnReturnView),
     onAnswer: (result) => {
       game.answer(result.correct);
+      practiceMemory.noteAnswered(result.expectedPitch, result.correct);
       view.setCombo(gameStore.combo());
       if (result.unlockedStage) game.stage(result.unlockedStage);
     },
@@ -1262,7 +1266,10 @@ function setupNavigation(learn: LearnHandle) {
     hub: noteInput,
     formatName: (note) => formatNoteName(note, getNoteNameSystem()),
     onBack: () => appShell.navigate('home'),
-    onAnswer: (correct) => game.earAnswer(correct),
+    onAnswer: (correct, question) => {
+      game.earAnswer(correct);
+      practiceMemory.earAnswered(question, correct);
+    },
   });
   const scales = new ScalesView({
     toolkit: new VerovioToolkit(verovioModule) as unknown as NotationToolkit,
@@ -1502,8 +1509,10 @@ function showWaitTarget(first = false) {
 function handleWaitPress(playedNote: string) {
   const session = waitSession;
   if (!session) return;
+  const awaited = session.expected(); // the written notes this key is an answer to
   const press = session.press(playedNote);
   if (press.result === 'ignored') return;
+  practiceMemory.keyPressed(awaited, playedNote, press.result !== 'wrong');
 
   const notation = document.getElementById('notation')!;
   const current = Array.from(notation.querySelectorAll('.note.current'));
@@ -1567,6 +1576,7 @@ function checkNoteMatch(playedNote: string) {
 
   // Check if played note matches any expected pitch
   const matchedAny = expectedPitches.some(p => normalizeNote(p) === normalizedPlayed);
+  if (matchedAny) practiceMemory.keyPressed(expectedPitches, playedNote, true);
 
   // Get current note elements
   const currentElements = Array.from(notation.querySelectorAll('.note.current'));
@@ -1640,6 +1650,7 @@ function checkNoteMatch(playedNote: string) {
       hadMistake = true;
       mistakeCount++;
       unmarked.forEach((el) => el.classList.add('wrong'));
+      practiceMemory.keyPressed(expectedPitches, playedNote, false);
     }
   }
 }

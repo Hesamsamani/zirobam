@@ -62,8 +62,14 @@ describe('which keys are backed up', () => {
     }
   });
 
+  it('takes what the dictionary, generators and practice tools keep, so it is saved from the first day', () => {
+    for (const key of ['generator.v1', 'band.options.v1', 'chords.stats.v1', 'mic.v1', 'rhythm.stats.v1', 'rhythm.latency', 'persian.stats.v1', 'srs.v1', 'mistakes.v1', 'today.v1']) {
+      expect(isBackupKey(key), key).toBe(true);
+    }
+  });
+
   it('leaves out everything else', () => {
-    for (const key of ['midiDeviceId', 'practiceMusic', 'someOtherSite', '__proto__', 'ui', '']) {
+    for (const key of ['midiDeviceId', 'practiceMusic', 'someOtherSite', '__proto__', 'ui', '', 'srs', 'mistakes', 'todays', 'micro.v1', 'generators.v1']) {
       expect(isBackupKey(key), key).toBe(false);
     }
   });

@@ -4,8 +4,8 @@
 
 - **M0 done** (`72f16d9`): tokens, dialog, visual guard.
 - **M1 done**: pitch core and notation grammar (`src/theory/`), shared note-to-XML builder, 6/8, chord tokens, MIDI writer. Deviations from the plan: double signs are displayed `♯♯` and `♭♭` (the single-symbol glyphs are missing from most fonts); `keysPicture` still takes only `from`/`to` (its `rootNotes`, `quarter` and `heat` options come with the screens that use them, M4 and M13); the stand's count-in and measure maths now use `core/timeSignature.ts`, because a 6/8 song counted in six beats. Known and left for M6: the stand compares a played note with the staff by letter and octave, which is wrong for flat keys.
-- **M2 waits for the owner's review** of the Persian scale table: `docs/persian-scales-review.md`.
-- **M3 in progress**: `src/stats/` (`days`, `mistakeLog`, `srs`) is written and tested; the backup whitelist and the hooks are next. `MistakeLog` keeps `notes`, `chords` and `rhythm`, not a separate `keys` map: the keyboard heat map is derived from the notes with `keyName`.
+- **M3 done**: `src/stats/` (`days`, `mistakeLog`, `srs`, `practiceMemory`), the backup whitelist for every planned storage prefix, and the hooks in the quiz, ear training and the stand (wait and timed). `MistakeLog` keeps `notes`, `chords` and `rhythm`, not a separate `keys` map: the keyboard heat map is derived from the notes with `keyName`. The scales play-along is not hooked yet: `scalesView` is rewritten in M4, so it is wired there.
+- **M2 in progress.** The owner chose (2026-10-21) to build with the draft Persian table, marked `reviewed: false` in the data and approximate on screen; corrections are one-line data changes pinned by `scaleCatalog.test.ts`. See `docs/persian-scales-review.md`.
 
 ## Context
 

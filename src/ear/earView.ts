@@ -21,8 +21,8 @@ export interface EarViewDeps {
   hub: NoteInputHub;
   formatName(note: string): string;
   onBack(): void;
-  /** A question was answered (for the rewards). */
-  onAnswer(correct: boolean): void;
+  /** A question was answered (for the rewards and the practice memory). `question` is its key: `interval:m3`, `chord:major`. */
+  onAnswer(correct: boolean, question: string): void;
   random?: Rng;
 }
 
@@ -315,7 +315,7 @@ export class EarView {
     if (!question) return;
     this.done = true;
     this.deps.stats.record(question.key, question.stage, correct);
-    this.deps.onAnswer(correct);
+    this.deps.onAnswer(correct, question.key);
     this.next.textContent = t('ear.next');
     this.next.hidden = false;
     this.next.focus();

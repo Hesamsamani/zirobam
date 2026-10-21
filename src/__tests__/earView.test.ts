@@ -119,7 +119,8 @@ describe('EarView: a question with buttons', () => {
     answer(view, true);
     expect($('.ear-feedback').textContent).toBe('Right!');
     expect($('.ear-feedback').dataset.tone).toBe('good');
-    expect(onAnswer).toHaveBeenCalledWith(true);
+    // the answer comes with the key of the question, which the practice memory files it under
+    expect(onAnswer).toHaveBeenCalledWith(true, expect.stringMatching(/^(higher|interval:|chord:|play:)/));
     expect(stats.recent(1)).toEqual({ answered: 1, accuracy: 1 });
     expect($('.ear-next').hidden).toBe(false);
     expect(all<HTMLButtonElement>('.ear-choice').every((b) => b.disabled)).toBe(true);
@@ -130,7 +131,7 @@ describe('EarView: a question with buttons', () => {
     const { view, onAnswer, stats } = setup();
     answer(view, false);
     expect($('.ear-feedback').textContent).toMatch(/^Not quite\. It was: (The first|The second)\.$/);
-    expect(onAnswer).toHaveBeenCalledWith(false);
+    expect(onAnswer).toHaveBeenCalledWith(false, expect.stringMatching(/^(higher|interval:|chord:|play:)/));
     expect(stats.recent(1).accuracy).toBe(0);
     expect($('.ear-choice[data-state="wrong"]')).not.toBeNull();
   });
@@ -213,11 +214,12 @@ describe('EarView: play it back (stage 5)', () => {
   it('counts a note played back right as a right answer', async () => {
     const { view, stats, onAnswer } = stage5();
     askUntil(view, 'playNote');
-    const note = view.currentQuestion()!.notes[0];
+    const question = view.currentQuestion()!;
+    const note = question.notes[0];
     $(`.lk-key[data-note="${note}"]`).dispatchEvent(new Event('pointerdown', { bubbles: true, cancelable: true }));
     await flush();
     expect($('.ear-feedback').textContent).toBe('Right!');
-    expect(onAnswer).toHaveBeenLastCalledWith(true);
+    expect(onAnswer).toHaveBeenLastCalledWith(true, question.key);
     expect(stats.recent(5).accuracy).toBeGreaterThan(0);
   });
 
@@ -233,7 +235,7 @@ describe('EarView: play it back (stage 5)', () => {
     expect(onAnswer.mock.calls.length).toBe(calls); // not over yet
     $(`.lk-key[data-note="${q.notes[0]}"]`).dispatchEvent(new Event('pointerdown', { bubbles: true, cancelable: true }));
     await flush();
-    expect(onAnswer).toHaveBeenLastCalledWith(false);
+    expect(onAnswer).toHaveBeenLastCalledWith(false, q.key);
   });
 
   it('follows a melody note by note', async () => {
@@ -244,7 +246,7 @@ describe('EarView: play it back (stage 5)', () => {
     $(`.lk-key[data-note="${q.notes[0]}"]`).dispatchEvent(new Event('pointerdown', { bubbles: true, cancelable: true }));
     expect($('.ear-melody').textContent).toBe('Note 2 of 3');
     for (const note of q.notes.slice(1)) $(`.lk-key[data-note="${note}"]`).dispatchEvent(new Event('pointerdown', { bubbles: true, cancelable: true }));
-    expect(onAnswer).toHaveBeenLastCalledWith(true);
+    expect(onAnswer).toHaveBeenLastCalledWith(true, q.key);
     expect($('.ear-next').hidden).toBe(false);
   });
 
@@ -256,7 +258,7 @@ describe('EarView: play it back (stage 5)', () => {
     expect(onAnswer).not.toHaveBeenCalled();
     view.activate();
     for (const note of q.notes) hub.noteOn(note, 'midi');
-    expect(onAnswer).toHaveBeenCalledWith(true);
+    expect(onAnswer).toHaveBeenCalledWith(true, q.key);
   });
 });
 
