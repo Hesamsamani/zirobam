@@ -52,7 +52,7 @@ describe('MainMenu', () => {
 
   it('offers lessons, the quiz, levels, songs and the tools', () => {
     const ids = MENU_TILES.map((tileDef) => tileDef.id);
-    expect(ids).toEqual(expect.arrayContaining(['lessons', 'learn', 'ear', 'scales', 'levels', 'songs', 'catalog', 'generator', 'xylophone', 'metronome', 'progress', 'settings']));
+    expect(ids).toEqual(expect.arrayContaining(['lessons', 'learn', 'ear', 'scales', 'chords', 'levels', 'songs', 'catalog', 'generator', 'xylophone', 'metronome', 'progress', 'settings']));
   });
 
   it('keeps the lessons apart from the quiz', () => {
@@ -141,7 +141,7 @@ describe('MainMenu', () => {
     const { menu } = setup();
     const paths = Array.from(menu.element.querySelectorAll<HTMLElement>('.menu-paths [data-tile]')).map((b) => b.dataset.tile);
     const tools = Array.from(menu.element.querySelectorAll<HTMLElement>('.menu-tools [data-tile]')).map((b) => b.dataset.tile);
-    expect(paths).toEqual(['lessons', 'learn', 'ear', 'scales', 'levels', 'songs']);
+    expect(paths).toEqual(['lessons', 'learn', 'ear', 'scales', 'chords', 'levels', 'songs']);
     expect(tools).toEqual(['catalog', 'generator', 'xylophone', 'metronome', 'progress', 'settings']);
   });
 

@@ -50,6 +50,8 @@ interface Counters {
   xyloThreeStars: number;
   /** Right answers in ear training, and scales or chords played along. */
   earCorrect: number;
+  /** Right answers in the chord quiz. */
+  chordsCorrect: number;
   scalesPlayed: number;
   maxLevel: number;
   maxStage: number;
@@ -77,7 +79,7 @@ function emptyState(): State {
     days: {},
     counters: {
       correct: 0, bestCombo: 0, piecesPassed: 0, stepsPassed: 0, songsFinished: 0,
-      xyloSongs: 0, xyloThreeStars: 0, earCorrect: 0, scalesPlayed: 0, maxLevel: 1, maxStage: 1, lessonsRead: 0, lessonsTotal: 0,
+      xyloSongs: 0, xyloThreeStars: 0, earCorrect: 0, chordsCorrect: 0, scalesPlayed: 0, maxLevel: 1, maxStage: 1, lessonsRead: 0, lessonsTotal: 0,
     },
     songStars: {},
     xyloBest: {},
@@ -258,6 +260,13 @@ export class GameStore {
   recordEarAnswer(correct: boolean): Award {
     if (!correct) return this.award(0);
     this.state.counters.earCorrect++;
+    return this.award(3);
+  }
+
+  /** A chord of the chord quiz played right: 3 XP. */
+  recordChordAnswer(correct: boolean): Award {
+    if (!correct) return this.award(0);
+    this.state.counters.chordsCorrect++;
     return this.award(3);
   }
 

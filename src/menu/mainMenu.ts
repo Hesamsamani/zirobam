@@ -1,7 +1,7 @@
 import { t, type MessageKey } from '../i18n';
 import type { View } from '../app/router';
 
-export type TileId = 'lessons' | 'learn' | 'ear' | 'scales' | 'generator' | 'catalog' | 'levels' | 'songs' | 'xylophone' | 'metronome' | 'progress' | 'settings';
+export type TileId = 'lessons' | 'learn' | 'ear' | 'scales' | 'chords' | 'generator' | 'catalog' | 'levels' | 'songs' | 'xylophone' | 'metronome' | 'progress' | 'settings';
 
 export interface MenuTile {
   id: TileId;
@@ -19,6 +19,7 @@ export const MENU_TILES: readonly MenuTile[] = [
   { id: 'learn', group: 'path', title: 'menu.learn.title', desc: 'menu.learn.desc', target: { view: 'learn' } },
   { id: 'ear', group: 'path', title: 'menu.ear.title', desc: 'menu.ear.desc', target: { view: 'ear' } },
   { id: 'scales', group: 'path', title: 'menu.scales.title', desc: 'menu.scales.desc', target: { view: 'scales' } },
+  { id: 'chords', group: 'path', title: 'menu.chords.title', desc: 'menu.chords.desc', target: { view: 'chords' } },
   { id: 'levels', group: 'path', title: 'menu.levels.title', desc: 'menu.levels.desc', target: { view: 'levels' } },
   { id: 'songs', group: 'path', title: 'menu.songs.title', desc: 'menu.songs.desc', target: { view: 'songs' } },
   { id: 'catalog', group: 'tool', title: 'menu.catalog.title', desc: 'menu.catalog.desc', target: { view: 'catalog' } },
@@ -63,6 +64,7 @@ const ICONS: Readonly<Record<TileId, string>> = {
   scales: 'M3 19h3v-3h3v-3h3v-3h3V7h3V4M3 19h18',
   levels: 'M3 6h18M3 9.5h18M3 13h18M3 16.5h18M3 20h18M12.2 16.2a2.2 1.6 -20 1 0 .01 0M14.3 15.6V5',
   songs: 'M9 17.5V6l10-2v11.5M9 17.5a2.2 2.2 0 1 1-4.4 0 2.2 2.2 0 0 1 4.4 0zM19 15.5a2.2 2.2 0 1 1-4.4 0 2.2 2.2 0 0 1 4.4 0z',
+  chords: 'M8 6a2 2 0 1 0 .01 0M8 12a2 2 0 1 0 .01 0M8 18a2 2 0 1 0 .01 0M10 6V3h9M10 12V9h9M10 18v-3h9',
   generator: 'M5 5h14v14H5zM9 9h.01M15 9h.01M12 12h.01M9 15h.01M15 15h.01',
   catalog: 'M4 6h10M4 11h10M4 16h6M18.2 17.2a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM18.2 17.2V8l3 1',
   xylophone: 'M3.2 4h3.2v16H3.2zM8.6 4h3.2v13H8.6zM14 4h3.2v10H14zM19.4 4h1.8v7h-1.8z',

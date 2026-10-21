@@ -1,4 +1,7 @@
 import type { BandBackend } from '../band/bandPlayer';
+import { ChordsView } from '../chords/chordsView';
+import type { NoteInputHub } from '../input/noteInput';
+import { NoteStats } from '../learn/noteStats';
 import { GeneratorView } from '../generator/generatorView';
 import type { NotationToolkit } from '../learn/noteCard';
 import type { PianoVoice } from '../playback/pianoVoice';
@@ -26,6 +29,10 @@ export interface FeatureDeps {
   formatName(note: string): string;
   /** The backing band's sounds. */
   band: BandBackend;
+  /** Where the notes the student plays come from. */
+  hub: NoteInputHub;
+  /** A chord of the chord quiz was answered (for the rewards). */
+  onChordAnswer(correct: boolean): void;
   goHome(): void;
   /** Opens a score (MusicXML) on the practice stand. */
   practiseXml(xml: string, title: string): void;
@@ -44,6 +51,13 @@ export function createFeatureViews(deps: FeatureDeps): FeatureView[] {
       onBack: deps.goHome,
       practise: deps.practiseXml,
       openInMaker: deps.openInMaker,
+    }),
+    new ChordsView({
+      hub: deps.hub,
+      formatName: deps.formatName,
+      stats: new NoteStats(undefined, 'chords.stats.v1'),
+      onBack: deps.goHome,
+      onAnswer: (correct) => deps.onChordAnswer(correct),
     }),
   ];
 }

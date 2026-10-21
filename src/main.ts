@@ -4,6 +4,7 @@ import './styles/dialog.css';
 import './styles/dictionary.css';
 import './styles/chordDialog.css';
 import './styles/generator.css';
+import './styles/chords.css';
 import createVerovioModule from 'verovio/wasm';
 import { VerovioToolkit } from 'verovio/esm';
 import * as Tone from 'tone';
@@ -1296,6 +1297,8 @@ function setupNavigation(learn: LearnHandle) {
       trigger: (frequency, seconds, time, velocity) => void sampler?.triggerAttackRelease(frequency, seconds, time, velocity),
       releaseAll: () => void sampler?.releaseAll(),
     }),
+    hub: noteInput,
+    onChordAnswer: (correct) => void game.chordAnswer(correct),
     goHome: () => appShell.navigate('home'),
     practiseXml: (xml, title) => {
       if (isPlaying) stop();

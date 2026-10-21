@@ -1,0 +1,76 @@
+/* ============================================
+   CHORD READER (src/chords)
+   The name of the chord the keys make, a quiz, and the keys. The keys stay left to right.
+   ============================================ */
+
+.chords-view {
+  flex: 1;
+  inline-size: 100%;
+  max-inline-size: 900px;
+  margin-inline: auto;
+  padding: var(--space-xl) var(--space-lg);
+}
+
+@media (max-width: 560px) {
+  .chords-view {
+    padding: var(--space-lg) var(--space-md);
+  }
+}
+
+.ch-tabs {
+  margin-block: var(--space-md);
+}
+
+.ch-detect,
+.ch-quiz {
+  display: grid;
+  gap: var(--space-sm);
+  min-block-size: 11rem;
+  align-content: start;
+}
+
+.ch-name,
+.ch-target {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: clamp(2.6rem, 9vw, 4rem);
+  font-weight: 500;
+  line-height: 1.1;
+}
+
+.ch-kind,
+.ch-notes,
+.ch-hint,
+.ch-progress,
+.ch-ask {
+  margin: 0;
+  color: var(--text-soft);
+}
+
+.ch-kind {
+  color: var(--text);
+  font-size: 1.15rem;
+}
+
+.ch-status {
+  min-block-size: 1.5em;
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.ch-status[data-tone='good'] {
+  color: var(--correct);
+}
+
+.ch-status[data-tone='bad'] {
+  color: #e69a9a;
+}
+
+.ch-keys {
+  margin-block-start: var(--space-lg);
+}
+
+.ch-clear {
+  justify-self: start;
+  margin-block-start: var(--space-sm);
+}

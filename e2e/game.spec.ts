@@ -42,9 +42,9 @@ test.describe('Rewards on the home screen', () => {
     await page.locator('#mainMenu [data-tile="progress"]').click();
     await expect(page).toHaveURL(/#\/progress$/);
     await expect(page.locator('#progressView')).toBeVisible();
-    await expect(page.locator('.pv-badge')).toHaveCount(18);
+    await expect(page.locator('.pv-badge')).toHaveCount(19);
     await expect(page.locator('.pv-badge[data-state="earned"]')).toHaveCount(0);
-    await expect(page.locator('.pv-count')).toHaveText('0 of 18 earned');
+    await expect(page.locator('.pv-count')).toHaveText('0 of 19 earned');
     await page.locator('#progressView .back-btn').click();
     await expect(page.locator('#mainMenu')).toBeVisible();
   });
@@ -78,7 +78,7 @@ test.describe('Rewards for the note quiz', () => {
     await page.locator('#mainMenu [data-tile="progress"]').click();
     await expect(page.locator('.pv-badge[data-badge="first-note"]')).toHaveAttribute('data-state', 'earned');
     await expect(page.locator('.pv-badge[data-badge="lessons"]')).toHaveAttribute('data-state', 'locked');
-    await expect(page.locator('.pv-count')).toHaveText('1 of 18 earned');
+    await expect(page.locator('.pv-count')).toHaveText('1 of 19 earned');
     await expect(page.locator('[data-stat="correct"] dd')).toHaveText('1');
   });
 
@@ -213,7 +213,7 @@ test.describe('The progress screen', () => {
     await page.locator('.pv-reset').click();
     await page.locator('.pv-reset-yes').click();
     await expect(page.locator('#progressView .hud-rank-name')).toHaveText('Rank 1');
-    await expect(page.locator('.pv-count')).toHaveText('0 of 18 earned');
+    await expect(page.locator('.pv-count')).toHaveText('0 of 19 earned');
     expect((await saved(page)).xp).toBe(0);
     expect((await saved(page)).goal).toBe(50);
     expect(dialogs).toBe(0);
@@ -248,7 +248,7 @@ test.describe('Rewards in Persian', () => {
     await expect(page.locator('#mainMenu .hud-goal-text')).toHaveText('امروز: ۰ از ۵۰ امتیاز');
     await page.locator('#mainMenu [data-tile="progress"]').click();
     await expect(page.locator('#progressView h2')).toHaveText('پیشرفت');
-    await expect(page.locator('.pv-count')).toHaveText('۰ از ۱۸ نشان به دست آمده');
+    await expect(page.locator('.pv-count')).toHaveText('۰ از ۱۹ نشان به دست آمده');
     await expect(page.locator('.pv-badge[data-badge="first-note"] .pv-badge-title')).toHaveText('نخستین نت');
   });
 });

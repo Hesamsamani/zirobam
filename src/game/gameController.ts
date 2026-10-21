@@ -26,6 +26,10 @@ export class GameController {
     return this.announce(this.store.recordEarAnswer(correct));
   }
 
+  chordAnswer(correct: boolean): Award {
+    return this.announce(this.store.recordChordAnswer(correct));
+  }
+
   scalePlayed(): Award {
     return this.announce(this.store.recordScalePlayed());
   }
