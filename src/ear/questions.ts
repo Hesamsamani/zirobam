@@ -1,5 +1,10 @@
 /** Ear training questions: pure and seeded, so they can be tested and so a seed gives the same questions. */
 
+import { seededRng, type Rng } from '../core/rng';
+
+// the generator moved to core/rng.ts; the ear exercises and their tests still take it from here
+export { seededRng, type Rng };
+
 export const EAR_STAGES = 5;
 
 export type IntervalId = 'm2' | 'M2' | 'm3' | 'M3' | 'P4' | 'TT' | 'P5' | 'm6' | 'M6' | 'm7' | 'M7' | 'P8';
@@ -30,20 +35,6 @@ export function noteToMidi(note: string): number {
 
 export function midiToNote(midi: number): string {
   return `${NAMES[((midi % 12) + 12) % 12]}${Math.floor(midi / 12) - 1}`;
-}
-
-export type Rng = () => number;
-
-/** A small seeded random number generator (mulberry32): numbers from 0 up to, not including, 1. */
-export function seededRng(seed: number): Rng {
-  let state = seed >>> 0;
-  return () => {
-    state = (state + 0x6d2b79f5) >>> 0;
-    let t = state;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
 }
 
 /** Notes that sound together, `at` seconds after the start, for `length` seconds. */

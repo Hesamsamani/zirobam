@@ -54,6 +54,7 @@ import { PwaPanel } from './pwa/pwaPanel';
 import { SongMakerView } from './songs/songMakerView';
 import { EarView } from './ear/earView';
 import { ScalesView } from './scales/scalesView';
+import { noteheadMatchesKey } from './practice/noteMatch';
 import { buildTimingEventList, effectiveHand, normalizeNote, type TimingEvent } from './practice/timingEvents';
 import { soundOf } from './theory/pitch';
 import { beatsPerMeasure, countInBeats } from './core/timeSignature';
@@ -1601,13 +1602,9 @@ function checkNoteMatch(playedNote: string) {
       const basePitch = (elemData.pname as string).toUpperCase();
       const octave = elemData.oct;
 
-      // Check if played note matches this element's base pitch
-      // The played note is already normalized (e.g., 'G#4')
-      // We need to check if the base letter and octave match
-      const playedBase = normalizedPlayed.charAt(0);
-      const playedOctave = normalizedPlayed.slice(-1);
-
-      if (basePitch === playedBase && octave === playedOctave) {
+      // The notehead is the one when an expected note is written on its letter and octave and is struck on the pressed key
+      // (a flat is drawn on its own letter and played on the sharp key before the next one)
+      if (noteheadMatchesKey(expectedPitches, basePitch, String(octave), normalizedPlayed)) {
         el.classList.add('correct');
         el.classList.remove('wrong');
         notesPlayed++; // Track that user played this note correctly
@@ -1636,10 +1633,8 @@ function checkNoteMatch(playedNote: string) {
 
         const basePitch = (elemData.pname as string).toUpperCase();
         const octave = elemData.oct;
-        const playedBase = normalizedPlayed.charAt(0);
-        const playedOctave = normalizedPlayed.slice(-1);
 
-        if (basePitch === playedBase && octave === playedOctave) {
+        if (noteheadMatchesKey(upcomingEvent.pitches, basePitch, String(octave), normalizedPlayed)) {
           el.setAttribute('data-early-correct', 'true');
           matchedUpcoming = true;
           break;
