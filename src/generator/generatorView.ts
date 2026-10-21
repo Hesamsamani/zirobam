@@ -1,3 +1,5 @@
+import { BAND_PARTS, type BandPart } from '../band/patterns';
+import { BandPlayer, TRANSPOSE_MAX, TRANSPOSE_MIN, type BandBackend } from '../band/bandPlayer';
 import { downloadBytes } from '../backup/download';
 import { formatNumber, t, type MessageKey } from '../i18n';
 import { freshSeed } from '../core/rng';
@@ -50,6 +52,8 @@ export interface GeneratorViewDeps {
   readAddress?(): string;
   /** Puts the query into the address without a new step in the history. */
   writeAddress?(query: string): void;
+  /** The backing band's sounds; without them the Band tab has nothing to play with. */
+  band?: BandBackend;
   storage?: ChoiceStorage;
   download?(fileName: string, bytes: Uint8Array): void;
   notify?(text: string): void;
@@ -91,6 +95,8 @@ export class GeneratorView {
   private readonly score: HTMLElement;
   private readonly actions: HTMLElement;
   private readonly status: HTMLElement;
+  private readonly band: HTMLElement;
+  private readonly bandPlayer: BandPlayer | null;
 
   private state: GeneratorState;
   private piece: GeneratedPiece | null = null;
@@ -131,9 +137,20 @@ export class GeneratorView {
     this.actions = make('div', 'sc-actions gen-actions');
     this.status = make('p', 'gen-status');
     this.status.setAttribute('role', 'status');
+    this.band = make('section', 'gen-band');
+    this.bandPlayer = deps.band ? new BandPlayer(deps.band) : null;
+    this.bandPlayer?.onBeat((beat, chord) => {
+      this.markBar(Math.floor(beat / 4));
+      const now = this.band.querySelector('.band-now');
+      if (now && chord) now.textContent = t('band.now', { chord: chordSymbol(chord.chord, this.deps.formatName) });
+    });
+    this.bandPlayer?.onState((playing) => {
+      if (!playing) this.markBar(null);
+      this.drawActions();
+    });
 
     const main = make('div', 'dict-main');
-    main.append(this.tabs, this.controls, this.summary, this.problem, this.ribbon, this.actions, this.status, this.score);
+    main.append(this.tabs, this.controls, this.summary, this.problem, this.ribbon, this.actions, this.band, this.status, this.score);
     const layout = make('div', 'dict-layout');
     layout.append(this.aside, main);
     this.element.append(header, layout);
@@ -209,6 +226,8 @@ export class GeneratorView {
 
     const result = buildPiece(state, `${this.scaleTitle()} ${t(`gen.style.${state.style}` as MessageKey)}`.slice(0, MAX_TITLE));
     this.piece = result.ok ? result.piece : null;
+    this.bandPlayer?.setProgression(state.tab === 'band' ? (this.piece?.progression ?? null) : null);
+    if (this.piece) this.bandPlayer?.setBpm(this.piece.bpm);
     this.drawTabs();
     this.drawControls();
     this.problem.hidden = result.ok;
@@ -217,8 +236,10 @@ export class GeneratorView {
     this.drawSummary();
     this.drawRibbon();
     this.drawActions();
-    // the staff is the costly part: it is not drawn while the screen is hidden (the shell hides it with this class), and is when it is shown
-    if (this.element.classList.contains('view-hidden')) this.score.replaceChildren();
+    this.drawBand();
+    // the staff is the costly part: it is not drawn while the screen is hidden (the shell hides it with this class), and is when it is shown;
+    // the Band tab has no staff
+    if (this.element.classList.contains('view-hidden') || state.tab === 'band') this.score.replaceChildren();
     else this.drawScore();
   }
 
@@ -252,7 +273,7 @@ export class GeneratorView {
   private drawTabs(): void {
     this.tabs.setAttribute('aria-label', t('gen.tabs'));
     this.tabs.replaceChildren(
-      ...(['prog', 'melody'] as const).map((tab: GenTab) => {
+      ...(['prog', 'melody', 'band'] as const).map((tab: GenTab) => {
         const button = this.chip(t(`gen.tab.${tab}` as MessageKey), this.state.tab === tab, { tab }, () => this.set({ tab }));
         button.classList.add('sc-tab');
         return button;
@@ -420,7 +441,8 @@ export class GeneratorView {
       b.addEventListener('click', onClick);
       return b;
     };
-    const play = button('sc-hear gen-play', t(this.playing ? 'gen.stop' : 'gen.play'), () => (this.playing ? this.stopSound() : void this.play()), !piece);
+    const sounding = this.playing || Boolean(this.bandPlayer?.isPlaying());
+    const play = button('sc-hear gen-play', t(sounding ? 'gen.stop' : 'gen.play'), () => (sounding ? this.stopSound() : void this.play()), !piece || (this.state.tab === 'band' && !this.bandPlayer));
     const midi = button('sc-along gen-midi', t('gen.midi'), () => this.saveMidi(), !piece);
     const practise = button('sc-along gen-practise', t('gen.practise'), () => piece && this.deps.practise(pieceXml(piece), piece.title), !piece);
     const maker = button('sc-along gen-maker', t('gen.maker'), () => void this.openMaker(), !piece?.melody);
@@ -454,6 +476,52 @@ export class GeneratorView {
     this.score.replaceChildren(...lines);
   }
 
+  // ----- the band -----
+
+  private drawBand(): void {
+    const player = this.bandPlayer;
+    const show = this.state.tab === 'band' && Boolean(player) && Boolean(this.piece?.progression);
+    this.band.hidden = !show;
+    if (!show || !player) {
+      this.band.replaceChildren();
+      return;
+    }
+    const settings = player.getSettings();
+    const hint = make('p', 'gen-note');
+    hint.textContent = t('band.hint');
+    const now = make('p', 'band-now');
+    now.setAttribute('role', 'status');
+    const toggles = this.group(t('band.parts'), 'band-parts', [
+      this.chip(t('band.loop'), settings.loop, { toggle: 'loop' }, () => {
+        player.setLoop(!player.getSettings().loop);
+        this.drawBand();
+      }),
+      this.chip(t('band.countIn'), settings.countIn, { toggle: 'countIn' }, () => {
+        player.setCountIn(!player.getSettings().countIn);
+        this.drawBand();
+      }),
+      ...BAND_PARTS.map((part: BandPart) =>
+        this.chip(t(`band.${part}` as MessageKey), !player.isMuted(part), { part }, () => {
+          player.setMuted(part, !player.isMuted(part));
+          this.drawBand();
+        }),
+      ),
+    ]);
+    const shift = (by: number): void => {
+      player.setTranspose(player.getSettings().transpose + by);
+      this.drawBand();
+    };
+    const down = this.chip('−', false, { transpose: 'down' }, () => shift(-1));
+    const up = this.chip('+', false, { transpose: 'up' }, () => shift(1));
+    down.disabled = settings.transpose <= TRANSPOSE_MIN;
+    up.disabled = settings.transpose >= TRANSPOSE_MAX;
+    const value = make('span', 'band-transpose-value');
+    value.setAttribute('dir', 'ltr');
+    value.textContent = `${settings.transpose > 0 ? '+' : ''}${formatNumber(settings.transpose)}`;
+    const transpose = this.group(t('band.transpose'), 'band-transpose', [down, value, up]);
+    this.band.replaceChildren(hint, toggles, transpose, now);
+  }
+
   // ----- sound and files -----
 
   private async ready(): Promise<boolean> {
@@ -471,6 +539,10 @@ export class GeneratorView {
 
   private async play(): Promise<void> {
     const piece = this.piece;
+    if (this.state.tab === 'band') {
+      if ((await this.bandPlayer?.play()) === 'noSound') this.status.textContent = t('ear.noSound');
+      return;
+    }
     if (!piece || !(await this.ready())) return;
     this.status.textContent = '';
     this.deps.voice.stopAll();
@@ -487,6 +559,7 @@ export class GeneratorView {
   }
 
   private stopSound(): void {
+    this.bandPlayer?.stop();
     for (const timer of this.timers) window.clearTimeout(timer);
     this.timers = [];
     this.deps.voice.stopAll();

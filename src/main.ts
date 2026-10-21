@@ -68,6 +68,7 @@ import { BackupPanel, type BackupPanelDeps } from './backup/backupView';
 import { downloadTextFile } from './backup/download';
 import { buildDraft, newMakerId } from './songs/songMaker';
 import { createFeatureViews } from './app/featureViews';
+import { createToneBackend } from './band/toneBackend';
 import { XylophoneView } from './xylophone/xylophoneView';
 import { PracticePanel } from './practice/practicePanel';
 import { songTitle } from './songs/songText';
@@ -1290,6 +1291,11 @@ function setupNavigation(learn: LearnHandle) {
     newToolkit: () => new VerovioToolkit(verovioModule) as unknown as NotationToolkit,
     voice: { ...pianoVoice, ready: async () => (await Tone.start(), pianoVoice.ready()) },
     formatName: (note) => formatNoteName(note, getNoteNameSystem()),
+    band: createToneBackend(Tone, {
+      ready: async () => (await Tone.start(), pianoVoice.ready()),
+      trigger: (frequency, seconds, time, velocity) => void sampler?.triggerAttackRelease(frequency, seconds, time, velocity),
+      releaseAll: () => void sampler?.releaseAll(),
+    }),
     goHome: () => appShell.navigate('home'),
     practiseXml: (xml, title) => {
       if (isPlaying) stop();

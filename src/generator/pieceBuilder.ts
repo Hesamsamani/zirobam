@@ -14,7 +14,7 @@ export type BuildResult = { ok: true; piece: GeneratedPiece } | { ok: false; rea
  */
 export function buildPieceFor(scale: SpelledScale, state: GeneratorState, title: string): BuildResult {
   const progression = generateProgression({ scale, style: state.style, bars: state.bars, seed: state.seed, bpm: state.bpm ?? undefined });
-  const withChords = state.tab === 'prog' || state.over === 'progression';
+  const withChords = state.tab !== 'melody' || state.over === 'progression';
   if (withChords && progression.chords.length === 0) return { ok: false, reason: 'noChords' };
   const melody =
     state.tab === 'melody'

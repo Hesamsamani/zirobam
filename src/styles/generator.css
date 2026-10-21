@@ -198,3 +198,32 @@
     transition: none;
   }
 }
+
+/* ----- the band ----- */
+
+.gen-band {
+  display: grid;
+  gap: var(--space-md);
+  margin-block: var(--space-md);
+  padding: var(--space-md);
+  background: var(--surface-1);
+  border: 1px solid var(--line-faint);
+  border-radius: var(--radius-3xl);
+}
+
+.gen-group-band-transpose .sc-chips {
+  align-items: center;
+}
+
+.band-transpose-value {
+  min-inline-size: 2.5em;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.band-now {
+  min-block-size: 1.6em;
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 1.3rem;
+}

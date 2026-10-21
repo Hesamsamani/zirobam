@@ -61,7 +61,7 @@ describe('the music maker: what it shows', () => {
   it('has a title, a picker for the scale, two tabs and the thirteen styles', () => {
     setup();
     expect($('.view-title').textContent).toBe('Music maker');
-    expect(all('.gen-tabs .sc-tab').map((b) => b.textContent)).toEqual(['Progression', 'Melody']);
+    expect(all('.gen-tabs .sc-tab').map((b) => b.textContent)).toEqual(['Progression', 'Melody', 'Band']);
     expect(all('.gen-group-style .sc-chip')).toHaveLength(13);
     expect(all('.gen-group-bars .sc-chip').map((b) => b.textContent)).toEqual(['4', '8', '12', '16']);
     expect(all('.dict-picker .sc-roots .sc-chip')).toHaveLength(12);
@@ -359,7 +359,7 @@ describe('the music maker: leaving, language', () => {
     const { view } = setup();
     view.refresh();
     expect($('.view-title').textContent).toBe('سازنده‌ی موسیقی');
-    expect(all('.gen-tabs .sc-tab').map((b) => b.textContent)).toEqual(['گردش آکورد', 'ملودی']);
+    expect(all('.gen-tabs .sc-tab').map((b) => b.textContent)).toEqual(['گردش آکورد', 'ملودی', 'گروه']);
     expect(all('.gen-group-bars .sc-chip').map((b) => b.textContent)).toEqual(['۴', '۸', '۱۲', '۱۶']);
     expect($('.gen-summary').textContent).toMatch(/۸ میزان/);
     expect($('.gen-chord-symbol').getAttribute('dir')).toBe('ltr');

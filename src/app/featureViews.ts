@@ -1,3 +1,4 @@
+import type { BandBackend } from '../band/bandPlayer';
 import { GeneratorView } from '../generator/generatorView';
 import type { NotationToolkit } from '../learn/noteCard';
 import type { PianoVoice } from '../playback/pianoVoice';
@@ -23,6 +24,8 @@ export interface FeatureDeps {
   voice: PianoVoice;
   /** A note name, with or without an octave, as the student has chosen to read it. */
   formatName(note: string): string;
+  /** The backing band's sounds. */
+  band: BandBackend;
   goHome(): void;
   /** Opens a score (MusicXML) on the practice stand. */
   practiseXml(xml: string, title: string): void;
@@ -36,6 +39,7 @@ export function createFeatureViews(deps: FeatureDeps): FeatureView[] {
     new GeneratorView({
       toolkit: deps.newToolkit(),
       voice: deps.voice,
+      band: deps.band,
       formatName: deps.formatName,
       onBack: deps.goHome,
       practise: deps.practiseXml,

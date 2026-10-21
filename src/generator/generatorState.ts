@@ -6,7 +6,7 @@ import type { Contour, MelodyRange } from './melody';
 import { METER_IDS, type Density, type MeterId, type RhythmFeel } from './rhythmCells';
 import { STYLE_IDS, type StyleId } from './styles';
 
-export type GenTab = 'prog' | 'melody';
+export type GenTab = 'prog' | 'melody' | 'band';
 export type Over = 'scale' | 'progression';
 export const BAR_CHOICES = [4, 8, 12, 16] as const;
 export const OCTAVES = [3, 4, 5] as const;
@@ -90,7 +90,7 @@ export function stateFromQuery(query: string, base: GeneratorState): GeneratorSt
   const params = new URLSearchParams(query.replace(/^[?#]+/, ''));
   const next: GeneratorState = { ...base };
 
-  next.tab = oneOf<GenTab>(['prog', 'melody'], params.get('t')) ?? base.tab;
+  next.tab = oneOf<GenTab>(['prog', 'melody', 'band'], params.get('t')) ?? base.tab;
   const named = params.get('s') ? parseParam(params.get('s')!) : null;
   if (named) {
     next.root = named.root;
@@ -142,7 +142,7 @@ export function readSettings(storage: ChoiceStorage = browserStorage): Generator
     const bpm = typeof d.bpm === 'number' && Number.isInteger(d.bpm) && d.bpm >= BPM_MIN && d.bpm <= BPM_MAX ? d.bpm : null;
     const scale = oneOf(SCALE_IDS, d.scale) ?? DEFAULT_SETTINGS.scale;
     const settings: GeneratorSettings = {
-      tab: oneOf<GenTab>(['prog', 'melody'], d.tab) ?? DEFAULT_SETTINGS.tab,
+      tab: oneOf<GenTab>(['prog', 'melody', 'band'], d.tab) ?? DEFAULT_SETTINGS.tab,
       root: validRoot(d.root) ?? DEFAULT_SETTINGS.root,
       scale,
       category: oneOf<CategoryChoice>(['all', ...SCALE_CATEGORIES], d.category) ?? getScale(scale).category,
