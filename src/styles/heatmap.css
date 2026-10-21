@@ -1,0 +1,117 @@
+/* ============================================
+   MISTAKE HEAT MAP (src/stats/heatmapView.ts), on the progress screen
+   A keyboard whose keys take a warmer colour the more they are missed, lists, a bar for the rhythm and a line by week.
+   The numbers are always written too: colour is never the only signal.
+   ============================================ */
+
+.heatmap {
+  display: grid;
+  gap: var(--space-sm);
+  margin-block: var(--space-lg);
+  padding: var(--space-md);
+  background: var(--surface-1);
+  border: 1px solid var(--line-faint);
+  border-radius: var(--radius-3xl);
+}
+
+.hm-title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+
+.hm-sub {
+  margin: var(--space-sm) 0 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.hm-period,
+.hm-empty,
+.hm-line {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.9rem;
+}
+
+.hm-slips {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-inline-start: 1.2rem;
+}
+
+.hm-slip {
+  font-variant-numeric: tabular-nums;
+}
+
+/* the keys: from a faint amber to a deep red, on the cream of the keys */
+.hm-keys .lk-key.lk-heat.heat-1 {
+  background: #f6e2b0;
+}
+
+.hm-keys .lk-key.lk-heat.heat-2 {
+  background: #f0c477;
+}
+
+.hm-keys .lk-key.lk-heat.heat-3 {
+  background: #e79a52;
+}
+
+.hm-keys .lk-key.lk-heat.heat-4 {
+  background: #d4623c;
+}
+
+.hm-keys .lk-key.lk-heat.heat-5 {
+  background: #b02f2f;
+}
+
+.hm-keys .lk-key.black.lk-heat {
+  box-shadow: inset 0 0 0 2px currentColor;
+}
+
+.hm-rhythm {
+  display: flex;
+  block-size: 14px;
+  overflow: hidden;
+  background: var(--surface-3);
+  border-radius: var(--radius-pill);
+}
+
+.hm-seg {
+  flex-basis: 0;
+}
+
+.hm-hit {
+  background: var(--correct);
+}
+
+.hm-early {
+  background: #6a8fd0;
+}
+
+.hm-late {
+  background: var(--current);
+}
+
+.hm-missed {
+  background: var(--wrong);
+}
+
+.hm-chart {
+  inline-size: min(100%, 360px);
+  block-size: auto;
+  background: var(--surface-2);
+  border-radius: var(--radius-lg);
+}
+
+.hm-line-path {
+  fill: none;
+  stroke: var(--current);
+  stroke-width: 2;
+}
+
+.hm-dot {
+  fill: var(--current);
+}

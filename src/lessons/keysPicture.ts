@@ -11,6 +11,8 @@ export interface KeysPictureOptions {
   rootNotes?: readonly string[];
   /** Keys that stand for a quarter tone, by key name: the kind, and the word that names it (shown on the key and read out). */
   quarter?: Readonly<Record<string, { kind: 'koron' | 'sori'; label: string }>>;
+  /** Keys (`C#4`) that are missed often: from 1 to 5, a darker key for a higher number (the mistake heat map). */
+  heat?: Readonly<Record<string, number>>;
   /** A note with its octave ("C#4") to the name shown on the key ("C♯"). */
   formatName(note: string): string;
   /** Fills in note tokens and digits of a mark. */
@@ -71,6 +73,11 @@ export function buildKeysPicture(options: KeysPictureOptions): HTMLElement {
     const quarter = options.quarter?.[key.noteName];
     button.setAttribute('aria-label', quarter ? `${options.formatName(key.noteName)} ${quarter.label}` : options.formatName(key.noteName));
     if (options.rootNotes?.includes(key.noteName)) button.classList.add('lk-root');
+    const heat = options.heat?.[key.noteName];
+    if (heat) {
+      button.classList.add('lk-heat', `heat-${heat}`);
+      button.dataset.heat = String(heat);
+    }
     if (quarter) {
       button.classList.add('lk-quarter');
       button.dataset.quarter = quarter.kind;

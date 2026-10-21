@@ -151,3 +151,16 @@ describe('buildKeysPicture', () => {
     expect(parseFloat(keyOf(root, 'A#3').style.left)).toBeGreaterThanOrEqual(0);
   });
 });
+
+describe('buildKeysPicture: heat', () => {
+  it('gives the keys that are missed a heat class and number, and leaves the others alone', () => {
+    const picture = buildKeysPicture({ from: 'C4', to: 'C5', names: 'none', heat: { C4: 2, 'F#4': 5 }, formatName: (n) => n, formatMark: (m) => m, ariaLabel: 'keys' });
+    const c4 = picture.querySelector<HTMLElement>('.lk-key[data-note="C4"]')!;
+    expect(c4.classList.contains('lk-heat')).toBe(true);
+    expect(c4.classList.contains('heat-2')).toBe(true);
+    expect(c4.dataset.heat).toBe('2');
+    expect(picture.querySelector<HTMLElement>('.lk-key[data-note="F#4"]')!.dataset.heat).toBe('5');
+    expect(picture.querySelectorAll('.lk-heat')).toHaveLength(2);
+    expect(picture.querySelector('.lk-key[data-note="D4"]')!.classList.contains('lk-heat')).toBe(false);
+  });
+});

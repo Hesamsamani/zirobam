@@ -10,6 +10,8 @@ export interface ProgressViewDeps {
   onBack(): void;
   /** Something to show under the progress, such as the backup panel. */
   footer?: HTMLElement;
+  /** The mistake heat map, shown between the numbers and the footer. */
+  heatmap?: { element: HTMLElement; refresh(): void };
 }
 
 const STATS: ReadonlyArray<{ id: string; label: MessageKey; value: (s: ReturnType<GameStore['stats']>) => number }> = [
@@ -64,6 +66,7 @@ export class ProgressView {
     this.hud = new GameHud(deps.store);
     this.body = make('div', 'pv-body');
     this.element.append(header, this.hud.element, this.body);
+    if (deps.heatmap) this.element.appendChild(deps.heatmap.element);
     if (deps.footer) this.element.appendChild(deps.footer);
 
     this.unsubscribe = deps.store.onChange(() => this.render());
@@ -71,6 +74,7 @@ export class ProgressView {
   }
 
   refresh(): void {
+    this.deps.heatmap?.refresh();
     this.hud.refresh();
     this.render();
   }

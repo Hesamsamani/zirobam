@@ -8,6 +8,7 @@ import './styles/chords.css';
 import './styles/tuner.css';
 import './styles/rhythm.css';
 import './styles/persian.css';
+import './styles/heatmap.css';
 import createVerovioModule from 'verovio/wasm';
 import { VerovioToolkit } from 'verovio/esm';
 import * as Tone from 'tone';
@@ -75,6 +76,7 @@ import { createFeatureViews } from './app/featureViews';
 import { createToneBackend } from './band/toneBackend';
 import { formatParam } from './scales/dictionaryState';
 import { MicInput, type AudioContextLike } from './audio/micInput';
+import { HeatmapView } from './stats/heatmapView';
 import { XylophoneView } from './xylophone/xylophoneView';
 import { PracticePanel } from './practice/practicePanel';
 import { songTitle } from './songs/songText';
@@ -1244,7 +1246,12 @@ function setupNavigation(learn: LearnHandle) {
     progressBackup.refresh();
     pwaPanel.refresh();
   });
-  const progress = new ProgressView({ store: gameStore, onBack: () => appShell.navigate('home'), footer: progressBackup.element });
+  const heatmap = new HeatmapView({
+    log: practiceMemory.log,
+    formatName: (note) => formatNoteName(note, getNoteNameSystem()),
+    formatNameWithOctave: (note) => formatNoteName(note, getNoteNameSystem(), { octave: true }),
+  });
+  const progress = new ProgressView({ store: gameStore, onBack: () => appShell.navigate('home'), footer: progressBackup.element, heatmap });
   // The xylophone draws its staff notes with its own notation engine, so the quiz keeps its settings
   const xylophone = new XylophoneView({
     hub: noteInput,

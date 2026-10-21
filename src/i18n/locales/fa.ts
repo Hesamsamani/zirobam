@@ -7,6 +7,7 @@ import { chordsFa } from './parts/chords.fa';
 import { tunerFa } from './parts/tuner.fa';
 import { rhythmFa } from './parts/rhythm.fa';
 import { persianFa } from './parts/persian.fa';
+import { heatmapFa } from './parts/heatmap.fa';
 import { theoryFa } from './parts/theory.fa';
 import { uiFa } from './parts/ui.fa';
 
@@ -658,4 +659,5 @@ export const fa: Record<MessageKey, string> = {
   ...tunerFa,
   ...rhythmFa,
   ...persianFa,
+  ...heatmapFa,
 };
