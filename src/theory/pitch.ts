@@ -14,7 +14,10 @@ export interface Pitch {
   octave: number;
 }
 
-const STEP_SEMITONES: Readonly<Record<Step, number>> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+/** The seven letters, from C. */
+export const STEPS: readonly Step[] = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+/** Semitones from C to each letter's own note. */
+export const STEP_SEMITONES: Readonly<Record<Step, number>> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
 const SHARP_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'] as const;
 
 const SIGN_ALTER: Readonly<Record<string, Alter>> = {

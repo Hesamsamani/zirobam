@@ -1,3 +1,4 @@
+import { keyAlter } from '../theory/keySignature';
 import { accidentalToken, MUSICXML_ACCIDENTAL, pitchMidi, type Alter, type Step } from '../theory/pitch';
 import type { BuiltInSong } from './index';
 
@@ -138,15 +139,6 @@ export function parseMelody(text: string, beats: number, beatType: number, stric
     }
   });
   return measures;
-}
-
-const SHARP_ORDER = ['F', 'C', 'G', 'D', 'A', 'E', 'B'];
-const FLAT_ORDER = ['B', 'E', 'A', 'D', 'G', 'C', 'F'];
-
-export function keyAlter(step: string, fifths: number): number {
-  if (fifths > 0 && SHARP_ORDER.slice(0, fifths).includes(step)) return 1;
-  if (fifths < 0 && FLAT_ORDER.slice(0, -fifths).includes(step)) return -1;
-  return 0;
 }
 
 function escapeXml(text: string): string {

@@ -1,4 +1,5 @@
 import type { MessageKey } from './en';
+import { theoryFa } from './parts/theory.fa';
 import { uiFa } from './parts/ui.fa';
 
 export const fa: Record<MessageKey, string> = {
@@ -650,4 +651,5 @@ export const fa: Record<MessageKey, string> = {
 
   // Feature parts (src/i18n/locales/parts)
   ...uiFa,
+  ...theoryFa,
 };

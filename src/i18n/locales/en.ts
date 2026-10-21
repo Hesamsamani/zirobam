@@ -1,3 +1,4 @@
+import { theoryEn } from './parts/theory.en';
 import { uiEn } from './parts/ui.en';
 
 export const en = {
@@ -650,6 +651,7 @@ export const en = {
 
   // Feature parts (src/i18n/locales/parts)
   ...uiEn,
+  ...theoryEn,
 } as const;
 
 export type MessageKey = keyof typeof en;
