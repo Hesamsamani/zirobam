@@ -67,9 +67,9 @@ if git grep -nIiE 'ghp_[A-Za-z0-9]{20}|github_pat_[A-Za-z0-9_]{20}|BEGIN (RSA|OP
   echo "FAIL: something that looks like a secret is in a file" >&2
   bad=1
 fi
-if git grep -nIF 'C:\Users' >/dev/null; then
+if git grep -nIF 'C:\Users' -- . ':!scripts/publish.sh' >/dev/null; then
   echo "FAIL: a local user path is in a file:" >&2
-  git grep -nIF 'C:\Users' >&2 || true
+  git grep -nIF 'C:\Users' -- . ':!scripts/publish.sh' >&2 || true
   bad=1
 fi
 [ "$bad" = "0" ] || { echo "nothing was pushed" >&2; exit 1; }
