@@ -6,6 +6,7 @@ import { tunerEn } from './parts/tuner.en';
 import { rhythmEn } from './parts/rhythm.en';
 import { persianEn } from './parts/persian.en';
 import { heatmapEn } from './parts/heatmap.en';
+import { todayEn } from './parts/today.en';
 import { dictionaryEn } from './parts/dictionary.en';
 import { theoryEn } from './parts/theory.en';
 import { uiEn } from './parts/ui.en';
@@ -583,6 +584,8 @@ export const en = {
   'badge.rhythm.desc': 'Tap 5 rhythms on time in the rhythm trainer.',
   'badge.persian.title': 'Quarter-tone ear',
   'badge.persian.desc': 'Give 10 right answers in the quarter-tone ear training.',
+  'badge.today.title': 'A plan done',
+  'badge.today.desc': 'Finish a whole plan of the day.',
   'badge.scales.title': 'Scale player',
   'badge.scales.desc': 'Play along with 5 scales or chords.',
   'game.stat.ear': 'Ear training answers',
@@ -660,6 +663,7 @@ export const en = {
   ...rhythmEn,
   ...persianEn,
   ...heatmapEn,
+  ...todayEn,
 } as const;
 
 export type MessageKey = keyof typeof en;

@@ -34,6 +34,12 @@ export class PracticeMemory {
     for (const answer of answersFromPress(expected, played, right)) this.noteAnswered(answer.note, answer.correct);
   }
 
+  /** A chord of the chord quiz was answered; `symbol` is how it was asked (`Cm7`, `C/E`). */
+  chordAnswered(symbol: string, correct: boolean): void {
+    this.log.recordChord(symbol, !correct);
+    this.srs.review(`chord:${symbol}`, correct);
+  }
+
   /** An ear question was answered; `question` is the key the ear training knows it by (`interval:m3`). */
   earAnswered(question: string, correct: boolean): void {
     this.srs.review(`ear:${question}`, correct);

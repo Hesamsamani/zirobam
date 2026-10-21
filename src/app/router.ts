@@ -1,5 +1,5 @@
 /** The screens of the app. `levels` and `practice` share the music stand; `learn` opens inside it too. */
-export const VIEWS = ['home', 'levels', 'practice', 'songs', 'learn', 'lessons', 'catalog', 'xylophone', 'progress', 'maker', 'ear', 'scales', 'generator', 'chords', 'tuner', 'rhythm', 'persian'] as const;
+export const VIEWS = ['home', 'levels', 'practice', 'songs', 'learn', 'lessons', 'catalog', 'xylophone', 'progress', 'maker', 'ear', 'scales', 'generator', 'chords', 'tuner', 'rhythm', 'persian', 'today'] as const;
 export type View = (typeof VIEWS)[number];
 
 export function isView(value: string): value is View {

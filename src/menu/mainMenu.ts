@@ -1,4 +1,4 @@
-import { t, type MessageKey } from '../i18n';
+import { formatNumber, t, type MessageKey } from '../i18n';
 import type { View } from '../app/router';
 
 export type TileId = 'lessons' | 'learn' | 'ear' | 'scales' | 'chords' | 'rhythm' | 'persian' | 'generator' | 'tuner' | 'catalog' | 'levels' | 'songs' | 'xylophone' | 'metronome' | 'progress' | 'settings';
@@ -53,6 +53,8 @@ export interface MainMenuDeps {
   lessonsProgress?(): { read: number; total: number };
   /** Where the player left off. */
   resume(): ResumeInfo;
+  /** How far the plan of today is, for the card at the top. Without this there is no card. */
+  today?(): { done: number; total: number; minutes: number };
   /** Shown under the subtitle: the rank, the daily goal and the streak. */
   extra?: HTMLElement;
 }
@@ -109,6 +111,9 @@ export class MainMenu {
   private readonly resumeTitle: HTMLElement;
   private readonly resumeDetail: HTMLElement;
   private readonly resumeGo: HTMLElement;
+  private todayCard: HTMLButtonElement | null = null;
+  private todayTitle: HTMLElement | null = null;
+  private todayDetail: HTMLElement | null = null;
   private readonly tiles = new Map<TileId, { title: HTMLElement; desc: HTMLElement }>();
   private resumeView: View = 'levels';
 
@@ -140,7 +145,23 @@ export class MainMenu {
     const tools = make('div', 'menu-tools');
     for (const def of MENU_TILES) (def.group === 'path' ? paths : tools).appendChild(this.buildTile(def));
 
-    this.element.append(header, this.resumeButton, paths, tools);
+    if (deps.today) {
+      const card = make('button', 'menu-today');
+      card.type = 'button';
+      card.dataset.tile = 'today';
+      const text = make('span', 'menu-today-text');
+      const todayTitle = make('span', 'menu-today-title');
+      const todayDetail = make('span', 'menu-today-detail');
+      text.append(todayTitle, todayDetail);
+      const go = make('span', 'menu-today-go');
+      card.append(text, go);
+      card.addEventListener('click', () => this.deps.navigate('today'));
+      this.todayCard = card;
+      this.todayTitle = todayTitle;
+      this.todayDetail = todayDetail;
+    }
+
+    this.element.append(header, ...(this.todayCard ? [this.todayCard] : []), this.resumeButton, paths, tools);
     this.refresh();
   }
 
@@ -186,5 +207,11 @@ export class MainMenu {
     this.resumeTitle.textContent = resume.title;
     this.resumeDetail.textContent = resume.detail;
     this.resumeGo.textContent = t('menu.resume.go');
+    const today = this.deps.today?.();
+    if (today && this.todayCard && this.todayTitle && this.todayDetail) {
+      this.todayTitle.textContent = `${t('menu.today.title')}: ${t('menu.today.progress', { done: formatNumber(today.done), total: formatNumber(today.total) })}`;
+      this.todayDetail.textContent = t('menu.today.detail', { minutes: formatNumber(today.minutes) });
+      this.todayCard.querySelector('.menu-today-go')!.textContent = t('menu.today.go');
+    }
   }
 }

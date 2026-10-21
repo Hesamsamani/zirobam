@@ -9,6 +9,7 @@ import './styles/tuner.css';
 import './styles/rhythm.css';
 import './styles/persian.css';
 import './styles/heatmap.css';
+import './styles/today.css';
 import createVerovioModule from 'verovio/wasm';
 import { VerovioToolkit } from 'verovio/esm';
 import * as Tone from 'tone';
@@ -77,6 +78,10 @@ import { createToneBackend } from './band/toneBackend';
 import { formatParam } from './scales/dictionaryState';
 import { MicInput, type AudioContextLike } from './audio/micInput';
 import { HeatmapView } from './stats/heatmapView';
+import { rhythmSummary } from './stats/heatmap';
+import { addDays, dayString } from './stats/days';
+import { buildTodayPlan, totalMinutes, type BlockKind } from './today/planner';
+import { TodayStore } from './today/todayStore';
 import { XylophoneView } from './xylophone/xylophoneView';
 import { PracticePanel } from './practice/practicePanel';
 import { songTitle } from './songs/songText';
@@ -213,6 +218,18 @@ const gameStore = new GameStore({
 const game = new GameController({ store: gameStore, toasts: new ToastCenter() });
 // what the student gets right and wrong, for the heat map and the daily plan
 const practiceMemory = new PracticeMemory();
+
+/** The plan of the day, made from the practice memory the first time it is asked for each day. */
+const todayStore = new TodayStore(() => {
+  const today = dayString(new Date());
+  return buildTodayPlan({
+    dueKeys: practiceMemory.srs.due(),
+    rhythm: rhythmSummary(practiceMemory.log.aggregate(addDays(today, -55), today).rhythm),
+    dayIndex: Math.floor(Date.now() / 86_400_000),
+  });
+});
+/** The screen each kind of block of the plan opens. */
+const TODAY_VIEWS: Record<BlockKind, View> = { notes: 'learn', ear: 'ear', chords: 'chords', rhythm: 'rhythm', scales: 'scales', levels: 'levels' };
 let gameHud: GameHud | null = null;
 let progressView: ProgressView | null = null;
 const scoreStore = new ScoreStore();
@@ -1167,6 +1184,7 @@ function setupNavigation(learn: LearnHandle) {
       void metronomeWindow?.open();
     },
     levelLabel: () => localizeLevel(getFullLevelString()),
+    today: () => ({ ...todayStore.progress(), minutes: totalMinutes(todayStore.plan()) }),
     lessonsProgress: () => ({ read: lessonProgress.count(), total: lessonProgress.total() }),
     resume: () => {
       if (currentMode === 'practice' && practiceSession) {
@@ -1333,7 +1351,13 @@ function setupNavigation(learn: LearnHandle) {
     openPersianLessons: () => appShell.navigate('lessons', 'persian-music-map'),
     onPersianAnswer: (correct) => void game.persianAnswer(correct),
     hub: noteInput,
-    onChordAnswer: (correct) => void game.chordAnswer(correct),
+    onChordAnswer: (correct, symbol) => {
+      game.chordAnswer(correct);
+      practiceMemory.chordAnswered(symbol, correct);
+    },
+    today: todayStore,
+    openKind: (kind) => appShell.navigate(TODAY_VIEWS[kind]),
+    onTodayDone: () => void game.todayDone(),
     goHome: () => appShell.navigate('home'),
     practiseXml: (xml, title) => {
       if (isPlaying) stop();

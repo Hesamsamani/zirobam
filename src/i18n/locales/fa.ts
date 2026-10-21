@@ -8,6 +8,7 @@ import { tunerFa } from './parts/tuner.fa';
 import { rhythmFa } from './parts/rhythm.fa';
 import { persianFa } from './parts/persian.fa';
 import { heatmapFa } from './parts/heatmap.fa';
+import { todayFa } from './parts/today.fa';
 import { theoryFa } from './parts/theory.fa';
 import { uiFa } from './parts/ui.fa';
 
@@ -583,6 +584,8 @@ export const fa: Record<MessageKey, string> = {
   'badge.rhythm.desc': 'در تمرین ریتم ۵ ریتم را سر وقت بزنید.',
   'badge.persian.title': 'گوش ربع‌پرده',
   'badge.persian.desc': 'در تمرین گوشِ ربع‌پرده ۱۰ پاسخ درست بدهید.',
+  'badge.today.title': 'برنامه‌ای تمام شد',
+  'badge.today.desc': 'یک برنامه‌ی کامل روز را انجام دهید.',
   'badge.scales.title': 'نوازنده‌ی گام',
   'badge.scales.desc': 'با ۵ گام یا آکورد همراه شوید و بنوازید.',
   'game.stat.ear': 'پاسخ‌های تمرین گوش',
@@ -660,4 +663,5 @@ export const fa: Record<MessageKey, string> = {
   ...rhythmFa,
   ...persianFa,
   ...heatmapFa,
+  ...todayFa,
 };

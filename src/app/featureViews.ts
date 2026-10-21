@@ -3,6 +3,9 @@ import type { MicSource } from '../tuner/tunerView';
 import { TunerView } from '../tuner/tunerView';
 import { ChordsView } from '../chords/chordsView';
 import { PersianView } from '../persian/persianView';
+import type { BlockKind } from '../today/planner';
+import type { TodayStore } from '../today/todayStore';
+import { TodayView } from '../today/todayView';
 import { RhythmView, type RhythmAudio } from '../rhythm/rhythmView';
 import type { ScaleId } from '../theory/scaleCatalog';
 import type { RhythmVerdict } from '../stats/mistakeLog';
@@ -39,8 +42,14 @@ export interface FeatureDeps {
   band: BandBackend;
   /** Where the notes the student plays come from. */
   hub: NoteInputHub;
-  /** A chord of the chord quiz was answered (for the rewards). */
-  onChordAnswer(correct: boolean): void;
+  /** A chord of the chord quiz was answered, and how it was written (for the rewards and the practice memory). */
+  onChordAnswer(correct: boolean, symbol: string): void;
+  /** The plan of the day. */
+  today: TodayStore;
+  /** Opens the screen that a kind of block of the plan is about. */
+  openKind(kind: BlockKind): void;
+  /** The whole plan of the day was done (for the rewards). */
+  onTodayDone(): void;
   /** The microphone. */
   mic: MicSource;
   /** The clicks of the rhythm trainer. */
@@ -79,7 +88,7 @@ export function createFeatureViews(deps: FeatureDeps): FeatureView[] {
       formatName: deps.formatName,
       stats: new NoteStats(undefined, 'chords.stats.v1'),
       onBack: deps.goHome,
-      onAnswer: (correct) => deps.onChordAnswer(correct),
+      onAnswer: (correct, question) => deps.onChordAnswer(correct, question.symbol),
     }),
     new RhythmView({
       hub: deps.hub,
@@ -100,6 +109,7 @@ export function createFeatureViews(deps: FeatureDeps): FeatureView[] {
       onBack: deps.goHome,
       onAnswer: deps.onPersianAnswer,
     }),
+    new TodayView({ store: deps.today, open: deps.openKind, onAllDone: deps.onTodayDone, onBack: deps.goHome }),
     new TunerView({ mic: deps.mic, hub: deps.hub, formatName: deps.formatNameWithOctave, onBack: deps.goHome }),
   ];
 }

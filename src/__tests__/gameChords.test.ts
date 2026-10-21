@@ -37,8 +37,8 @@ describe('the chord quiz in the game', () => {
     expect(new GameStore({ storage, now: () => new Date('2026-10-21T12:00:00'), beginnerSongIds: [] }).stats().chordsCorrect).toBe(0);
   });
 
-  it('is one of twenty one badges', () => {
-    expect(BADGES).toHaveLength(21);
+  it('is one of twenty two badges', () => {
+    expect(BADGES).toHaveLength(22);
     expect(BADGES.map((b) => b.id)).toContain('chords-25');
   });
 });
