@@ -6,6 +6,7 @@ import { finderFa } from './parts/finder.fa';
 import { chordsFa } from './parts/chords.fa';
 import { tunerFa } from './parts/tuner.fa';
 import { rhythmFa } from './parts/rhythm.fa';
+import { persianFa } from './parts/persian.fa';
 import { theoryFa } from './parts/theory.fa';
 import { uiFa } from './parts/ui.fa';
 
@@ -579,6 +580,8 @@ export const fa: Record<MessageKey, string> = {
   'badge.chords.desc': 'در آزمون آکورد ۲۵ آکورد را درست بزنید.',
   'badge.rhythm.title': 'سر وقت',
   'badge.rhythm.desc': 'در تمرین ریتم ۵ ریتم را سر وقت بزنید.',
+  'badge.persian.title': 'گوش ربع‌پرده',
+  'badge.persian.desc': 'در تمرین گوشِ ربع‌پرده ۱۰ پاسخ درست بدهید.',
   'badge.scales.title': 'نوازنده‌ی گام',
   'badge.scales.desc': 'با ۵ گام یا آکورد همراه شوید و بنوازید.',
   'game.stat.ear': 'پاسخ‌های تمرین گوش',
@@ -654,4 +657,5 @@ export const fa: Record<MessageKey, string> = {
   ...chordsFa,
   ...tunerFa,
   ...rhythmFa,
+  ...persianFa,
 };

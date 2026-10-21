@@ -2,7 +2,9 @@ import type { BandBackend } from '../band/bandPlayer';
 import type { MicSource } from '../tuner/tunerView';
 import { TunerView } from '../tuner/tunerView';
 import { ChordsView } from '../chords/chordsView';
+import { PersianView } from '../persian/persianView';
 import { RhythmView, type RhythmAudio } from '../rhythm/rhythmView';
+import type { ScaleId } from '../theory/scaleCatalog';
 import type { RhythmVerdict } from '../stats/mistakeLog';
 import type { NoteInputHub } from '../input/noteInput';
 import { NoteStats } from '../learn/noteStats';
@@ -47,6 +49,12 @@ export interface FeatureDeps {
   onRhythmPassed(): void;
   /** One note of the rhythm trainer was on time, early, late or missed (for the practice memory). */
   onRhythmVerdict(verdict: RhythmVerdict): void;
+  /** Opens a scale in the dictionary. */
+  openScale(root: string, scale: ScaleId): void;
+  /** Opens the Persian music lessons. */
+  openPersianLessons(): void;
+  /** A question of the quarter-tone ear training was answered (for the rewards). */
+  onPersianAnswer(correct: boolean): void;
   goHome(): void;
   /** Opens a score (MusicXML) on the practice stand. */
   practiseXml(xml: string, title: string): void;
@@ -82,6 +90,15 @@ export function createFeatureViews(deps: FeatureDeps): FeatureView[] {
       onBack: deps.goHome,
       onPassed: deps.onRhythmPassed,
       onVerdict: deps.onRhythmVerdict,
+    }),
+    new PersianView({
+      voice: deps.voice,
+      stats: new NoteStats(undefined, 'persian.stats.v1'),
+      formatName: deps.formatName,
+      openScale: deps.openScale,
+      openLessons: deps.openPersianLessons,
+      onBack: deps.goHome,
+      onAnswer: deps.onPersianAnswer,
     }),
     new TunerView({ mic: deps.mic, hub: deps.hub, formatName: deps.formatNameWithOctave, onBack: deps.goHome }),
   ];

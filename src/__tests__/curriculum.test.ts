@@ -27,8 +27,8 @@ function texts(lesson: Lesson): Array<{ where: string; bi: Bi }> {
 const everyText = ALL_LESSONS.flatMap(texts);
 
 describe('the course', () => {
-  it('has three units and plenty of lessons', () => {
-    expect(UNITS.map((u) => u.id)).toEqual(['notes', 'rhythm', 'piano']);
+  it('has four units and plenty of lessons', () => {
+    expect(UNITS.map((u) => u.id)).toEqual(['notes', 'rhythm', 'piano', 'persian']);
     for (const unit of UNITS) expect(unit.lessons.length).toBeGreaterThanOrEqual(10);
     expect(ALL_LESSONS.length).toBeGreaterThanOrEqual(30);
   });
@@ -83,7 +83,7 @@ describe('the words', () => {
       expect(bi.fa, `${where}: a dash`).not.toMatch(/[–—]/);
       expect(bi.fa, `${where}: a double space`).not.toMatch(/ {2}/);
       // digits belong to Persian text as Persian digits; a note name followed by an octave number is the exception
-      expect(bi.fa.replace(/\{[A-G][#b]?\d\}/g, ''), `${where}: Latin digits`).not.toMatch(/[0-9]/);
+      expect(bi.fa.replace(/\{[A-G](?:##|bb|[#bko])?\d\}/g, ''), `${where}: Latin digits`).not.toMatch(/[0-9]/);
     }
   });
 
@@ -94,7 +94,7 @@ describe('the words', () => {
   it('uses only note tokens the app can fill in, and every brace pairs up', () => {
     for (const { where, bi } of everyText) {
       for (const text of [bi.en, bi.fa]) {
-        const stripped = text.replace(/\{[A-G][#b]?\d?\}/g, '');
+        const stripped = text.replace(/\{[A-G](?:##|bb|[#bko])?\d?\}/g, '');
         expect(stripped, `${where}: stray brace`).not.toMatch(/[{}]/);
       }
     }

@@ -6,7 +6,7 @@ export interface Bi {
   fa: string;
 }
 
-export type UnitId = 'notes' | 'rhythm' | 'piano';
+export type UnitId = 'notes' | 'rhythm' | 'piano' | 'persian';
 
 /** Where a lesson can send the student to try what they just read. */
 export type LessonAction = 'quiz' | 'levels' | 'songs' | 'metronome' | 'xylophone';

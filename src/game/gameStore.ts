@@ -54,6 +54,8 @@ interface Counters {
   chordsCorrect: number;
   /** Pieces of the rhythm trainer tapped on time. */
   rhythmPassed: number;
+  /** Right answers in the quarter-tone ear training. */
+  persianCorrect: number;
   scalesPlayed: number;
   maxLevel: number;
   maxStage: number;
@@ -81,7 +83,7 @@ function emptyState(): State {
     days: {},
     counters: {
       correct: 0, bestCombo: 0, piecesPassed: 0, stepsPassed: 0, songsFinished: 0,
-      xyloSongs: 0, xyloThreeStars: 0, earCorrect: 0, chordsCorrect: 0, rhythmPassed: 0, scalesPlayed: 0, maxLevel: 1, maxStage: 1, lessonsRead: 0, lessonsTotal: 0,
+      xyloSongs: 0, xyloThreeStars: 0, earCorrect: 0, chordsCorrect: 0, rhythmPassed: 0, persianCorrect: 0, scalesPlayed: 0, maxLevel: 1, maxStage: 1, lessonsRead: 0, lessonsTotal: 0,
     },
     songStars: {},
     xyloBest: {},
@@ -269,6 +271,13 @@ export class GameStore {
   recordChordAnswer(correct: boolean): Award {
     if (!correct) return this.award(0);
     this.state.counters.chordsCorrect++;
+    return this.award(3);
+  }
+
+  /** A question of the quarter-tone ear training answered right: 3 XP. */
+  recordPersianAnswer(correct: boolean): Award {
+    if (!correct) return this.award(0);
+    this.state.counters.persianCorrect++;
     return this.award(3);
   }
 

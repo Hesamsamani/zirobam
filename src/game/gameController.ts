@@ -30,6 +30,10 @@ export class GameController {
     return this.announce(this.store.recordChordAnswer(correct));
   }
 
+  persianAnswer(correct: boolean): Award {
+    return this.announce(this.store.recordPersianAnswer(correct));
+  }
+
   rhythmPassed(): Award {
     return this.announce(this.store.recordRhythmPassed());
   }

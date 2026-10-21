@@ -23,14 +23,14 @@ test.describe('Lessons', () => {
     await expect(page.locator('#lessonsView')).toBeVisible();
     await expect(page.locator('#learnView')).toBeHidden();
     await expect(page.locator('#lessonsView h2')).toHaveText('Lessons');
-    await expect(page.locator('.course-unit')).toHaveCount(3);
+    await expect(page.locator('.course-unit')).toHaveCount(4);
     expect(await page.locator('.lesson-card').count()).toBeGreaterThanOrEqual(30);
     await expect(page.locator('.course-progress-text')).toContainText('0 of');
   });
 
-  test('has lessons about notes, rhythm and the piano', async ({ page }) => {
+  test('has lessons about notes, rhythm, the piano and Persian music', async ({ page }) => {
     await page.goto('/#/lessons');
-    await expect(page.locator('.course-unit')).toHaveCount(3); // the list is drawn after the page loads
+    await expect(page.locator('.course-unit')).toHaveCount(4); // the list is drawn after the page loads
     for (const unit of ['notes', 'rhythm', 'piano']) {
       expect(await page.locator(`.course-unit[data-unit="${unit}"] .lesson-card`).count(), unit).toBeGreaterThanOrEqual(10);
     }

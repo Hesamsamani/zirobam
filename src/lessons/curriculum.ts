@@ -1,4 +1,5 @@
 import { NOTES_UNIT } from './unitNotes';
+import { PERSIAN_UNIT } from './unitPersian';
 import { PIANO_UNIT } from './unitPiano';
 import { RHYTHM_UNIT } from './unitRhythm';
 import type { Lesson, Unit } from './types';
@@ -6,7 +7,7 @@ import type { Lesson, Unit } from './types';
 export type { Bi, Block, Lesson, LessonAction, Unit, UnitId } from './types';
 
 /** The course, in the order a beginner should take it. */
-export const UNITS: readonly Unit[] = [NOTES_UNIT, RHYTHM_UNIT, PIANO_UNIT];
+export const UNITS: readonly Unit[] = [NOTES_UNIT, RHYTHM_UNIT, PIANO_UNIT, PERSIAN_UNIT];
 
 export const ALL_LESSONS: readonly Lesson[] = UNITS.flatMap((unit) => unit.lessons);
 

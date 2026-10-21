@@ -1,0 +1,36 @@
+// The Persian music page: the modes and the quarter-tone ear training (src/persian). The lessons are in lessons/unitPersian.ts.
+export const persianEn = {
+  'menu.persian.title': 'Persian music',
+  'menu.persian.desc': 'Dastgahs and avazes, the quarter tones koron and sori, and ear training for them.',
+
+  'persian.title': 'Persian music',
+  'persian.subtitle': 'The seven dastgahs and five avazes as a teaching model on the piano, and ear training for the quarter tones.',
+  'persian.draft': 'The pitches are an approximate model, still to be checked by an expert. Real pitches vary with the dastgah, the school and the player.',
+
+  'persian.lessons': 'Read the lessons',
+  'persian.modes': 'The modes',
+  'persian.dastgah': 'Dastgah',
+  'persian.avaz': 'Avaz of {parent}',
+  'persian.openMode': 'Open {mode} on {root} in the scale dictionary',
+
+  'persian.ear': 'Ear training: quarter tones',
+  'persian.stages': 'Stage',
+  'persian.stage': 'Stage {n}',
+  'persian.q.order': 'Two notes. Which one is lower?',
+  'persian.q.koronOrFlat': 'Two notes. Is the second a koron (a little lower) or a flat (a semitone lower)?',
+  'persian.q.soriOrSharp': 'Two notes. Is the second a sori (a little higher) or a sharp (a semitone higher)?',
+  'persian.q.motif': 'Two short tunes. Which one has the koron?',
+  'persian.a.first': 'The first',
+  'persian.a.second': 'The second',
+  'persian.a.koron': 'Koron',
+  'persian.a.flat': 'Flat',
+  'persian.a.sori': 'Sori',
+  'persian.a.sharp': 'Sharp',
+  'persian.hear': 'Hear again',
+  'persian.next': 'Next question',
+  'persian.right': 'Right!',
+  'persian.wrong': 'Not this time. The answer is: {answer}.',
+  'persian.progress': '{answered} of {limit} answered, {percent} right',
+  'persian.unlocked': 'Stage {n} is open now.',
+  'persian.noSound': 'The piano sounds could not be loaded, so there is nothing to listen to.',
+} as const;

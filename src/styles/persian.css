@@ -1,0 +1,99 @@
+/* ============================================
+   PERSIAN MUSIC (src/persian)
+   The twelve modes as cards, and the quarter-tone ear training. Logical properties only.
+   ============================================ */
+
+.persian-view {
+  flex: 1;
+  inline-size: 100%;
+  max-inline-size: 960px;
+  margin-inline: auto;
+  padding: var(--space-xl) var(--space-lg);
+}
+
+@media (max-width: 560px) {
+  .persian-view {
+    padding: var(--space-lg) var(--space-md);
+  }
+}
+
+.pr-draft {
+  margin-block: var(--space-md);
+}
+
+.pr-lessons {
+  margin-block-end: var(--space-md);
+}
+
+.pr-title {
+  margin: var(--space-lg) 0 var(--space-sm);
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+
+.pr-modes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: var(--space-sm);
+}
+
+.pr-mode {
+  display: grid;
+  gap: 2px;
+  min-block-size: 88px;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--surface-2);
+  border: 1px solid var(--line-soft);
+  border-inline-start: 4px solid var(--quarter);
+  border-radius: var(--radius-xl);
+  color: var(--text);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.pr-mode:hover {
+  background: var(--surface-3);
+}
+
+.pr-mode-name {
+  font-family: var(--font-serif);
+  font-size: 1.3rem;
+}
+
+.pr-mode-root,
+.pr-mode-kind {
+  color: var(--text-soft);
+  font-size: 0.85rem;
+}
+
+.pr-ear {
+  display: grid;
+  gap: var(--space-sm);
+  justify-items: start;
+}
+
+.pr-prompt {
+  margin: var(--space-sm) 0 0;
+  font-size: 1.1rem;
+}
+
+.pr-status {
+  min-block-size: 1.5em;
+  margin: 0;
+}
+
+.pr-status[data-tone='good'] {
+  color: var(--correct);
+}
+
+.pr-status[data-tone='bad'] {
+  color: #e69a9a;
+}
+
+.pr-progress {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.9rem;
+}

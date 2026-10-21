@@ -7,6 +7,7 @@ import './styles/generator.css';
 import './styles/chords.css';
 import './styles/tuner.css';
 import './styles/rhythm.css';
+import './styles/persian.css';
 import createVerovioModule from 'verovio/wasm';
 import { VerovioToolkit } from 'verovio/esm';
 import * as Tone from 'tone';
@@ -72,6 +73,7 @@ import { downloadTextFile } from './backup/download';
 import { buildDraft, newMakerId } from './songs/songMaker';
 import { createFeatureViews } from './app/featureViews';
 import { createToneBackend } from './band/toneBackend';
+import { formatParam } from './scales/dictionaryState';
 import { MicInput, type AudioContextLike } from './audio/micInput';
 import { XylophoneView } from './xylophone/xylophoneView';
 import { PracticePanel } from './practice/practicePanel';
@@ -1320,6 +1322,9 @@ function setupNavigation(learn: LearnHandle) {
     },
     onRhythmPassed: () => void game.rhythmPassed(),
     onRhythmVerdict: (verdict) => practiceMemory.log.recordRhythm(verdict),
+    openScale: (root, scale) => appShell.navigate('scales', formatParam(root, scale)),
+    openPersianLessons: () => appShell.navigate('lessons', 'persian-music-map'),
+    onPersianAnswer: (correct) => void game.persianAnswer(correct),
     hub: noteInput,
     onChordAnswer: (correct) => void game.chordAnswer(correct),
     goHome: () => appShell.navigate('home'),
