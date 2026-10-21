@@ -15,7 +15,7 @@ async function saveBackup(page: Page, to: string): Promise<void> {
   const download = page.waitForEvent('download');
   await page.locator('#progressView .backup-save').click();
   const file = await download;
-  expect(file.suggestedFilename()).toMatch(/^music-notes-trainer-backup-\d{4}-\d{2}-\d{2}\.json$/);
+  expect(file.suggestedFilename()).toMatch(/^zirobam-backup-\d{4}-\d{2}-\d{2}\.json$/);
   await file.saveAs(to);
 }
 

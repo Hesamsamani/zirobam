@@ -1,6 +1,6 @@
-# Music Notes Trainer (English / فارسی)
+# ZiroBam (English / فارسی)
 
-A personal study fork of [ftrain/sightreading](https://github.com/ftrain/sightreading), extended so a beginner can learn to read music notes in **English or Persian**, with or without a MIDI keyboard. Persian README: [README.fa.md](README.fa.md).
+**ZiroBam** (Persian: زیر و بم, "treble and bass", also "the ins and outs") is a personal study fork of [ftrain/sightreading](https://github.com/ftrain/sightreading), extended so a beginner can learn to read music notes in **English or Persian**, with or without a MIDI keyboard. Live at **https://hesamsamani.me/zirobam/** (https://hesamsamani.github.io/zirobam/ forwards there). Persian README: [README.fa.md](README.fa.md).
 
 ## What this fork adds
 
@@ -32,13 +32,13 @@ A personal study fork of [ftrain/sightreading](https://github.com/ftrain/sightre
 
 ## Run it
 
-On Windows, double-click the Desktop shortcut **Music Notes Trainer**. It starts the app and opens your browser; close its window to stop. (Double-clicking `Start-Trainer.ps1` itself only opens it in an editor.) The shortcut runs `powershell.exe -NoProfile -ExecutionPolicy Bypass -File "<this folder>\Start-Trainer.ps1"` and uses the icon `Start-Trainer.ico`, so it can be recreated by hand. From a terminal: `powershell -ExecutionPolicy Bypass -File Start-Trainer.ps1`.
+On Windows, double-click the Desktop shortcut **ZiroBam**. It starts the app and opens your browser; close its window to stop. (Double-clicking `Start-Trainer.ps1` itself only opens it in an editor.) The shortcut runs `powershell.exe -NoProfile -ExecutionPolicy Bypass -File "<this folder>\Start-Trainer.ps1"` and uses the icon `Start-Trainer.ico`, so it can be recreated by hand. From a terminal: `powershell -ExecutionPolicy Bypass -File Start-Trainer.ps1`.
 
 By hand:
 
 ```bash
 npm ci
-npm run dev      # http://localhost:5173/sightreading/
+npm run dev      # http://localhost:5173/zirobam/
 npm test         # unit tests
 npx playwright test
 npm run build
@@ -51,7 +51,7 @@ npm run build
 - Persian music terms (دیز, بمل, the lesson texts, the level names) are waiting for the owner's review.
 - The song library lists titles, artists and an estimated level. It contains no notes of copyrighted songs: the notes come from the sheet-music links or from your own file. The lists were put together by hand, so a few details may be wrong, and the Persian list is shorter than the international one.
 - All unit tests (1,386) and the end-to-end tests (about 690, on desktop, phone and phone-landscape profiles, plus an offline run against the production build) pass. One playback-timing check on the phone profile failed once in a full run and then passed 123 times in a row, so it may be a rare timing flake.
-- Audit warnings in dev tooling (Vite, Vitest, gh-pages) are not fixed yet; nothing in the shipped bundle is flagged.
+- Audit warnings in dev tooling (Vite, Vitest) are not fixed yet; nothing in the shipped bundle is flagged.
 
 Design: [docs/superpowers/specs/2026-10-16-bilingual-note-trainer-design.md](docs/superpowers/specs/2026-10-16-bilingual-note-trainer-design.md). Why this base app was chosen: [research/candidates.md](research/candidates.md).
 
@@ -59,7 +59,9 @@ Design: [docs/superpowers/specs/2026-10-16-bilingual-note-trainer-design.md](doc
 
 The notes of the public-domain songs were read from the LilyPond scores on English and German Wikipedia (CC BY-SA 4.0) and from The Session's ABC settings, compared with each other and with the well-known tunes; see `src/songs/libraryMore.ts`. The tests check the length of every measure and the first notes of every tune, so please tell us if a song sounds wrong anywhere else.
 
-Piano sounds: the Salamander Grand Piano by Alexander Holm, licensed CC BY 3.0 (copied from the Tone.js samples; see `public/samples/salamander/README.md`). Fonts: Inter and Crimson Pro through `@fontsource` and Vazirmatn (SIL OFL 1.1).
+Piano sounds: the Salamander Grand Piano by Alexander Holm, licensed [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/) (copied from the Tone.js samples; see `public/samples/salamander/README.md`).
+
+Built with: the upstream app [ftrain/sightreading](https://github.com/ftrain/sightreading) (LGPL-3.0, modified here), [Verovio](https://www.verovio.org/) (LGPL-3.0), [Tone.js](https://tonejs.github.io/), [tonal](https://github.com/tonaljs/tonal) and [@tonejs/midi](https://github.com/Tonejs/Midi) (MIT), [JSZip](https://stuk.github.io/jszip/) (MIT or GPL-3.0), and the fonts Inter and Crimson Pro through `@fontsource` and Vazirmatn (SIL OFL 1.1).
 
 Based on `ftrain/sightreading` at commit `05158c5` (LGPL-3.0). The original `LICENSE` is kept and this fork stays under LGPL-3.0. Changes made in this fork are the ones listed above and in the git history of the `bilingual` branch. The notation engine, [Verovio](https://www.verovio.org/), is LGPL-3.0 too.
 
@@ -150,8 +152,7 @@ npx playwright test
 # Build for production
 npm run build
 
-# Deploy to GitHub Pages
-npm run deploy
+# Publishing: this fork has no `npm run deploy`; a GitHub Actions workflow builds and publishes the site
 ```
 
 ## Architecture

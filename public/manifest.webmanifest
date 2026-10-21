@@ -1,6 +1,6 @@
 {
-  "name": "Music Notes Trainer",
-  "short_name": "Note Trainer",
+  "name": "ZiroBam",
+  "short_name": "ZiroBam",
   "description": "Learn to read music notes and play the piano, in English and Persian. Works without internet.",
   "lang": "en",
   "start_url": "./",

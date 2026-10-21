@@ -100,7 +100,7 @@ describe('createBackup', () => {
   });
 
   it('names the file after the day', () => {
-    expect(backupFileName(new Date('2026-10-16T22:00:00Z'))).toBe('music-notes-trainer-backup-2026-10-16.json');
+    expect(backupFileName(new Date('2026-10-16T22:00:00Z'))).toBe('zirobam-backup-2026-10-16.json');
   });
 });
 

@@ -1,6 +1,6 @@
-# مربی نت‌خوانی (Music Notes Trainer)
+# زیر و بم (ZiroBam)
 
-این پروژه شاخه‌ای شخصی و آموزشی از برنامهٔ [ftrain/sightreading](https://github.com/ftrain/sightreading) است. هدفش این است که یک مبتدی بتواند با رابط انگلیسی یا فارسی، چه با کیبورد MIDI و چه بدون آن، نت‌خوانی را یاد بگیرد. نسخهٔ انگلیسی این راهنما در [README.md](README.md) است.
+این پروژه شاخه‌ای شخصی و آموزشی از برنامهٔ [ftrain/sightreading](https://github.com/ftrain/sightreading) است. هدفش این است که یک مبتدی بتواند با رابط انگلیسی یا فارسی، چه با کیبورد MIDI و چه بدون آن، نت‌خوانی را یاد بگیرد. نسخهٔ آنلاین: https://hesamsamani.me/zirobam/ (نشانی https://hesamsamani.github.io/zirobam/ به همان‌جا می‌رود). نسخهٔ انگلیسی این راهنما در [README.md](README.md) است.
 
 ## این شاخه چه چیزی اضافه می‌کند
 
@@ -32,7 +32,7 @@
 
 ## اجرای برنامه
 
-در ویندوز کافی است روی میان‌بر «Music Notes Trainer» روی دسکتاپ دوبار کلیک کنید. برنامه شروع می‌شود و مرورگر باز می‌شود. برای متوقف‌کردنش پنجرهٔ آن را ببندید. دوبار کلیک روی خود فایل `Start-Trainer.ps1` فقط آن را در ویرایشگر باز می‌کند. از ترمینال هم می‌توانید این دستور را بزنید: `powershell -ExecutionPolicy Bypass -File Start-Trainer.ps1`
+در ویندوز کافی است روی میان‌بر «ZiroBam» روی دسکتاپ دوبار کلیک کنید. برنامه شروع می‌شود و مرورگر باز می‌شود. برای متوقف‌کردنش پنجرهٔ آن را ببندید. دوبار کلیک روی خود فایل `Start-Trainer.ps1` فقط آن را در ویرایشگر باز می‌کند. از ترمینال هم می‌توانید این دستور را بزنید: `powershell -ExecutionPolicy Bypass -File Start-Trainer.ps1`
 
 اجرای دستی به Node.js نیاز دارد:
 
@@ -41,7 +41,7 @@ npm ci
 npm run dev
 ```
 
-آدرس برنامه بعد از اجرا: `http://localhost:5173/sightreading/`
+آدرس برنامه بعد از اجرا: `http://localhost:5173/zirobam/`
 
 برای اجرای آزمون‌ها از دستور `npm test` استفاده کنید و برای آزمون‌های مرورگری از `npx playwright test`.
 
@@ -62,6 +62,6 @@ npm run dev
 
 نت آهنگ‌های بدون حق نشر از نت‌های LilyPond در ویکی‌پدیای انگلیسی و آلمانی (مجوز CC BY-SA 4.0) و از نسخه‌های ABC سایت The Session خوانده شده و با هم و با آهنگ‌های شناخته‌شده مقایسه شده است. فایل `src/songs/libraryMore.ts` را ببینید. آزمون‌ها طول هر میزان و نت‌های آغاز هر آهنگ را بررسی می‌کنند. اگر جای دیگری آهنگی غلط به گوش آمد، خبر بدهید.
 
-صدای پیانو: پیانوی بزرگ سالامندر، ساخته‌ی الکساندر هولم با مجوز CC BY 3.0 (از نمونه‌های Tone.js کپی شده؛ فایل `public/samples/salamander/README.md` را ببینید). فونت‌ها: Inter و Crimson Pro از راه `@fontsource` و Vazirmatn (مجوز SIL OFL 1.1).
+صدای پیانو: پیانوی بزرگ سالامندر، ساخته‌ی الکساندر هولم با مجوز CC BY 3.0 (از نمونه‌های Tone.js کپی شده؛ فایل `public/samples/salamander/README.md` را ببینید). فونت‌ها: Inter و Crimson Pro از راه `@fontsource` و Vazirmatn (مجوز SIL OFL 1.1). کتابخانه‌ها: Tone.js و tonal و ‎@tonejs/midi (مجوز MIT)، JSZip (MIT یا GPL-3.0) و Verovio (LGPL-3.0).
 
 مبنای کار برنامهٔ `ftrain/sightreading` در نسخهٔ `05158c5` با مجوز LGPL-3.0 است. فایل `LICENSE` اصلی حفظ شده و این شاخه هم تحت همان مجوز می‌ماند. تغییرات این شاخه همان موارد بالا و تاریخچهٔ git در شاخهٔ `bilingual` است. موتور نت‌نگاری برنامه، [Verovio](https://www.verovio.org/)، هم با مجوز LGPL-3.0 منتشر شده است.

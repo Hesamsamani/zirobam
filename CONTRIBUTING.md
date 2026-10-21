@@ -1,4 +1,4 @@
-# Contributing to Sight Reading Practice
+# Contributing to ZiroBam
 
 Thanks for your interest in contributing! This guide will help you get started.
 
@@ -6,8 +6,8 @@ Thanks for your interest in contributing! This guide will help you get started.
 
 ```bash
 # Clone the repo
-git clone https://github.com/ftrain/sightreading.git
-cd sightreading
+git clone https://github.com/Hesamsamani/zirobam.git
+cd zirobam
 
 # Install dependencies
 npm install
@@ -16,7 +16,7 @@ npm install
 npm run dev
 ```
 
-The app will be available at http://localhost:5173
+The app will be available at http://localhost:5173/zirobam/
 
 ## Testing
 

@@ -14,7 +14,7 @@ async function waitUntilSaved(page: Page) {
     .poll(
       () =>
         page.evaluate(async () => {
-          const names = (await caches.keys()).filter((name) => name.startsWith('music-notes-trainer-'));
+          const names = (await caches.keys()).filter((name) => name.startsWith('zirobam-'));
           if (names.length === 0) return 0;
           const cache = await caches.open(names[0]);
           return (await cache.keys()).filter((request) => request.url.includes('/samples/salamander/')).length;
@@ -53,7 +53,7 @@ test.describe('Without internet', () => {
     await page.goto('#/lessons');
     await expect(page.locator('#lessonsView')).toBeVisible();
     // the piano sounds are served from the store
-    const status = await page.evaluate(async () => (await fetch('/sightreading/samples/salamander/C4.mp3')).status);
+    const status = await page.evaluate(async () => (await fetch(new URL('samples/salamander/C4.mp3', document.baseURI))).status);
     expect(status).toBe(200);
     await page.goto('#/levels');
     await page.locator('#playPause').click();
@@ -73,12 +73,24 @@ test.describe('Without internet', () => {
     const href = await page.locator('link[rel="manifest"]').getAttribute('href');
     const manifestUrl = new URL(href!, page.url()).href;
     const manifest = await (await request.get(manifestUrl)).json();
-    expect(manifest).toMatchObject({ name: 'Music Notes Trainer', display: 'standalone', start_url: './', scope: './' });
+    expect(manifest).toMatchObject({ name: 'ZiroBam', display: 'standalone', start_url: './', scope: './' });
     expect(manifest.icons.map((icon: { sizes: string; purpose: string }) => `${icon.sizes} ${icon.purpose}`)).toEqual(['192x192 any', '512x512 any', '512x512 maskable']);
     for (const icon of manifest.icons) {
       const response = await request.get(new URL(icon.src, manifestUrl).href);
       expect(response.status(), icon.src).toBe(200);
       expect(response.headers()['content-type']).toContain('image/png');
+    }
+  });
+
+  test('has a tab icon that loads: an .ico for every browser, the SVG, and the icon of the home screen', async ({ page, request }) => {
+    await page.goto('./');
+    const links = await page.locator('link[rel~="icon"], link[rel="apple-touch-icon"]').evaluateAll((els) => els.map((el) => (el as HTMLLinkElement).href));
+    expect(links).toHaveLength(3);
+    expect(links.some((href) => href.endsWith('/favicon.ico'))).toBe(true);
+    for (const href of links) {
+      const response = await request.get(href);
+      expect(response.status(), href).toBe(200);
+      expect(response.headers()['content-type'], href).toMatch(/^image\//);
     }
   });
 

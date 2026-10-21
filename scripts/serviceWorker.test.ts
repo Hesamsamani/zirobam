@@ -112,7 +112,7 @@ function runWorker(options: { precache: string[]; online: boolean }) {
   const claimed: boolean[] = [];
   const context = {
     self: {
-      registration: { scope: 'https://example.org/sightreading/' },
+      registration: { scope: 'https://example.org/zirobam/' },
       location: { origin: 'https://example.org' },
       addEventListener: (type: string, handler: Handler) => handlers.set(type, handler),
       clients: { claim: async () => void claimed.push(true) },
@@ -153,45 +153,45 @@ describe('public/sw.js', () => {
 
   it('stores the whole list when it installs', async () => {
     await worker.dispatch('install', {});
-    const cache = worker.caches.get('music-notes-trainer-v2')!;
+    const cache = worker.caches.get('zirobam-v2')!;
     expect([...cache.map.keys()]).toEqual([
-      'https://example.org/sightreading/',
-      'https://example.org/sightreading/index.html',
-      'https://example.org/sightreading/assets/app.js',
+      'https://example.org/zirobam/',
+      'https://example.org/zirobam/index.html',
+      'https://example.org/zirobam/assets/app.js',
     ]);
   });
 
   it('answers from the store without asking the network, and ignores a ?query', async () => {
     await worker.dispatch('install', {});
-    const response = await worker.get('https://example.org/sightreading/assets/app.js?v=3');
-    expect(response?.body).toBe('stored https://example.org/sightreading/assets/app.js');
+    const response = await worker.get('https://example.org/zirobam/assets/app.js?v=3');
+    expect(response?.body).toBe('stored https://example.org/zirobam/assets/app.js');
     expect(worker.fetched).toEqual([]);
   });
 
   it('does not let a Vary: Origin header keep a stored file from matching', async () => {
     await worker.dispatch('install', {});
-    await worker.get('https://example.org/sightreading/assets/app.js');
-    expect(worker.caches.get('music-notes-trainer-v2')!.lastOptions).toEqual({ ignoreSearch: true, ignoreVary: true });
+    await worker.get('https://example.org/zirobam/assets/app.js');
+    expect(worker.caches.get('zirobam-v2')!.lastOptions).toEqual({ ignoreSearch: true, ignoreVary: true });
   });
 
   it('opens a page offline: a navigation that is not stored gets the stored app', async () => {
     await worker.dispatch('install', {});
-    const response = await worker.get('https://example.org/sightreading/some/page', 'navigate');
-    expect(response?.body).toBe('stored https://example.org/sightreading/index.html');
+    const response = await worker.get('https://example.org/zirobam/some/page', 'navigate');
+    expect(response?.body).toBe('stored https://example.org/zirobam/index.html');
   });
 
   it('fails an unknown file offline instead of making one up', async () => {
     await worker.dispatch('install', {});
-    await expect(worker.get('https://example.org/sightreading/assets/unknown.js')).rejects.toThrow('offline');
+    await expect(worker.get('https://example.org/zirobam/assets/unknown.js')).rejects.toThrow('offline');
   });
 
   it('keeps a file it had to fetch, for the next time', async () => {
     const online = runWorker({ precache: ['index.html'], online: true });
     await online.dispatch('install', {});
-    const first = await online.get('https://example.org/sightreading/assets/lazy.js');
-    expect(first?.body).toBe('network https://example.org/sightreading/assets/lazy.js');
-    const second = await online.get('https://example.org/sightreading/assets/lazy.js');
-    expect(second?.body).toBe('network https://example.org/sightreading/assets/lazy.js');
+    const first = await online.get('https://example.org/zirobam/assets/lazy.js');
+    expect(first?.body).toBe('network https://example.org/zirobam/assets/lazy.js');
+    const second = await online.get('https://example.org/zirobam/assets/lazy.js');
+    expect(second?.body).toBe('network https://example.org/zirobam/assets/lazy.js');
     expect(online.fetched).toHaveLength(1);
   });
 
@@ -200,9 +200,9 @@ describe('public/sw.js', () => {
     let touched = false;
     const handler = worker.handlers.get('fetch')!;
     for (const request of [
-      { method: 'GET', url: 'https://other.example/sightreading/x.js', mode: 'cors' },
+      { method: 'GET', url: 'https://other.example/zirobam/x.js', mode: 'cors' },
       { method: 'GET', url: 'https://example.org/elsewhere/x.js', mode: 'cors' },
-      { method: 'POST', url: 'https://example.org/sightreading/x', mode: 'cors' },
+      { method: 'POST', url: 'https://example.org/zirobam/x', mode: 'cors' },
     ]) {
       handler({ request, respondWith: () => void (touched = true) });
     }
@@ -210,11 +210,13 @@ describe('public/sw.js', () => {
   });
 
   it('removes the stores of older versions when it takes over', async () => {
+    await worker.caches.set('zirobam-old', new FakeCache());
+    // the app was called music-notes-trainer at first: its stores go too
     await worker.caches.set('music-notes-trainer-old', new FakeCache());
     await worker.caches.set('someone-elses-cache', new FakeCache());
     await worker.dispatch('install', {});
     await worker.dispatch('activate', {});
-    expect([...worker.caches.keys()].sort()).toEqual(['music-notes-trainer-v2', 'someone-elses-cache']);
+    expect([...worker.caches.keys()].sort()).toEqual(['someone-elses-cache', 'zirobam-v2']);
     expect(worker.claimed).toEqual([true]);
   });
 });

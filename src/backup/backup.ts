@@ -141,9 +141,9 @@ export function backupToText(backup: BackupFile): string {
   return JSON.stringify(backup);
 }
 
-/** The name the downloaded file gets: `music-notes-trainer-backup-2026-10-16.json`. */
+/** The name the downloaded file gets: `zirobam-backup-2026-10-16.json` (the `app` inside the file keeps its first id, so older backups still open). */
 export function backupFileName(now: Date = new Date()): string {
-  return `${BACKUP_APP}-backup-${now.toISOString().slice(0, 10)}.json`;
+  return `zirobam-backup-${now.toISOString().slice(0, 10)}.json`;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

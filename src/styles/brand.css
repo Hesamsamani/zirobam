@@ -1,0 +1,18 @@
+/* ============================================
+   BRAND (the name and the credits)
+   The credit for the piano sounds must be readable (a CC BY licence asks for it), so it uses --text-soft, not --text-subtle.
+   ============================================ */
+
+.options-credit {
+  color: var(--text-soft);
+}
+
+.credit-link {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.credit-link:hover {
+  color: var(--text);
+}

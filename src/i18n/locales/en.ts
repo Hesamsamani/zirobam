@@ -14,7 +14,7 @@ import { uiEn } from './parts/ui.en';
 export const en = {
   // App
   'app.title': 'Sight Reading',
-  'app.documentTitle': 'Sight Reading Practice',
+  'app.documentTitle': 'ZiroBam: learn to read music and play the piano',
   'notation.aria': 'Music notation for sight reading practice',
   'celebration.complete': 'Complete!',
 
@@ -176,7 +176,7 @@ export const en = {
 
   // Main menu and navigation
   'nav.home': 'Main menu',
-  'menu.title': 'Music Notes Trainer',
+  'menu.title': 'ZiroBam',
   'menu.subtitle': 'What would you like to practise?',
   'menu.resume.go': 'Continue',
   'menu.back': 'Back to menu',
@@ -545,6 +545,7 @@ export const en = {
   'backup.err.read': 'The file could not be read.',
   'backup.err.failed': 'The backup could not be made.',
   'options.credit': 'Piano sounds: Salamander Grand Piano by Alexander Holm (CC BY 3.0).',
+  'options.creditLicence': 'Licence',
   // Offline use and installing
   'pwa.title': 'Offline use',
   'pwa.offlineReady': 'The app and its piano sounds are saved in this browser, so it works without internet.',

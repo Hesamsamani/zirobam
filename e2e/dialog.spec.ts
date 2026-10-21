@@ -8,7 +8,7 @@ async function openTestDialog(page: Page, locale?: 'fa'): Promise<void> {
   await page.goto('/');
   await expect(page.locator('#mainMenu')).toBeVisible();
   await page.evaluate(async () => {
-    const url = '/sightreading/src/ui/dialog.ts';
+    const url = new URL('src/ui/dialog.ts', document.baseURI).href;
     const { openDialog } = await import(/* @vite-ignore */ url);
     const opener = document.createElement('button');
     opener.id = 'testOpener';

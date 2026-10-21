@@ -35,7 +35,7 @@ describe('MainMenu', () => {
 
   it('shows a title and a subtitle', () => {
     const { menu } = setup();
-    expect(menu.element.querySelector('h1')!.textContent).toBe('Music Notes Trainer');
+    expect(menu.element.querySelector('h1')!.textContent).toBe('ZiroBam');
     expect(menu.element.querySelector('.menu-subtitle')!.textContent).toBe(t('menu.subtitle'));
   });
 
@@ -171,7 +171,7 @@ describe('MainMenu', () => {
     setLocale('fa');
     level = '۴c';
     menu.refresh();
-    expect(menu.element.querySelector('h1')!.textContent).toBe('مربی نت‌خوانی');
+    expect(menu.element.querySelector('h1')!.textContent).toBe('زیر و بم');
     expect(menu.element.querySelector('[data-tile="songs"] .menu-tile-title')!.textContent).toBe('آهنگ‌ها');
     expect(menu.element.querySelector('[data-tile="levels"] .menu-tile-desc')!.textContent).toContain('۴c');
     expect(menu.element.querySelector('.menu-resume-go')!.textContent).toBe('ادامه');

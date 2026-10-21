@@ -1,9 +1,9 @@
 {
-  "name": "sightreading",
+  "name": "zirobam",
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://ftrain.github.io/sightreading",
+  "homepage": "https://hesamsamani.me/zirobam/",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build && node scripts/build-sw.mjs",
@@ -12,15 +12,13 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui",
-    "deploy": "npm run build && gh-pages -d dist"
+    "test:e2e:ui": "playwright test --ui"
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",
     "@types/webmidi": "^2.1.0",
     "@vitest/coverage-v8": "^4.0.15",
     "fake-indexeddb": "^6.2.6",
-    "gh-pages": "^6.3.0",
     "jsdom": "^27.2.0",
     "typescript": "~5.9.3",
     "vite": "^7.2.4",

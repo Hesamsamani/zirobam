@@ -1,10 +1,10 @@
-# Starts the Music Notes Trainer and opens it in the default browser.
-# Double-click the Desktop shortcut "Music Notes Trainer", or run: powershell -File Start-Trainer.ps1
+# Starts ZiroBam and opens it in the default browser.
+# Double-click the Desktop shortcut "ZiroBam", or run: powershell -File Start-Trainer.ps1
 # Leave this window open while you practise; close it to stop the app.
 
 $project = Split-Path -Parent $MyInvocation.MyCommand.Path
-$url = 'http://localhost:5173/sightreading/'
-$Host.UI.RawUI.WindowTitle = 'Music Notes Trainer (close this window to stop)'
+$url = 'http://localhost:5173/zirobam/'
+$Host.UI.RawUI.WindowTitle = 'ZiroBam (close this window to stop)'
 Set-Location -LiteralPath $project
 
 function Test-Server {
@@ -31,7 +31,7 @@ if (-not (Test-Path -LiteralPath (Join-Path $project 'node_modules'))) {
     }
 }
 
-Write-Host 'Starting Music Notes Trainer. Your browser opens when it is ready.'
+Write-Host 'Starting ZiroBam. Your browser opens when it is ready.'
 Write-Host 'Leave this window open while you practise. Close it to stop.'
 Write-Host ''
 npm run dev -- --open

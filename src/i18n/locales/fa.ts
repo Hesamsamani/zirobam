@@ -15,7 +15,7 @@ import { uiFa } from './parts/ui.fa';
 export const fa: Record<MessageKey, string> = {
   // App
   'app.title': 'نت‌خوانی',
-  'app.documentTitle': 'تمرین نت‌خوانی',
+  'app.documentTitle': 'زیر و بم: یادگیری نت‌خوانی و نواختن پیانو',
   'notation.aria': 'نت‌نویسی موسیقی برای تمرین نت‌خوانی',
   'celebration.complete': 'تمام شد!',
 
@@ -176,7 +176,7 @@ export const fa: Record<MessageKey, string> = {
 
   // منو و پیمایش
   'nav.home': 'منوی اصلی',
-  'menu.title': 'مربی نت‌خوانی',
+  'menu.title': 'زیر و بم',
   'menu.subtitle': 'امروز چه چیزی را تمرین کنیم؟',
   'menu.resume.go': 'ادامه',
   'menu.back': 'بازگشت به منو',
@@ -545,6 +545,7 @@ export const fa: Record<MessageKey, string> = {
   'backup.err.read': 'خواندن فایل ممکن نشد.',
   'backup.err.failed': 'ساختن نسخه‌ی پشتیبان ممکن نشد.',
   'options.credit': 'صدای پیانو: پیانوی بزرگ سالامندر، ساخته‌ی الکساندر هولم (CC BY 3.0).',
+  'options.creditLicence': 'مجوز',
   // Offline use and installing
   'pwa.title': 'استفاده بدون اینترنت',
   'pwa.offlineReady': 'برنامه و صدای پیانو در همین مرورگر ذخیره شده‌اند، پس بدون اینترنت هم کار می‌کند.',

@@ -5,6 +5,10 @@ const OFFLINE = /offline\.spec\.ts/;
 // screenshot baselines: desktop Chrome only, run on purpose (`--project=visual`), not with the default projects
 const VISUAL = /visual\.spec\.ts/;
 const NOT_DEFAULT = [OFFLINE, VISUAL];
+// the folder the app is served from (`base` in vite.config.ts), on the dev server (5173) and on `vite preview` (4173)
+const BASE = '/zirobam/';
+const DEV_URL = `http://localhost:5173${BASE}`;
+const PREVIEW_URL = `http://localhost:4173${BASE}`;
 
 export default defineConfig({
   testDir: './e2e',
@@ -15,7 +19,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : 4,
   reporter: 'html',
   use: {
-    baseURL: 'http://localhost:5173/sightreading/',
+    baseURL: DEV_URL,
     trace: 'on-first-retry',
   },
 
@@ -45,21 +49,21 @@ export default defineConfig({
     {
       name: 'offline',
       testMatch: OFFLINE,
-      use: { ...devices['Desktop Chrome'], baseURL: 'http://localhost:4173/sightreading/' },
+      use: { ...devices['Desktop Chrome'], baseURL: PREVIEW_URL },
     },
   ],
 
   webServer: [
     {
       command: 'npm run dev',
-      url: 'http://localhost:5173/sightreading/',
+      url: DEV_URL,
       reuseExistingServer: true,
       timeout: 120000,
     },
     {
       // a fresh build every time, so the tests never run against an old one
       command: 'npm run build && npx vite preview --port 4173 --strictPort',
-      url: 'http://localhost:4173/sightreading/',
+      url: PREVIEW_URL,
       reuseExistingServer: false,
       timeout: 240000,
     },

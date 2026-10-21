@@ -10,6 +10,7 @@ import './styles/rhythm.css';
 import './styles/persian.css';
 import './styles/heatmap.css';
 import './styles/today.css';
+import './styles/brand.css';
 import createVerovioModule from 'verovio/wasm';
 import { VerovioToolkit } from 'verovio/esm';
 import * as Tone from 'tone';

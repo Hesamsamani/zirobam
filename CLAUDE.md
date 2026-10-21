@@ -4,17 +4,16 @@ This file provides guidance for Claude Code when working on this project.
 
 ## Project Overview
 
-Sight Reading Practice is a web app for learning to read piano sheet music. It generates procedural exercises with a structured curriculum and provides real-time feedback via MIDI input.
+ZiroBam (Persian زیر و بم; first called Sight Reading Practice) is a web app for learning to read piano sheet music. It generates procedural exercises with a structured curriculum and provides real-time feedback via MIDI input.
 
 ## Build & Test Commands
 
 ```bash
 npm install          # Install dependencies
-npm run dev          # Start dev server (http://localhost:5173/sightreading/)
+npm run dev          # Start dev server (http://localhost:5173/zirobam/)
 npm test             # Run unit tests (Vitest)
 npx playwright test  # Run E2E tests
 npm run build        # Production build
-npm run deploy       # Deploy to GitHub Pages
 ```
 
 ## Architecture
@@ -111,6 +110,7 @@ The timing system uses the music generator as the single source of truth:
 
 This is the owner's personal fork. Design: `docs/superpowers/specs/2026-10-16-bilingual-note-trainer-design.md`.
 
+- **Name and address:** the app is called ZiroBam and is served under `/zirobam/` (`base` in `vite.config.ts`; one `BASE` constant in `playwright.config.ts`; e2e code builds URLs from `document.baseURI`, never from a `/zirobam/...` literal). Some internal ids keep their first names on purpose, because stored data and old backups use them: `BACKUP_APP` and the IndexedDB name `'music-notes-trainer'`, `'sightreading-progress'` and `'music-notes-trainer-maker'`. The service worker stores under `zirobam-` and removes the `music-notes-trainer-` stores of the first name. The icons are drawn from `public/favicon.svg` and `scripts/icons/*.svg` by `node scripts/build-icons.mjs` (it needs Playwright's chromium; `scripts/ico.mjs` packs the `.ico`) and the results are committed. `src/styles/brand.css` holds the credit styles.
 - **Branch:** work happens on `bilingual`. The only remote is `upstream` and its push URL is set to `DISABLED-local-only`. Do not push or fork to GitHub unless the owner asks.
 - **Two languages, always together:** every new user-visible string gets a key in `src/i18n/locales/en.ts` and the same key in `fa.ts`. No hard-coded UI text. Persian text follows the persian-writing skill (natural wording, ZWNJ, «guillemets»).
 - **RTL rule:** only text and panels flip for Persian. The score (`#notation`), the staff and the piano keyboard stay `dir="ltr"`.
@@ -194,4 +194,4 @@ This is the owner's personal fork. Design: `docs/superpowers/specs/2026-10-16-bi
 - Vite's dev server can serve stale CSS after quick edits; restart it if a rule seems missing.
 - Line endings (checked 2026-10-20 by counting bytes): only `src/style.css` is CRLF; every other file is LF. Patch scripts for `style.css` must preserve CRLF. `grep` and `od` in Git Bash hide or mangle carriage returns, so count bytes with Node instead.
 - Heredoc and `node -e` scripts lose backslashes in Git Bash (`\\(` becomes `(`, so a regex silently matches nothing). Write scripts with the Write tool, use regex literals, and check the match count before replacing.
-- Visual guard: `npx playwright test --project=visual` compares six screens pixel for pixel (zero tolerance, desktop Chrome, `e2e/visual.spec.ts-snapshots/`). It is not part of the default run. Run it after any CSS refactor; accept a deliberate change with `--update-snapshots`. Re-measure geometry only after `document.getAnimations()` has finished.
+- Visual guard: `npx playwright test --project=visual` compares twelve screens pixel for pixel (none of them shows the exercise screen, the options panel, the control bar or toasts) (zero tolerance, desktop Chrome, `e2e/visual.spec.ts-snapshots/`). It is not part of the default run. Run it after any CSS refactor; accept a deliberate change with `--update-snapshots`. Re-measure geometry only after `document.getAnimations()` has finished.
