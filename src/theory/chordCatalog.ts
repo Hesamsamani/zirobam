@@ -44,8 +44,8 @@ export const CHORD_DEFS: readonly ChordDef[] = [
 
   chord('power', 'power', '5', '1P 5P', '5'),
 
-  chord('quartal', 'quartal', 'Quartal', '1P 4P 7m', ''),
-  chord('quintal', 'quartal', 'Quintal', '1P 5P 9M', ''),
+  chord('quartal', 'quartal', '(4ths)', '1P 4P 7m', ''),
+  chord('quintal', 'quartal', '(5ths)', '1P 5P 9M', ''),
 
   chord('dom9', 'ninth', '9', '1P 3M 5P 7m 9M', '9'),
   chord('maj9', 'ninth', 'maj9', '1P 3M 5P 7M 9M', 'maj9'),

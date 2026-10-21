@@ -35,8 +35,8 @@ describe('chordsOfScale', () => {
     expect(found.filter((c) => c.def.family === 'triad')).toHaveLength(7);
     expect(found.filter((c) => c.def.family === 'sixth').map((c) => c.symbol)).toEqual(['C6', 'Dm6', 'F6', 'G6']);
     expect(found.filter((c) => c.def.family === 'power').map((c) => c.symbol)).toEqual(['C5', 'D5', 'E5', 'F5', 'G5', 'A5']);
-    expect(found.filter((c) => c.def.id === 'quartal').map((c) => c.symbol)).toEqual(['DQuartal', 'EQuartal', 'GQuartal', 'AQuartal', 'BQuartal']);
-    expect(found.filter((c) => c.def.id === 'quintal').map((c) => c.symbol)).toEqual(['CQuintal', 'DQuintal', 'FQuintal', 'GQuintal', 'AQuintal']);
+    expect(found.filter((c) => c.def.id === 'quartal').map((c) => c.symbol)).toEqual(['D(4ths)', 'E(4ths)', 'G(4ths)', 'A(4ths)', 'B(4ths)']);
+    expect(found.filter((c) => c.def.id === 'quintal').map((c) => c.symbol)).toEqual(['C(5ths)', 'D(5ths)', 'F(5ths)', 'G(5ths)', 'A(5ths)']);
   });
 
   it('orders the chords by degree, and within a degree as the catalog does', () => {

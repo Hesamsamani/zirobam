@@ -2,6 +2,7 @@ import { storageGet, storageSet } from '../core/safeStorage';
 import { CHORD_FAMILIES, type ChordFamily } from '../theory/chordCatalog';
 import { STEP_SEMITONES, parseNoteName, type Alter } from '../theory/pitch';
 import { SCALE_CATEGORIES, SCALE_IDS, getScale, type ScaleCategory, type ScaleId } from '../theory/scaleCatalog';
+import { spellScale, type SpelledScale } from '../theory/spell';
 
 export type Tab = 'scales' | 'chords';
 export type Labels = 'names' | 'right' | 'left';
@@ -151,4 +152,13 @@ export function parseParam(param: string): { root: string; scale: ScaleId } | nu
   if (!match) return null;
   const scale = oneOf(SCALE_IDS, match[3]);
   return scale ? { root: `${match[1].toUpperCase()}${SUFFIX_SIGN[match[2] ?? '']}`, scale } : null;
+}
+
+/** The scale of a root and an id. A root that cannot be written (it would need a triple sign) is taken as its note of the piano. */
+export function spellChoice(root: number | string, scale: ScaleId): SpelledScale {
+  try {
+    return spellScale(root, scale);
+  } catch {
+    return spellScale(rootChipPc(root), scale);
+  }
 }

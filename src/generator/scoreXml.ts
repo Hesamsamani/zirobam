@@ -1,4 +1,4 @@
-import { buildExampleXml } from '../lessons/exampleXml';
+import { buildExampleXml, type StaffExample } from '../lessons/exampleXml';
 import type { SongDraft } from '../songs/songMaker';
 import type { MidiNote, MidiSongSpec, MidiTrackSpec } from '../theory/midiExport';
 import { parsePitch, pianoMidi } from '../theory/pitch';
@@ -48,14 +48,13 @@ function restBars(meter: MeterId, bars: number): string {
 }
 
 /**
- * The score of a piece as MusicXML for the practice stand and for drawing: the grand staff. A tune goes in the right
- * hand, over chords that go in the left an octave down (and over rests when there are no chords). Chords alone are
- * shared between the hands the way a pianist reads them: from middle C up in the right, the rest in the left.
+ * The score of a piece: the grand staff. A tune goes in the right hand, over chords that go in the left an octave down
+ * (and over rests when there are no chords). Chords alone are shared between the hands the way a pianist reads them:
+ * from middle C up in the right, the rest in the left.
  */
-export function pieceXml(piece: GeneratedPiece): string {
+export function pieceSpec(piece: GeneratedPiece): StaffExample {
   const meter = METERS[piece.meter];
   const bars = piece.melody ? piece.melody.bars.length : (piece.progression?.bars ?? 0);
-  const fifths = piece.scale.fifths ?? 0;
   let upper: string;
   let lower: string;
   if (piece.melody) {
@@ -67,7 +66,18 @@ export function pieceXml(piece: GeneratedPiece): string {
   } else {
     throw new Error('Nothing to write: the piece has no melody and no progression');
   }
-  return buildExampleXml({ clef: 'grand', notes: upper, lower, fifths, beats: meter.beats, beatType: meter.beatType, showTime: true });
+  return { clef: 'grand', notes: upper, lower, fifths: piece.scale.fifths ?? 0, beats: meter.beats, beatType: meter.beatType, showTime: true };
+}
+
+/** `count` bars of a score from bar `from` (counting from 0), as a score of its own: for drawing a long piece a few bars to a line. */
+export function barsOfSpec(spec: StaffExample, from: number, count: number): StaffExample {
+  const cut = (text: string | undefined): string | undefined => text?.split(' | ').slice(from, from + count).join(' | ');
+  return { ...spec, notes: cut(spec.notes)!, lower: cut(spec.lower) };
+}
+
+/** The score of a piece as MusicXML, for the practice stand. */
+export function pieceXml(piece: GeneratedPiece): string {
+  return buildExampleXml(pieceSpec(piece));
 }
 
 /**

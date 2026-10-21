@@ -56,6 +56,16 @@ test.describe('Visual baseline', () => {
     await shot(page, 'scales-chord-dialog');
   });
 
+  test('music maker', async ({ page }) => {
+    await open(page, 'generator?t=prog&s=c-major&style=jazz&bars=8&seed=12', '.gen-line svg .note');
+    await shot(page, 'generator');
+  });
+
+  test('music maker in Persian', async ({ page }) => {
+    await open(page, 'generator?t=melody&s=c-major&style=bossa&bars=8&seed=3&over=progression', '.gen-line svg .note', 'fa');
+    await shot(page, 'generator-fa');
+  });
+
   test('dictionary in Persian', async ({ page }) => {
     await open(page, 'scales/ek-segah', '.sc-staff svg .note', 'fa');
     await shot(page, 'scales-segah-fa');

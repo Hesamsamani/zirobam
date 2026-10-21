@@ -1,5 +1,5 @@
 /** The screens of the app. `levels` and `practice` share the music stand; `learn` opens inside it too. */
-export const VIEWS = ['home', 'levels', 'practice', 'songs', 'learn', 'lessons', 'catalog', 'xylophone', 'progress', 'maker', 'ear', 'scales'] as const;
+export const VIEWS = ['home', 'levels', 'practice', 'songs', 'learn', 'lessons', 'catalog', 'xylophone', 'progress', 'maker', 'ear', 'scales', 'generator'] as const;
 export type View = (typeof VIEWS)[number];
 
 export function isView(value: string): value is View {
@@ -8,8 +8,8 @@ export function isView(value: string): value is View {
 
 /** Screens whose address can end in a name (`#/lessons/note-values`, `#/maker/maker-lk3j2a`, `#/scales/d-shur`). */
 const NAMED_VIEWS: readonly View[] = ['lessons', 'maker', 'scales'];
-/** Screens that keep their filters in a query after the address (`#/catalog?artist=...`). */
-const QUERY_VIEWS: readonly View[] = ['catalog'];
+/** Screens that keep their settings in a query after the address (`#/catalog?artist=...`, `#/generator?s=d-dorian&seed=5`). */
+const QUERY_VIEWS: readonly View[] = ['catalog', 'generator'];
 
 export interface RouteLocation {
   view: View;

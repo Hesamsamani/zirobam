@@ -5,73 +5,73 @@ async function openScales(page: Page, locale?: 'fa') {
   await page.goto('/');
   await page.locator('#mainMenu [data-tile="scales"]').click();
   await expect(page.locator('#scalesView')).toBeVisible();
-  await expect(page.locator('.sc-staff svg .note').first()).toBeVisible();
+  await expect(page.locator('#scalesView .sc-staff svg .note').first()).toBeVisible();
 }
 
 /** On a phone the picker is folded behind the button that names the scale; on a wide screen it is always open. */
 async function openPicker(page: Page) {
-  const toggle = page.locator('.dict-toggle');
+  const toggle = page.locator('#scalesView .dict-toggle');
   if ((await toggle.isVisible()) && (await toggle.getAttribute('aria-expanded')) === 'false') await toggle.click();
 }
 
-const labels = (page: Page) => page.locator('.sc-staff .note-label').allTextContents();
-const key = (page: Page, note: string) => page.locator(`.sc-keys .lk-key[data-note="${note}"]`);
+const labels = (page: Page) => page.locator('#scalesView .sc-staff .note-label').allTextContents();
+const key = (page: Page, note: string) => page.locator(`#scalesView .sc-keys .lk-key[data-note="${note}"]`);
 
 test.describe('Scales and chords', () => {
   test('opens from the menu on the C major scale: stairs, staff, keys and notes', async ({ page }) => {
     await openScales(page);
     await expect(page.locator('#scalesView .view-title')).toHaveText('Scale and chord dictionary');
     await openPicker(page);
-    await expect(page.locator('.sc-roots .sc-chip')).toHaveCount(12);
-    await expect(page.locator('.dict-step')).toHaveCount(7);
-    await expect(page.locator('.dict-step[data-tonic="true"]')).toContainText('C');
-    await expect(page.locator('.sc-staff svg .note')).toHaveCount(8);
-    await expect(page.locator('.sc-keys .lk-key.marked')).toHaveCount(8);
-    await expect(page.locator('.sc-notes')).toHaveText('Notes: C D E F G A B C');
+    await expect(page.locator('#scalesView .sc-roots .sc-chip')).toHaveCount(12);
+    await expect(page.locator('#scalesView .dict-step')).toHaveCount(7);
+    await expect(page.locator('#scalesView .dict-step[data-tonic="true"]')).toContainText('C');
+    await expect(page.locator('#scalesView .sc-staff svg .note')).toHaveCount(8);
+    await expect(page.locator('#scalesView .sc-keys .lk-key.marked')).toHaveCount(8);
+    await expect(page.locator('#scalesView .sc-notes')).toHaveText('Notes: C D E F G A B C');
     expect(await labels(page)).toEqual(['C', 'D', 'E', 'F', 'G', 'A', 'B', 'C']);
   });
 
   test('another key: D flat major has its key signature and its own keys', async ({ page }) => {
     await openScales(page);
     await openPicker(page);
-    await page.locator('.sc-roots [data-root="1"]').click();
-    await expect(page.locator('.sc-roots [aria-pressed="true"]')).toHaveText('D♭');
-    await expect(page.locator('.sc-notes')).toHaveText('Notes: D♭ E♭ F G♭ A♭ B♭ C D♭');
+    await page.locator('#scalesView .sc-roots [data-root="1"]').click();
+    await expect(page.locator('#scalesView .sc-roots [aria-pressed="true"]')).toHaveText('D♭');
+    await expect(page.locator('#scalesView .sc-notes')).toHaveText('Notes: D♭ E♭ F G♭ A♭ B♭ C D♭');
     await expect(key(page, 'C#4')).toHaveClass(/marked/);
     await expect(key(page, 'D4')).not.toHaveClass(/marked/);
     // five flats at the start of the staff
-    await expect(page.locator('.sc-staff .keySig .keyAccid')).toHaveCount(5);
+    await expect(page.locator('#scalesView .sc-staff .keySig .keyAccid')).toHaveCount(5);
   });
 
   test('fingering under the notes, for the right and the left hand', async ({ page }) => {
     await openScales(page);
-    await page.locator('.sc-labels [data-labels="right"]').click();
+    await page.locator('#scalesView .sc-labels [data-labels="right"]').click();
     expect(await labels(page)).toEqual(['1', '2', '3', '1', '2', '3', '4', '5']);
-    await page.locator('.sc-labels [data-labels="left"]').click();
+    await page.locator('#scalesView .sc-labels [data-labels="left"]').click();
     expect(await labels(page)).toEqual(['5', '4', '3', '2', '1', '3', '2', '1']);
     await openPicker(page);
-    await page.locator('.sc-roots [data-root="1"]').click();
-    await expect(page.locator('.sc-note')).toContainText('no fingering');
+    await page.locator('#scalesView .sc-roots [data-root="1"]').click();
+    await expect(page.locator('#scalesView .sc-note')).toContainText('no fingering');
   });
 
   test('other kinds of scale, and the chords that belong to a scale', async ({ page }) => {
     await openScales(page);
     await openPicker(page);
-    await page.locator('.sc-roots [data-root="9"]').click();
-    await page.locator('.dict-categories [data-category="minor"]').click();
-    await page.locator('.dict-scales [data-type="harmonic-minor"]').click();
-    await expect(page.locator('.sc-notes')).toHaveText('Notes: A B C D E F G♯ A');
+    await page.locator('#scalesView .sc-roots [data-root="9"]').click();
+    await page.locator('#scalesView .dict-categories [data-category="minor"]').click();
+    await page.locator('#scalesView .dict-scales [data-type="harmonic-minor"]').click();
+    await expect(page.locator('#scalesView .sc-notes')).toHaveText('Notes: A B C D E F G♯ A');
 
-    await page.locator('.sc-tab[data-tab="chords"]').click();
-    await expect(page.locator('.dict-scale')).toBeHidden();
+    await page.locator('#scalesView .sc-tab[data-tab="chords"]').click();
+    await expect(page.locator('#scalesView .dict-scale')).toBeHidden();
     await openPicker(page);
-    await page.locator('.sc-roots [data-root="0"]').click();
-    await page.locator('.dict-categories [data-category="major"]').click();
-    await page.locator('.dict-scales [data-type="major"]').click();
-    await page.locator('.dict-families [data-family="seventh"]').click();
-    await expect(page.locator('.dict-card')).toHaveCount(7);
-    await expect(page.locator('.dict-card[data-degree="1"] .dict-card-symbol')).toHaveText('Cmaj7');
-    await expect(page.locator('.dict-card[data-degree="1"] .dict-card-notes')).toHaveText('C · E · G · B');
+    await page.locator('#scalesView .sc-roots [data-root="0"]').click();
+    await page.locator('#scalesView .dict-categories [data-category="major"]').click();
+    await page.locator('#scalesView .dict-scales [data-type="major"]').click();
+    await page.locator('#scalesView .dict-families [data-family="seventh"]').click();
+    await expect(page.locator('#scalesView .dict-card')).toHaveCount(7);
+    await expect(page.locator('#scalesView .dict-card[data-degree="1"] .dict-card-symbol')).toHaveText('Cmaj7');
+    await expect(page.locator('#scalesView .dict-card[data-degree="1"] .dict-card-notes')).toHaveText('C · E · G · B');
   });
 
   test('Hear it plays the piano from the app\'s own files, without an error', async ({ page }) => {
@@ -79,7 +79,7 @@ test.describe('Scales and chords', () => {
     page.on('pageerror', (e) => errors.push(e.message));
     await openScales(page);
     const samples = page.waitForResponse((r) => r.url().includes('/samples/salamander/'));
-    await page.locator('.sc-hear').click();
+    await page.locator('#scalesView .sc-hear').click();
     expect((await samples).status()).toBe(200);
     await page.waitForTimeout(500);
     expect(errors).toEqual([]);
@@ -87,16 +87,16 @@ test.describe('Scales and chords', () => {
 
   test('play along: the next key is marked, and finishing earns a reward', async ({ page }) => {
     await openScales(page);
-    await page.locator('.sc-along').click();
-    await expect(page.locator('.sc-status')).toHaveText('Play the marked key.');
-    await expect(page.locator('.sc-keys .lk-key.next-key')).toHaveAttribute('data-note', 'C4');
+    await page.locator('#scalesView .sc-along').click();
+    await expect(page.locator('#scalesView .sc-status')).toHaveText('Play the marked key.');
+    await expect(page.locator('#scalesView .sc-keys .lk-key.next-key')).toHaveAttribute('data-note', 'C4');
     await key(page, 'E4').click(); // not the marked one
-    await expect(page.locator('.sc-status')).toHaveText('Not that one. Look at the marked key.');
+    await expect(page.locator('#scalesView .sc-status')).toHaveText('Not that one. Look at the marked key.');
     for (const note of ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5']) {
-      await expect(page.locator('.sc-keys .lk-key.next-key')).toHaveAttribute('data-note', note);
+      await expect(page.locator('#scalesView .sc-keys .lk-key.next-key')).toHaveAttribute('data-note', note);
       await key(page, note).click();
     }
-    await expect(page.locator('.sc-status')).toHaveText('Well done! You played every note.');
+    await expect(page.locator('#scalesView .sc-status')).toHaveText('Well done! You played every note.');
     await page.goto('#/progress');
     await expect(page.locator('#progressView .pv-stat', { hasText: 'Scales and chords played' })).toContainText('1');
   });
@@ -104,22 +104,22 @@ test.describe('Scales and chords', () => {
   test('remembers the choice', async ({ page }) => {
     await openScales(page);
     await openPicker(page);
-    await page.locator('.sc-roots [data-root="7"]').click();
-    await page.locator('.dict-categories [data-category="minor"]').click();
-    await page.locator('.dict-scales [data-type="natural-minor"]').click();
+    await page.locator('#scalesView .sc-roots [data-root="7"]').click();
+    await page.locator('#scalesView .dict-categories [data-category="minor"]').click();
+    await page.locator('#scalesView .dict-scales [data-type="natural-minor"]').click();
     await page.reload(); // the address keeps the screen and the scale
     await expect(page.locator('#scalesView')).toBeVisible();
-    await expect(page.locator('.sc-notes')).toHaveText('Notes: G A B♭ C D E♭ F G');
+    await expect(page.locator('#scalesView .sc-notes')).toHaveText('Notes: G A B♭ C D E♭ F G');
   });
 
   test('is in Persian, with Persian digits for the fingers, and the picture left to right', async ({ page }) => {
     await openScales(page, 'fa');
     await expect(page.locator('#scalesView .view-title')).toHaveText('فرهنگ‌نامه گام و آکورد');
-    await page.locator('.sc-labels [data-labels="right"]').click();
+    await page.locator('#scalesView .sc-labels [data-labels="right"]').click();
     expect(await labels(page)).toEqual(['۱', '۲', '۳', '۱', '۲', '۳', '۴', '۵']);
-    expect(await page.locator('.sc-staff').getAttribute('dir')).toBe('ltr');
-    expect(await page.locator('.sc-keys').getAttribute('dir')).toBe('ltr');
-    expect(await page.locator('.dict-stairs').getAttribute('dir')).toBe('ltr');
+    expect(await page.locator('#scalesView .sc-staff').getAttribute('dir')).toBe('ltr');
+    expect(await page.locator('#scalesView .sc-keys').getAttribute('dir')).toBe('ltr');
+    expect(await page.locator('#scalesView .dict-stairs').getAttribute('dir')).toBe('ltr');
   });
 
   test('fits the screen without scrolling sideways', async ({ page }) => {

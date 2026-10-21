@@ -1,0 +1,200 @@
+/* ============================================
+   MUSIC MAKER (src/generator)
+   The picker is the one of the dictionary (dictionary.css); here are the settings, the ribbon of chords and the staff.
+   Cream paper is for what is music: the chords and the staff. Logical properties only; the staff stays left to right.
+   ============================================ */
+
+.generator-view {
+  flex: 1;
+  inline-size: 100%;
+  max-inline-size: 1180px;
+  margin-inline: auto;
+  padding: var(--space-xl) var(--space-lg);
+}
+
+@media (max-width: 560px) {
+  .generator-view {
+    padding: var(--space-lg) var(--space-md);
+  }
+}
+
+.gen-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+  gap: var(--space-md) var(--space-lg);
+  margin-block: var(--space-md);
+  padding: var(--space-md);
+  background: var(--surface-1);
+  border: 1px solid var(--line-faint);
+  border-radius: var(--radius-3xl);
+}
+
+.gen-group {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+}
+
+.gen-group-style,
+.gen-group-seed {
+  grid-column: 1 / -1;
+}
+
+.gen-label {
+  color: var(--text-soft);
+  font-size: 0.85rem;
+}
+
+.gen-note {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.82rem;
+}
+
+.gen-group-seed {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--space-md);
+}
+
+.gen-field {
+  display: grid;
+  gap: 6px;
+}
+
+.gen-seed,
+.gen-bpm {
+  min-block-size: var(--tap-min);
+  inline-size: 9rem;
+  padding-inline: 14px;
+  background: var(--bg);
+  border: 1px solid var(--line-medium);
+  border-radius: var(--radius-pill);
+  color: var(--text);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+.gen-bpm {
+  inline-size: 7rem;
+}
+
+.gen-bpm::placeholder {
+  color: var(--text-soft);
+}
+
+.gen-new {
+  align-self: end;
+}
+
+.gen-summary {
+  margin: var(--space-sm) 0 var(--space-xs);
+  font-family: var(--font-serif);
+  font-size: clamp(1.25rem, 3vw, 1.6rem);
+  font-weight: 500;
+}
+
+.gen-problem {
+  margin-block: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--quarter-soft);
+  border-inline-start: 3px solid var(--quarter);
+  border-radius: var(--radius-lg);
+  font-size: 0.92rem;
+}
+
+.gen-status {
+  min-block-size: 1.4em;
+  margin: 0 0 var(--space-sm);
+  color: #e69a9a;
+  font-size: 0.92rem;
+}
+
+/* ----- the ribbon of chords ----- */
+
+.gen-ribbon {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-sm);
+  margin-block: var(--space-sm) var(--space-md);
+}
+
+.gen-bar {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--paper);
+  border: 2px solid transparent;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-1);
+  color: var(--ink);
+  transition: border-color var(--transition-fast);
+}
+
+.gen-bar[data-current='true'] {
+  border-color: var(--current);
+}
+
+.gen-chord {
+  flex: 1 1 0;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 2px;
+  min-block-size: 64px;
+  padding: 6px 4px;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-lg);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.gen-chord:hover {
+  background: rgba(26, 26, 26, 0.07);
+}
+
+.gen-chord:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+}
+
+.gen-chord-symbol {
+  font-family: var(--font-serif);
+  font-size: 1.35rem;
+  font-weight: 500;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.gen-chord-roman {
+  color: #5b554d;
+  font-family: var(--font-serif);
+  font-size: 0.9rem;
+}
+
+/* ----- the staff ----- */
+
+.gen-score {
+  display: grid;
+  gap: var(--space-sm);
+  margin-block-start: var(--space-md);
+}
+
+.gen-line {
+  margin: 0;
+}
+
+@media (max-width: 599px) {
+  .gen-ribbon {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gen-bar {
+    transition: none;
+  }
+}

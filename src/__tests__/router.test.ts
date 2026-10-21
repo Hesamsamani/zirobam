@@ -56,6 +56,9 @@ describe('parseLocation', () => {
 
   it('ignores a query on the catalogue (it is read by the screen itself) and refuses it elsewhere', () => {
     expect(parseLocation('#/catalog?artist=Queen&level=2')).toEqual({ view: 'catalog', param: null });
+    expect(parseLocation('#/generator')).toEqual({ view: 'generator', param: null });
+    expect(parseLocation('#/generator?t=prog&s=d-dorian&style=jazz&bars=8&seed=123')).toEqual({ view: 'generator', param: null });
+    expect(hashQuery('#/generator?t=prog&seed=5')).toBe('t=prog&seed=5');
     expect(parseLocation('#/levels?x=1')).toEqual({ view: 'home', param: null });
   });
 

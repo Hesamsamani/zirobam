@@ -4,10 +4,10 @@ import type { NotationToolkit } from '../learn/noteCard';
 import { createBackButton } from '../menu/backButton';
 import type { PianoVoice } from '../playback/pianoVoice';
 import { getScale } from '../theory/scaleCatalog';
-import { spellScale, type SpelledScale } from '../theory/spell';
+import type { SpelledScale } from '../theory/spell';
 import { openChordDialog } from './chordDialog';
 import { ChordSection } from './chordSection';
-import { formatParam, parseParam, readChoice, rootChipPc, writeChoice, type Choice, type ChoiceStorage, type Tab } from './dictionaryState';
+import { formatParam, parseParam, readChoice, spellChoice, writeChoice, type Choice, type ChoiceStorage, type Tab } from './dictionaryState';
 import { ScalePanel } from './scalePanel';
 import { ScalePicker } from './scalePicker';
 
@@ -153,13 +153,9 @@ export class ScalesView {
 
   // ----- the choice -----
 
-  /** The scale of a choice. A root that cannot be written (it would need a triple sign) is taken as its note of the piano. */
+  /** The scale of a choice. */
   private spell(choice: Choice): SpelledScale {
-    try {
-      return spellScale(choice.root, choice.scale);
-    } catch {
-      return spellScale(rootChipPc(choice.root), choice.scale);
-    }
+    return spellChoice(choice.root, choice.scale);
   }
 
   private summary(): string {

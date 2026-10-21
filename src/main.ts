@@ -3,6 +3,7 @@ import './style.css';
 import './styles/dialog.css';
 import './styles/dictionary.css';
 import './styles/chordDialog.css';
+import './styles/generator.css';
 import createVerovioModule from 'verovio/wasm';
 import { VerovioToolkit } from 'verovio/esm';
 import * as Tone from 'tone';
@@ -65,7 +66,8 @@ import { PracticeAids } from './practice/practiceAids';
 import { applyBackup, backupFileName, browserStorage, createBackup } from './backup/backup';
 import { BackupPanel, type BackupPanelDeps } from './backup/backupView';
 import { downloadTextFile } from './backup/download';
-import { newMakerId } from './songs/songMaker';
+import { buildDraft, newMakerId } from './songs/songMaker';
+import { createFeatureViews } from './app/featureViews';
 import { XylophoneView } from './xylophone/xylophoneView';
 import { PracticePanel } from './practice/practicePanel';
 import { songTitle } from './songs/songText';
@@ -1283,13 +1285,35 @@ function setupNavigation(learn: LearnHandle) {
     onPlayed: () => game.scalePlayed(),
     onAnswer: (note, correct) => practiceMemory.noteAnswered(note, correct),
   });
+  // the screens of the feature modules (src/app/featureViews.ts)
+  const features = createFeatureViews({
+    newToolkit: () => new VerovioToolkit(verovioModule) as unknown as NotationToolkit,
+    voice: { ...pianoVoice, ready: async () => (await Tone.start(), pianoVoice.ready()) },
+    formatName: (note) => formatNoteName(note, getNoteNameSystem()),
+    goHome: () => appShell.navigate('home'),
+    practiseXml: (xml, title) => {
+      if (isPlaying) stop();
+      startScore(parseMusicXML(xml), { scoreId: null, title });
+    },
+    openInMaker: async (draft) => {
+      const built = buildDraft(draft);
+      if (!built.ok) return false;
+      const id = newMakerId();
+      if (!(await scoreStore.put({ id, title: draft.title, kind: 'maker', data: built.xml })).ok) return false;
+      appShell.navigate('maker', id);
+      return true;
+    },
+  });
+  const featureOf = (view: View) => features.find((feature) => feature.id === view);
   onLocaleChange(() => {
     ear.refresh();
     scales.refresh();
+    features.forEach((feature) => feature.refresh());
   });
   onNoteNamesChange(() => {
     ear.refresh();
     scales.refresh();
+    features.forEach((feature) => feature.refresh());
   });
   const lessons = new LessonsView({
     toolkit: new VerovioToolkit(verovioModule) as unknown as NotationToolkit,
@@ -1330,7 +1354,7 @@ function setupNavigation(learn: LearnHandle) {
   songsView = songs;
   xylophoneView = xylophone;
   progressView = progress;
-  document.getElementById('app')!.prepend(menu.element, lessons.element, songs.element, maker.element, ear.element, scales.element, catalog.element, xylophone.element, progress.element);
+  document.getElementById('app')!.prepend(menu.element, lessons.element, songs.element, maker.element, ear.element, scales.element, catalog.element, xylophone.element, progress.element, ...features.map((feature) => feature.element));
 
   document.getElementById('homeButton')!.addEventListener('click', () => appShell.navigate('home'));
 
@@ -1347,12 +1371,14 @@ function setupNavigation(learn: LearnHandle) {
       if (view === 'xylophone') xylophone.deactivate();
       if (view === 'ear') ear.deactivate();
       if (view === 'scales') scales.deactivate();
+      featureOf(view)?.deactivate();
       if (view === 'lessons') lessons.stop();
     },
     change: (view, param) => {
       if (view === 'lessons') lessons.show(param);
       if (view === 'maker') void maker.show(param);
       if (view === 'scales') scales.applyParam(param);
+      featureOf(view)?.change(param);
     },
     enter: (view, previous, param) => {
       if (STAND_VIEWS.includes(view)) pianoKeyboard?.attach();
@@ -1399,6 +1425,8 @@ function setupNavigation(learn: LearnHandle) {
         case 'progress':
           progress.refresh();
           break;
+        default:
+          featureOf(view)?.activate(param);
       }
     },
   });
