@@ -7,6 +7,29 @@
     <meta name="application-name" content="ZiroBam" />
     <meta name="apple-mobile-web-app-title" content="ZiroBam" />
     <meta name="theme-color" content="#1a1a1a" />
+    <script>
+      // Puts the stored theme, accent and language on the page before the first paint, so a visit does not flash the
+      // dark theme or the left-to-right layout first. It reads the same keys as src/ui/appearance.ts and src/i18n; the
+      // app takes over when it starts. Without storage nothing changes: dark, brass, English.
+      (function () {
+        try {
+          var root = document.documentElement;
+          var store = window.localStorage;
+          var theme = store.getItem('ui.theme');
+          var accent = store.getItem('ui.accent');
+          var light = theme === 'light' || (theme === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches);
+          root.setAttribute('data-theme', light ? 'light' : 'dark');
+          root.setAttribute('data-accent', ['violet', 'blue', 'rose', 'copper', 'silver'].indexOf(accent) >= 0 ? accent : 'brass');
+          if (light) document.querySelector('meta[name="theme-color"]').setAttribute('content', '#e2e7ec');
+          if (store.getItem('ui.locale') === 'fa') {
+            root.setAttribute('lang', 'fa');
+            root.setAttribute('dir', 'rtl');
+          }
+        } catch (e) {
+          // no storage, or an odd page: the defaults
+        }
+      })();
+    </script>
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="icon" href="/zirobam/favicon.ico" sizes="32x32" type="image/x-icon" />
@@ -154,6 +177,28 @@
             <span data-i18n="options.persianDigits">Persian digits</span>
             <input type="checkbox" id="persianDigits" checked />
           </label>
+        </div>
+
+        <div class="options-group" id="appearanceGroup">
+          <h3 data-i18n="appearance.title">Appearance</h3>
+          <div class="option-row">
+            <select id="themeSelect" aria-label="Theme" data-i18n-attr="aria-label:appearance.theme">
+              <option value="dark" data-i18n="appearance.theme.dark">Dark</option>
+              <option value="light" data-i18n="appearance.theme.light">Light</option>
+              <option value="system" data-i18n="appearance.theme.system">Same as the device</option>
+            </select>
+          </div>
+          <div class="option-row accent-row">
+            <span id="accentLabel" data-i18n="appearance.accent">Accent colour</span>
+            <div class="accent-swatches" role="radiogroup" aria-labelledby="accentLabel">
+              <button type="button" role="radio" aria-checked="true" tabindex="0" data-accent="brass" aria-label="Brass" data-i18n-attr="aria-label:appearance.accent.brass"></button>
+              <button type="button" role="radio" aria-checked="false" tabindex="-1" data-accent="violet" aria-label="Violet" data-i18n-attr="aria-label:appearance.accent.violet"></button>
+              <button type="button" role="radio" aria-checked="false" tabindex="-1" data-accent="blue" aria-label="Blue" data-i18n-attr="aria-label:appearance.accent.blue"></button>
+              <button type="button" role="radio" aria-checked="false" tabindex="-1" data-accent="rose" aria-label="Rose" data-i18n-attr="aria-label:appearance.accent.rose"></button>
+              <button type="button" role="radio" aria-checked="false" tabindex="-1" data-accent="copper" aria-label="Copper" data-i18n-attr="aria-label:appearance.accent.copper"></button>
+              <button type="button" role="radio" aria-checked="false" tabindex="-1" data-accent="silver" aria-label="Silver" data-i18n-attr="aria-label:appearance.accent.silver"></button>
+            </div>
+          </div>
         </div>
 
         <div class="options-group">

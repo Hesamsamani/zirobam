@@ -11,6 +11,7 @@ import './styles/persian.css';
 import './styles/heatmap.css';
 import './styles/today.css';
 import './styles/brand.css';
+import './styles/appearance.css';
 import createVerovioModule from 'verovio/wasm';
 import { VerovioToolkit } from 'verovio/esm';
 import * as Tone from 'tone';
@@ -102,6 +103,8 @@ import {
   formatNumber, setPersianDigits, isLocale,
 } from './i18n';
 import type { MessageKey } from './i18n';
+import { Appearance } from './ui/appearance';
+import { bindAppearance } from './ui/appearancePanel';
 import {
   getNoteNameSystem, setNoteNameSystem, loadNoteNameSystem, onNoteNamesChange,
   formatKeyName, formatNoteName, isNoteNameSystem,
@@ -276,9 +279,15 @@ function updateMobileMode() {
   }
 }
 
+/** How the app looks: the theme and the accent colour. */
+let appearance: Appearance;
+
 async function init() {
   initLocale();
   loadNoteNameSystem();
+  // the theme and the accent (index.html has already put the stored ones on the page); the group in Settings and the quick button use it
+  appearance = new Appearance();
+  bindAppearance(appearance);
 
   // Initialize Verovio
   const VerovioModule = await createVerovioModule();

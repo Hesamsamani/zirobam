@@ -344,7 +344,7 @@
 .dict-inversions[aria-pressed='true'] {
   border-color: var(--current);
   background: rgb(var(--current-rgb) / 0.16);
-  color: var(--on-accent);
+  color: var(--text-strong);
 }
 
 .dict-chords-empty,

@@ -56,15 +56,12 @@ describe('colour literals', () => {
     expect(offenders).toEqual([]);
   });
 
-  it('are defined once, for the dark theme, in the :root of tokens.css', () => {
+  it('are defined for the dark theme in the :root of tokens.css, and a theme or an accent only overrides them', () => {
     const tokens = postcss.parse(read('src/styles/tokens.css'));
-    const roots: postcss.Rule[] = [];
-    tokens.walkRules((rule) => {
-      if (rule.selector === ':root') roots.push(rule);
-    });
-    expect(roots).toHaveLength(1);
     const names = new Set<string>();
-    roots[0].walkDecls((d) => names.add(d.prop));
+    tokens.walkRules((rule) => {
+      if (rule.selector === ':root') rule.walkDecls((d) => names.add(d.prop));
+    });
     for (const name of ['--tint', '--shade', '--shade-k', '--scrim-rgb', '--current-rgb', '--accent-rgb', '--correct-rgb', '--wrong-rgb', '--quarter-rgb', '--on-accent', '--error-text', '--success-text', '--current-paper', '--note-past']) {
       expect(names.has(name), name).toBe(true);
     }

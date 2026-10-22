@@ -1,7 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
-// the offline tests need the production build (it has the service worker); everything else runs on the dev server
-const OFFLINE = /offline\.spec\.ts/;
+// the offline and first-paint tests need the production build (it has the service worker and the real index.html);
+// everything else runs on the dev server
+const OFFLINE = /(offline|firstpaint\.prod)\.spec\.ts/;
 // screenshot baselines: desktop Chrome only, run on purpose (`--project=visual`), not with the default projects
 const VISUAL = /visual\.spec\.ts/;
 const NOT_DEFAULT = [OFFLINE, VISUAL];

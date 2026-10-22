@@ -9,6 +9,7 @@ import { rhythmFa } from './parts/rhythm.fa';
 import { persianFa } from './parts/persian.fa';
 import { heatmapFa } from './parts/heatmap.fa';
 import { todayFa } from './parts/today.fa';
+import { appearanceFa } from './parts/appearance.fa';
 import { theoryFa } from './parts/theory.fa';
 import { uiFa } from './parts/ui.fa';
 
@@ -665,4 +666,5 @@ export const fa: Record<MessageKey, string> = {
   ...persianFa,
   ...heatmapFa,
   ...todayFa,
+  ...appearanceFa,
 };

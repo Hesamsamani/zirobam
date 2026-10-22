@@ -7,6 +7,7 @@ import { rhythmEn } from './parts/rhythm.en';
 import { persianEn } from './parts/persian.en';
 import { heatmapEn } from './parts/heatmap.en';
 import { todayEn } from './parts/today.en';
+import { appearanceEn } from './parts/appearance.en';
 import { dictionaryEn } from './parts/dictionary.en';
 import { theoryEn } from './parts/theory.en';
 import { uiEn } from './parts/ui.en';
@@ -665,6 +666,7 @@ export const en = {
   ...persianEn,
   ...heatmapEn,
   ...todayEn,
+  ...appearanceEn,
 } as const;
 
 export type MessageKey = keyof typeof en;

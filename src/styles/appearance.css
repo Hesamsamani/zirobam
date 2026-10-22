@@ -1,0 +1,98 @@
+/* ============================================
+   APPEARANCE (the group in Settings: theme and accent colour)
+   The six swatches are a radio group (src/ui/appearancePanel.ts). Each is a 44px target with a smaller colour dot; the
+   chosen one has a ring, so the choice is never told by colour alone.
+   ============================================ */
+
+.accent-row {
+  flex-wrap: wrap;
+  row-gap: var(--space-xs);
+}
+
+.accent-swatches {
+  display: flex;
+  inline-size: 100%;
+}
+
+/* six targets share the row of the panel, 40px or more each */
+.accent-swatches [data-accent] {
+  position: relative;
+  flex: 1 1 0;
+  min-inline-size: 38px;
+  block-size: var(--tap-min);
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-round);
+  cursor: pointer;
+}
+
+.accent-swatches [data-accent]::before,
+.accent-swatches [data-accent]::after {
+  content: '';
+  position: absolute;
+  border-radius: var(--radius-round);
+}
+
+/* the colour dot: a hairline keeps a pale colour visible on a pale page */
+.accent-swatches [data-accent]::before {
+  inset-block-start: 9px;
+  inset-inline-start: calc(50% - 13px);
+  inline-size: 26px;
+  block-size: 26px;
+  background: var(--swatch);
+  box-shadow: inset 0 0 0 1px rgb(var(--tint) / 0.3);
+  transition: transform var(--transition-fast);
+}
+
+.accent-swatches [data-accent]:hover::before {
+  transform: scale(1.08);
+}
+
+/* the ring of the chosen one */
+.accent-swatches [data-accent][aria-checked='true']::after {
+  inset-block-start: 4px;
+  inset-inline-start: calc(50% - 18px);
+  inline-size: 32px;
+  block-size: 32px;
+  border: 2px solid var(--text);
+}
+
+.accent-swatches [data-accent]:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+.accent-swatches [data-accent='brass'] {
+  --swatch: var(--swatch-brass);
+}
+
+.accent-swatches [data-accent='violet'] {
+  --swatch: var(--swatch-violet);
+}
+
+.accent-swatches [data-accent='blue'] {
+  --swatch: var(--swatch-blue);
+}
+
+.accent-swatches [data-accent='rose'] {
+  --swatch: var(--swatch-rose);
+}
+
+.accent-swatches [data-accent='copper'] {
+  --swatch: var(--swatch-copper);
+}
+
+.accent-swatches [data-accent='silver'] {
+  --swatch: var(--swatch-silver);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .accent-swatches [data-accent]::before {
+    transition: none;
+  }
+
+  .accent-swatches [data-accent]:hover::before {
+    transform: none;
+  }
+}

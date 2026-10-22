@@ -4976,7 +4976,7 @@ html[dir='rtl'] .nav-arrow {
 .maker-chip[aria-pressed='true'] {
   border-color: var(--current);
   background: rgb(var(--current-rgb) / 0.16);
-  color: var(--on-accent);
+  color: var(--text-strong);
 }
 
 .maker-chip:disabled {
@@ -5288,7 +5288,7 @@ html[dir='rtl'] .nav-arrow {
 .pa-chip[aria-pressed='true'] {
   border-color: var(--current);
   background: rgb(var(--current-rgb) / 0.16);
-  color: var(--on-accent);
+  color: var(--text-strong);
 }
 
 .pa-chip:disabled {
@@ -5452,7 +5452,7 @@ html[dir='rtl'] .nav-arrow {
 .sc-chip[aria-pressed='true'] {
   border-color: var(--current);
   background: rgb(var(--current-rgb) / 0.16);
-  color: var(--on-accent);
+  color: var(--text-strong);
 }
 
 .ear-stage:disabled {

@@ -39,8 +39,8 @@
   --ink: #1a1a1a;
 
   /* Accent colors - subtle and musical */
-  --accent: #8b7355;
-  --accent-rgb: 139 115 85;
+  --accent: #876e4f; /* white text on it: 4.5:1 */
+  --accent-rgb: 135 110 79;
   --accent-light: #a08060;
   --accent-glow: rgb(var(--accent-rgb) / 0.3);
   /* Text and icons on a filled accent control */
@@ -82,6 +82,8 @@
   /* Small text on cards and raised surfaces: 5.3:1 or better on every surface (--text-muted is 3.9:1 on --surface-3) */
   --text-soft: #a39e98;
   --text-faint: #6b655e;
+  /* Text on a tinted accent background (a chosen chip): white on dark, near-black on light */
+  --text-strong: #fff;
 
   /* Lines (borders and dividers on the page surfaces), from faint to strong */
   --line-faint: rgb(var(--tint) / 0.08);
@@ -125,4 +127,148 @@
   /* Transitions */
   --transition-fast: 0.15s ease;
   --transition-med: 0.25s ease;
+}
+
+/* ============================================
+   LIGHT THEME ("daylight desk")
+   A cool, pale desk, so that the warm paper of the staves and cards reads as paper. Paper itself (--paper, --ink) and
+   everything that is music keeps its colours. Set by Appearance (src/ui/appearance.ts) as <html data-theme="light">.
+   ============================================ */
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --bg: #e2e7ec;
+  --bg-warm: #e9edf1;
+  --surface: #eef1f4;
+  --surface-3: #f6f8fa;
+  --surface-hover: #dfe5eb;
+  --surface-sunk: #d3dae1;
+  --surface-sunk-top: #dce2e8;
+  --surface-panel-top: #edf0f3;
+  --surface-panel-bottom: #e4e8ec;
+  --input-bg: #f8fafc;
+
+  /* hairlines, hovers and shadows are dark on a light page, and softer */
+  --tint: 23 33 48;
+  --shade: 23 33 48;
+  --shade-k: 0.45;
+
+  --text: #18212c;
+  --text-muted: #4b5765;
+  --text-subtle: #5c6774;
+  --text-soft: #45505d;
+  --text-faint: #5c6774;
+  --text-strong: #0f1720;
+
+  --correct: #2f6b43;
+  --correct-rgb: 47 107 67;
+  --wrong: #a63040;
+  --wrong-rgb: 166 48 64;
+  --error-text: #a63040;
+  --error-text-2: #a63040;
+  --success-text: #2f6b43;
+  --star-on: #b07a00;
+
+  --quarter: #0d6b63;
+  --quarter-rgb: 13 107 99;
+
+  --hue-gold: #7d6000;
+  --hue-teal: #176b64;
+  --hue-coral: #a24330;
+  --hue-green: #2f6b43;
+  --hue-teal-2: #146560;
+  --hue-terracotta: #9a3f29;
+}
+
+/* ============================================
+   ACCENTS
+   Teal, red and green are not offered: they mean quarter tone, wrong and right. Each accent sets the fill of a control
+   (white text on it, 4.5:1 or better), a lighter fill for hovers, and the colour that marks "now" and "selected": a light
+   one on the dark theme and a deeper one on the light theme, both 4.5:1 or better on the page. On the light theme the
+   hover fill (--accent-light) is that deeper colour, so it is readable as text and still holds white text. Brass is the
+   default and is the :root above. The swatch colours are for the picker in Settings.
+   ============================================ */
+:root {
+  --swatch-brass: #876e4f;
+  --swatch-violet: #6d55c9;
+  --swatch-blue: #2f6fd1;
+  --swatch-rose: #b43a82;
+  --swatch-copper: #a85a2c;
+  --swatch-silver: #5d6773;
+}
+
+:root[data-accent='violet'] {
+  --accent: #6d55c9;
+  --accent-rgb: 109 85 201;
+  --accent-light: #8671e0;
+  --current: #b39dff;
+  --current-rgb: 179 157 255;
+}
+
+:root[data-accent='blue'] {
+  --accent: #2f6fd1;
+  --accent-rgb: 47 111 209;
+  --accent-light: #4f8be6;
+  --current: #7fb2ff;
+  --current-rgb: 127 178 255;
+}
+
+:root[data-accent='rose'] {
+  --accent: #b43a82;
+  --accent-rgb: 180 58 130;
+  --accent-light: #cc5c9b;
+  --current: #ee8ec4;
+  --current-rgb: 238 142 196;
+}
+
+:root[data-accent='copper'] {
+  --accent: #a85a2c;
+  --accent-rgb: 168 90 44;
+  --accent-light: #bf7345;
+  --current: #e0915a;
+  --current-rgb: 224 145 90;
+}
+
+:root[data-accent='silver'] {
+  --accent: #5d6773;
+  --accent-rgb: 93 103 115;
+  --accent-light: #808a96;
+  --current: #c3cad3;
+  --current-rgb: 195 202 211;
+}
+
+:root[data-theme='light'][data-accent='brass'] {
+  --accent-light: #7a5d16;
+  --current: #7a5d16;
+  --current-rgb: 122 93 22;
+}
+
+:root[data-theme='light'][data-accent='violet'] {
+  --accent-light: #5b44b8;
+  --current: #5b44b8;
+  --current-rgb: 91 68 184;
+}
+
+:root[data-theme='light'][data-accent='blue'] {
+  --accent-light: #1f5fbf;
+  --current: #1f5fbf;
+  --current-rgb: 31 95 191;
+}
+
+:root[data-theme='light'][data-accent='rose'] {
+  --accent-light: #a02f78;
+  --current: #a02f78;
+  --current-rgb: 160 47 120;
+}
+
+:root[data-theme='light'][data-accent='copper'] {
+  --accent-light: #935012;
+  --current: #935012;
+  --current-rgb: 147 80 18;
+}
+
+:root[data-theme='light'][data-accent='silver'] {
+  --accent-light: #4f5966;
+  --current: #4f5966;
+  --current-rgb: 79 89 102;
 }

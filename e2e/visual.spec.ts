@@ -5,8 +5,10 @@ import { test, expect, type Page } from '@playwright/test';
 // Run: `npx playwright test --project=visual`; accept intended changes with `--update-snapshots`.
 // The exercise screen is left out on purpose, it draws random music.
 
-async function open(page: Page, hash: string, ready: string, locale?: 'fa'): Promise<void> {
+async function open(page: Page, hash: string, ready: string, locale?: 'fa', look: { theme?: 'light'; accent?: string } = {}): Promise<void> {
   if (locale) await page.addInitScript((value) => localStorage.setItem('ui.locale', value), locale);
+  if (look.theme) await page.addInitScript((value) => localStorage.setItem('ui.theme', value), look.theme);
+  if (look.accent) await page.addInitScript((value) => localStorage.setItem('ui.accent', value), look.accent);
   await page.goto(`/#/${hash}`);
   await expect(page.locator(ready).first()).toBeVisible();
   // fonts and the staff are drawn a moment after the screen is shown
@@ -84,5 +86,36 @@ test.describe('Visual baseline', () => {
   test('progress', async ({ page }) => {
     await open(page, 'progress', '#progressView');
     await shot(page, 'progress');
+  });
+});
+
+// The light theme and the accent colours: a cool desk with the warm paper of the staves on it.
+test.describe('Visual baseline: themes and accents', () => {
+  test('home, light', async ({ page }) => {
+    await open(page, '', '#mainMenu .menu-tile', undefined, { theme: 'light' });
+    await shot(page, 'home-light');
+  });
+
+  test('home, dark with the violet accent', async ({ page }) => {
+    await open(page, '', '#mainMenu .menu-tile', undefined, { accent: 'violet' });
+    await shot(page, 'home-violet');
+  });
+
+  test('dictionary, light', async ({ page }) => {
+    await open(page, 'scales/d-shur', '.sc-staff svg .note', undefined, { theme: 'light' });
+    await shot(page, 'scales-light');
+  });
+
+  test('music maker in Persian, light with the rose accent', async ({ page }) => {
+    await open(page, 'generator?t=melody&s=c-major&style=bossa&bars=8&seed=3&over=progression', '.gen-line svg .note', 'fa', { theme: 'light', accent: 'rose' });
+    await shot(page, 'generator-fa-light');
+  });
+
+  test('settings panel, light with the copper accent', async ({ page }) => {
+    await open(page, '', '#mainMenu .menu-tile', undefined, { theme: 'light', accent: 'copper' });
+    await page.locator('#mainMenu [data-tile="settings"]').click();
+    await expect(page.locator('#optionsPanel')).toBeVisible();
+    await page.waitForTimeout(400);
+    await expect(page.locator('#optionsPanel')).toHaveScreenshot('settings-light-copper.png', { animations: 'disabled', maxDiffPixels: 0 });
   });
 });
