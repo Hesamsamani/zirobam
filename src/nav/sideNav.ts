@@ -1,6 +1,7 @@
 import type { View } from '../app/router';
 import { t, type Locale, type MessageKey } from '../i18n';
 import type { Theme } from '../ui/appearance';
+import { makeBrandMark } from '../ui/brandMark';
 import { makeIcon } from '../ui/icons';
 import { NAV_GROUPS, NAV_ITEMS, RAIL_QUERY, navIdForView, type NavId, type NavItem } from './navItems';
 
@@ -29,29 +30,6 @@ function make<K extends keyof HTMLElementTagNameMap>(doc: Document, tag: K, clas
   const el = doc.createElement(tag);
   el.className = className;
   return el;
-}
-
-const SVG_NS = 'http://www.w3.org/2000/svg';
-
-/** The mark of ZiroBam: a heavy Z (treble above, bass below) with a notehead where the diagonal lands. The colours are in nav.css. */
-function brandMark(doc: Document): SVGSVGElement {
-  const svg = doc.createElementNS(SVG_NS, 'svg');
-  svg.setAttribute('viewBox', '8 8 48 48');
-  svg.setAttribute('aria-hidden', 'true');
-  svg.setAttribute('focusable', 'false');
-  svg.classList.add('nav-mark');
-  const z = doc.createElementNS(SVG_NS, 'polygon');
-  z.setAttribute('points', '12,14 52,14 52,23 28,41 52,41 52,50 12,50 12,41 36,23 12,23');
-  z.setAttribute('class', 'mark-z');
-  const note = doc.createElementNS(SVG_NS, 'ellipse');
-  note.setAttribute('cx', '19.5');
-  note.setAttribute('cy', '45.5');
-  note.setAttribute('rx', '7.4');
-  note.setAttribute('ry', '5.4');
-  note.setAttribute('transform', 'rotate(-22 19.5 45.5)');
-  note.setAttribute('class', 'mark-note');
-  svg.append(z, note);
-  return svg;
 }
 
 /**
@@ -102,7 +80,7 @@ export class SideNav {
     this.brand = make(doc, 'button', 'nav-brand');
     this.brand.type = 'button';
     const brandIcon = make(doc, 'span', 'nav-icon');
-    brandIcon.append(brandMark(doc));
+    brandIcon.append(makeBrandMark(doc, 'nav-mark'));
     this.brandLabel = make(doc, 'span', 'nav-label nav-wordmark');
     this.brand.append(brandIcon, this.brandLabel);
     this.brand.addEventListener('click', () => {

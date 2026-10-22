@@ -16,3 +16,14 @@
 .credit-link:hover {
   color: var(--text);
 }
+
+/* The mark of ZiroBam (src/ui/brandMark.ts): the Z takes the accent colour and the notehead is paper */
+.brand-mark .mark-z {
+  fill: var(--current);
+}
+
+.brand-mark .mark-note {
+  fill: var(--paper);
+  stroke: var(--surface-2);
+  stroke-width: 1.8;
+}

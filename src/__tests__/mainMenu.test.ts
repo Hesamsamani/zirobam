@@ -175,3 +175,83 @@ describe('MainMenu', () => {
     expect(menu.element.querySelector('.menu-resume-title')!.textContent).toBe('مری');
   });
 });
+
+describe('the welcome of the home screen', () => {
+  function welcome(withToday = true) {
+    const menu = new MainMenu({
+      navigate: vi.fn(),
+      openSettings: vi.fn(),
+      openMetronome: vi.fn(),
+      levelLabel: () => '1a',
+      resume: () => ({ view: 'levels' as View, title: 'Level 1a', detail: 'Whole notes' }),
+      today: withToday ? () => ({ done: 1, total: 3, minutes: 7 }) : undefined,
+    });
+    document.body.replaceChildren(menu.element);
+    return menu;
+  }
+  const q = (menu: MainMenu, selector: string) => menu.element.querySelector<HTMLElement>(selector)!;
+
+  beforeEach(() => {
+    localStorage.clear();
+    initLocale();
+    setLocale('en');
+  });
+
+  it('opens with the mark, the name and a line about the app, in the header', () => {
+    const menu = welcome();
+    const header = q(menu, '.menu-header');
+    const mark = header.querySelector('.brand-mark')!;
+    expect(mark.getAttribute('aria-hidden')).toBe('true');
+    expect(header.querySelector('h1')!.textContent).toBe('ZiroBam');
+    expect(header.querySelector('.menu-tagline')!.textContent).toBe(t('menu.tagline'));
+    expect(menu.element.querySelectorAll('h1')).toHaveLength(1);
+    // the mark, then the name, then the line
+    const order = Array.from(header.children).map((el) => el.className.split(' ')[0]);
+    expect(order.slice(0, 3)).toEqual(['menu-mark', 'menu-title', 'menu-tagline']);
+  });
+
+  it('puts the plan of the day and where you left off side by side in one row, the plan first', () => {
+    const menu = welcome();
+    const cards = q(menu, '.menu-cards');
+    expect(Array.from(cards.children).map((c) => c.className.split(' ')[0])).toEqual(['menu-today', 'menu-resume']);
+    expect(q(menu, '.menu-today').nextElementSibling).toBe(q(menu, '.menu-resume'));
+  });
+
+  it('has only where you left off in the row when there is no plan', () => {
+    const menu = welcome(false);
+    expect(Array.from(q(menu, '.menu-cards').children).map((c) => c.className.split(' ')[0])).toEqual(['menu-resume']);
+    expect(menu.element.querySelector('.menu-today')).toBeNull();
+  });
+
+  it('asks what to practise between the cards and the tiles', () => {
+    const menu = welcome();
+    const follows = (a: HTMLElement, b: HTMLElement) => Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(q(menu, '.menu-subtitle').textContent).toBe(t('menu.subtitle'));
+    expect(follows(q(menu, '.menu-cards'), q(menu, '.menu-subtitle'))).toBe(true);
+    expect(follows(q(menu, '.menu-subtitle'), q(menu, '.menu-paths'))).toBe(true);
+  });
+
+  it('ends with the credits: where the code is and where the piano sounds come from, as links that open in another tab', () => {
+    const menu = welcome();
+    const links = Array.from(menu.element.querySelectorAll<HTMLAnchorElement>('.menu-credits a'));
+    expect(links.map((a) => a.getAttribute('href'))).toEqual(['https://github.com/Hesamsamani/zirobam', 'https://creativecommons.org/licenses/by/3.0/']);
+    for (const a of links) {
+      expect(a.target).toBe('_blank');
+      expect(a.rel).toContain('noopener');
+    }
+    expect(links[0].textContent).toBe(t('menu.credits.source'));
+    expect(links[1].textContent).toBe(t('menu.credits.piano'));
+    expect(menu.element.lastElementChild).toBe(q(menu, '.menu-credits'));
+  });
+
+  it('is in Persian when the language is, and the line is another one', () => {
+    const menu = welcome();
+    const english = q(menu, '.menu-tagline').textContent;
+    setLocale('fa');
+    menu.refresh();
+    expect(q(menu, '.menu-tagline').textContent).not.toBe(english);
+    expect(q(menu, '.menu-tagline').textContent).toBe(t('menu.tagline'));
+    expect(q(menu, '.menu-title').textContent).toBe('زیر و بم');
+    expect(q(menu, '.menu-credits a').textContent).toBe(t('menu.credits.source'));
+  });
+});

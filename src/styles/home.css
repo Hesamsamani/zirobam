@@ -1,0 +1,122 @@
+/* ============================================
+   HOME (the welcome)
+
+   The mark sits on a staff like a clef; the name, a line about the app and the rank are centred under it. The plan of
+   the day and where you left off are side by side where there is room, then the question, the ways to practise and the
+   tools. Loaded after style.css; tokens only, logical properties only.
+   ============================================ */
+
+.menu-header {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-md) 0 var(--space-sm);
+  text-align: center;
+}
+
+/* five staff lines behind the mark, fading out at both ends (the same in both directions) */
+.menu-header::before,
+html[dir='rtl'] .menu-header::before {
+  inset: 31px 0 auto 0;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 22%, #000 78%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 22%, #000 78%, transparent);
+}
+
+.menu-mark {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  padding-inline: var(--space-lg);
+  background: var(--bg-warm);
+}
+
+.menu-mark .brand-mark {
+  inline-size: 76px;
+  block-size: 76px;
+}
+
+/* the notehead is cut out of the page, not out of the rail */
+.menu-mark .mark-note {
+  stroke: var(--bg-warm);
+}
+
+.menu-title,
+html[dir='rtl'] .menu-title {
+  padding: 0;
+  background: none;
+  font-size: clamp(2.4rem, 6vw, 3.6rem);
+}
+
+.menu-tagline {
+  margin: 0;
+  max-inline-size: 38ch;
+  color: var(--text-soft);
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  line-height: 1.45;
+  text-wrap: balance;
+}
+
+.menu-header .game-hud {
+  justify-content: center;
+  margin-block-start: var(--space-sm);
+}
+
+/* the plan of the day and where you left off, side by side where there is room */
+.menu-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
+  gap: var(--space-md);
+}
+
+.menu-cards .menu-today {
+  margin-block-end: 0;
+}
+
+/* the question is the heading of the tiles under it */
+.menu-subtitle {
+  margin: var(--space-xs) 0 calc(-1 * var(--space-sm));
+  color: var(--text);
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+
+.menu-credits {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-xs) var(--space-lg);
+  margin: var(--space-md) 0 0;
+  color: var(--text-soft);
+  font-size: 0.8rem;
+}
+
+.menu-credits a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.menu-credits a:hover {
+  color: var(--text);
+}
+
+.menu-credits a:focus-visible {
+  border-radius: var(--radius-xs);
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+@media (max-width: 560px) {
+  .menu-header::before,
+  html[dir='rtl'] .menu-header::before {
+    inset-block-start: 23px;
+  }
+
+  .menu-mark .brand-mark {
+    inline-size: 60px;
+    block-size: 60px;
+  }
+}

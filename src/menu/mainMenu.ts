@@ -1,5 +1,6 @@
 import { formatNumber, t, type MessageKey } from '../i18n';
 import type { View } from '../app/router';
+import { makeBrandMark } from '../ui/brandMark';
 import { makeIcon } from '../ui/icons';
 
 export type TileId = 'lessons' | 'learn' | 'ear' | 'scales' | 'chords' | 'rhythm' | 'persian' | 'generator' | 'tuner' | 'catalog' | 'levels' | 'songs' | 'xylophone' | 'metronome' | 'progress' | 'settings';
@@ -66,12 +67,26 @@ function make<K extends keyof HTMLElementTagNameMap>(tag: K, className: string):
   return el;
 }
 
-/** The home screen: where you left off, the ways to learn and practise, and the extra tools. */
+const REPOSITORY = 'https://github.com/Hesamsamani/zirobam';
+const PIANO_LICENCE = 'https://creativecommons.org/licenses/by/3.0/';
+
+function link(href: string): HTMLAnchorElement {
+  const a = make('a', '');
+  a.href = href;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  return a;
+}
+
+/** The home screen: a welcome (the mark, the name, a line about the app, the rank), the plan of the day and where you left off, the ways to learn and practise, the extra tools, and the credits. */
 export class MainMenu {
   readonly element: HTMLElement;
   private readonly deps: MainMenuDeps;
   private readonly title: HTMLElement;
+  private readonly tagline: HTMLElement;
   private readonly subtitle: HTMLElement;
+  private readonly sourceLink: HTMLAnchorElement;
+  private readonly pianoLink: HTMLAnchorElement;
   private readonly resumeButton: HTMLButtonElement;
   private readonly resumeTitle: HTMLElement;
   private readonly resumeDetail: HTMLElement;
@@ -88,11 +103,15 @@ export class MainMenu {
     this.element.id = 'mainMenu';
     this.element.dataset.views = 'home';
 
+    // The welcome: the mark on a staff, the name, a line about the app, and the rank
     const header = make('header', 'menu-header');
+    const mark = make('span', 'menu-mark');
+    mark.append(makeBrandMark(document));
     this.title = make('h1', 'menu-title');
-    this.subtitle = make('p', 'menu-subtitle');
-    header.append(this.title, this.subtitle);
+    this.tagline = make('p', 'menu-tagline');
+    header.append(mark, this.title, this.tagline);
     if (deps.extra) header.appendChild(deps.extra);
+    this.subtitle = make('p', 'menu-subtitle');
 
     // The sheet of music: continue where you stopped
     this.resumeButton = make('button', 'menu-resume');
@@ -126,7 +145,16 @@ export class MainMenu {
       this.todayDetail = todayDetail;
     }
 
-    this.element.append(header, ...(this.todayCard ? [this.todayCard] : []), this.resumeButton, paths, tools);
+    // The plan of the day and where you left off, side by side where there is room
+    const cards = make('div', 'menu-cards');
+    cards.append(...(this.todayCard ? [this.todayCard] : []), this.resumeButton);
+
+    const credits = make('p', 'menu-credits');
+    this.sourceLink = link(REPOSITORY);
+    this.pianoLink = link(PIANO_LICENCE);
+    credits.append(this.sourceLink, this.pianoLink);
+
+    this.element.append(header, cards, this.subtitle, paths, tools, credits);
     this.refresh();
   }
 
@@ -164,7 +192,10 @@ export class MainMenu {
   /** Writes the texts again, after the language, the note names, the level or the song changed. */
   refresh(): void {
     this.title.textContent = t('menu.title');
+    this.tagline.textContent = t('menu.tagline');
     this.subtitle.textContent = t('menu.subtitle');
+    this.sourceLink.textContent = t('menu.credits.source');
+    this.pianoLink.textContent = t('menu.credits.piano');
     for (const def of MENU_TILES) {
       const parts = this.tiles.get(def.id)!;
       parts.title.textContent = t(def.title);

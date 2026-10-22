@@ -11,6 +11,7 @@ import { heatmapFa } from './parts/heatmap.fa';
 import { todayFa } from './parts/today.fa';
 import { appearanceFa } from './parts/appearance.fa';
 import { navFa } from './parts/nav.fa';
+import { homeFa } from './parts/home.fa';
 import { theoryFa } from './parts/theory.fa';
 import { uiFa } from './parts/ui.fa';
 
@@ -669,4 +670,5 @@ export const fa: Record<MessageKey, string> = {
   ...todayFa,
   ...appearanceFa,
   ...navFa,
+  ...homeFa,
 };

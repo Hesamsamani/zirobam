@@ -206,16 +206,6 @@ body[data-nav='drawer'] .nav-label {
   block-size: 28px;
 }
 
-.nav-mark .mark-z {
-  fill: var(--current);
-}
-
-.nav-mark .mark-note {
-  fill: var(--paper);
-  stroke: var(--surface-2);
-  stroke-width: 1.8;
-}
-
 .nav-wordmark {
   font-family: var(--font-serif);
   font-size: 1.3rem;

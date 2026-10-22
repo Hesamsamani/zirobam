@@ -13,6 +13,7 @@ import './styles/today.css';
 import './styles/brand.css';
 import './styles/appearance.css';
 import './styles/nav.css';
+import './styles/home.css';
 import createVerovioModule from 'verovio/wasm';
 import { VerovioToolkit } from 'verovio/esm';
 import * as Tone from 'tone';
