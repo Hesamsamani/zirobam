@@ -32,6 +32,11 @@
   --shade-k: 1;
   /* A scrim over the page (dialogs, the celebration): dark whatever the theme */
   --scrim-rgb: 0 0 0;
+  /* Glass: the rail, the control bar and the settings panel are translucent with the page blurred behind them. Opaque
+     enough that the text holds over a black notehead and over white paper (scripts/themeContrast.test.ts checks). */
+  --glass: rgb(36 36 36 / 0.92);
+  --glass-line: rgb(var(--tint) / 0.14);
+  --glass-blur: 14px;
 
   /* Sheet music paper colors: paper is music, so it is the same in every theme */
   --paper: #f8f5f0;
@@ -147,6 +152,7 @@
   --surface-panel-top: #edf0f3;
   --surface-panel-bottom: #e4e8ec;
   --input-bg: #f8fafc;
+  --glass: rgb(246 248 250 / 0.86);
 
   /* hairlines, hovers and shadows are dark on a light page, and softer */
   --tint: 23 33 48;

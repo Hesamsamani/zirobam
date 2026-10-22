@@ -111,6 +111,21 @@ describe.each(THEMES.flatMap((theme) => ACCENTS.map((accent) => [theme, accent] 
     expect(c('--current-paper')).toEqual([201, 162, 39]);
   });
 
+  it('stays readable on the glass of the rail, the control bar and the settings panel, whatever is behind it', () => {
+    // a translucent panel: its text must hold over the darkest and the lightest thing that can be behind it (the black
+    // of a notehead, the white of the paper, the colour of the page)
+    const raw = all.get('--glass');
+    const match = raw ? /^rgb\((\d+) (\d+) (\d+) \/ ([\d.]+)\)$/.exec(raw) : null;
+    expect(match, '--glass is rgb(r g b / alpha)').not.toBeNull();
+    const [r, g, b, alpha] = [Number(match![1]), Number(match![2]), Number(match![3]), Number(match![4])];
+    expect(alpha, 'it is translucent').toBeLessThan(1);
+    for (const behind of [[0, 0, 0], [255, 255, 255], c('--paper'), c('--bg')]) {
+      const onGlass = [r, g, b].map((channel, i) => channel * alpha + behind[i] * (1 - alpha));
+      expect(ratio(c('--text'), onGlass), `--text on glass over ${behind}`).toBeGreaterThanOrEqual(7);
+      expect(ratio(c('--text-soft'), onGlass), `--text-soft on glass over ${behind}`).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
   it('is not mistaken for quarter tone, wrong or right', () => {
     const current = c('--current');
     if (oklch(current).chroma < 0.03) return; // silver has no hue to confuse

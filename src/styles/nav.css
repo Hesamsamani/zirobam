@@ -382,6 +382,31 @@ html[dir='rtl'] .fingering-panel {
   }
 }
 
+/* --- glass: a translucent panel with the page blurred behind it. Not on phones and tablets (body.mobile-mode): the blur costs battery --- */
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  body:not(.mobile-mode) .side-nav,
+  body:not(.mobile-mode) #controlBar,
+  body:not(.mobile-mode) .options-panel,
+  body:not(.mobile-mode) .nav-handle {
+    background: var(--glass);
+    border-color: var(--glass-line);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.2);
+    backdrop-filter: blur(var(--glass-blur)) saturate(1.2);
+  }
+}
+
+/* a person who asked for less transparency gets solid panels */
+@media (prefers-reduced-transparency: reduce) {
+  body:not(.mobile-mode) .side-nav,
+  body:not(.mobile-mode) #controlBar,
+  body:not(.mobile-mode) .options-panel,
+  body:not(.mobile-mode) .nav-handle {
+    background: var(--surface-2);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
 /* --- other --- */
 @media (forced-colors: active) {
   .side-nav,

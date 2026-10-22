@@ -263,6 +263,15 @@ test.describe('Side navigation: in every mode', () => {
     }
   });
 
+  test('the rail and the control bar are glass on a desktop, and solid on a phone, where the blur would cost battery', async ({ page }, testInfo) => {
+    await start(page, 'levels');
+    const filter = (selector: string) => page.locator(selector).first().evaluate((el) => getComputedStyle(el).backdropFilter);
+    for (const selector of ['#sideNav', '#controlBar']) {
+      if (testInfo.project.name === 'chromium') expect(await filter(selector), selector).toContain('blur');
+      else expect(await filter(selector), selector).toBe('none');
+    }
+  });
+
   test('keeps the first visit as it was: no rail text announced twice, and the content starts after the rail', async ({ page }) => {
     await start(page);
     const title = await box(page, '#mainMenu .menu-title');
