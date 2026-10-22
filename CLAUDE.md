@@ -106,9 +106,9 @@ The timing system uses the music generator as the single source of truth:
 - `visualGroups` is for SVG highlighting only, not timing
 - Level cap is 20 (`MAX_LEVEL`: 10 C major levels + 10 key levels, G through Db)
 
-## Fork notes (music-notes-trainer, bilingual)
+## Project notes (ZiroBam, bilingual)
 
-This is the owner's personal fork. Design: `docs/superpowers/specs/2026-10-16-bilingual-note-trainer-design.md`.
+This is the owner's own bilingual trainer, built on an open-source sight-reading app. Design: `docs/superpowers/specs/2026-10-16-bilingual-note-trainer-design.md`.
 
 - **Name and address:** the app is called ZiroBam and is served under `/zirobam/` (`base` in `vite.config.ts`; one `BASE` constant in `playwright.config.ts`; e2e code builds URLs from `document.baseURI`, never from a `/zirobam/...` literal). Some internal ids keep their first names on purpose, because stored data and old backups use them: `BACKUP_APP` and the IndexedDB name `'music-notes-trainer'`, `'sightreading-progress'` and `'music-notes-trainer-maker'`. The service worker stores under `zirobam-` and removes the `music-notes-trainer-` stores of the first name. The icons are drawn from `public/favicon.svg` and `scripts/icons/*.svg` by `node scripts/build-icons.mjs` (it needs Playwright's chromium; `scripts/ico.mjs` packs the `.ico`) and the results are committed. `src/styles/brand.css` holds the credit styles.
 - **Colours are tokens.** No colour literal outside `src/styles/tokens.css` except music and paper (piano keys, keyboard and fretboard pictures, chord cards, the staff verdicts of the rhythm trainer, the cream resume card, masks, print): `scripts/styleTokens.test.ts` lists them and fails on a new one. Translucent colours are triplets, `rgb(var(--tint) / 0.08)` (`--tint` hovers and hairlines, `--shade` and `--shade-k` shadows, `--scrim-rgb`, `--current-rgb`, `--accent-rgb`, `--correct-rgb`, `--wrong-rgb`, `--quarter-rgb`). White text on a solid accent fill is `--on-accent`, on a tinted chip `--text-strong`. The note being played on the staff and the pressed keys use `--current-paper` (fixed), not `--current`.

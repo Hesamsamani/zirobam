@@ -1,28 +1,82 @@
-# ZiroBam (English / فارسی)
+<p align="center">
+  <img src="docs/images/logo.svg" width="96" height="96" alt="ZiroBam logo: a heavy Z with a notehead">
+</p>
 
-**ZiroBam** (Persian: زیر و بم, "treble and bass", also "the ins and outs") is a personal study fork of [ftrain/sightreading](https://github.com/ftrain/sightreading), extended so a beginner can learn to read music notes in **English or Persian**, with or without a MIDI keyboard. Live at **https://hesamsamani.me/zirobam/** (https://hesamsamani.github.io/zirobam/ forwards there). Persian README: [README.fa.md](README.fa.md).
+<h1 align="center">ZiroBam</h1>
 
-## What this fork adds
+<p align="center">
+  <b>The ins and outs of music: read it, hear it, play it.</b><br>
+  A free piano and music-reading trainer in <b>English</b> and <b>Persian</b>. It works offline.
+</p>
 
-- **Main menu.** Lessons, Note quiz, Sight-reading levels, Songs, Song library, Ear training, Scales and chords, Xylophone, Metronome, Progress and Settings. Every screen has its own address (`#/lessons/octaves`, `#/catalog?artist=Queen`), so the Back button, reloads and shared links work.
-- **English and Persian interface**, with right-to-left layout for Persian text. The staff, the piano, the keyboard pictures and the note buttons stay left-to-right. Choose the language in Options (the three-dot button).
-- **Three ways to name notes:** letters (C D E), solfège (Do Re Mi) and Persian solfège (دو ر می). The choice applies everywhere: level names, the piano, the quiz, the lessons and, if you tick "Show note names on the staff", under every note.
-- **Play without a MIDI keyboard.** The piano button opens an on-screen piano, and the computer keyboard plays notes too (table below). Keys are matched by position, so it also works with a Persian keyboard layout.
-- **Lessons (36).** Three units: reading notes (staff, clefs, ledger lines, octaves, sharps and flats, key signatures), reading rhythm (beat, note values, rests, time signatures, counting, dotted notes, ties) and playing the piano (keyboard, finding notes, posture, fingering, five-finger position, both hands, touch, scales, pedals, practising). Each lesson has drawn staff examples with a Play button, clickable keyboards, hand pictures and "Try it" links. Read lessons are remembered.
-- **Note quiz.** "Name the note": one note on a staff, seven answer buttons, or play the note on any input. Notes you miss come back more often, and five stages unlock after 20 answers at 90 percent.
-- **Ear training.** Five stages: which of two notes is higher, five easy intervals, all twelve intervals (also played together), major or minor chords, and playing back a note or a three-note melody on the keys. Each stage opens when 90 percent of the last 20 answers are right.
-- **Scales and chords.** Twelve starting notes with six kinds of scale (major, natural, harmonic and melodic minor, two pentatonics) and seven kinds of chord, each drawn on the staff (with its key signature) and on the keys, played by the piano, and playable along with the next key marked. Note names or fingering under the notes; the fingering is shown only where teachers agree on it (C, D, E, F, G, A, B major and A, E, D minor).
-- **Songs.** 45 built-in songs and exercises in groups by difficulty, 22 of them real public-domain tunes with their notes: carols (Silent Night, Joy to the World, O Come All Ye Faithful), folk songs (Amazing Grace, Auld Lang Syne, Greensleeves, Scarborough Fair, Danny Boy, When the Saints), children's songs and classical themes (Für Elise, Eine kleine Nachtmusik, Brahms' Lullaby). A song is practised in small steps with a measure map, jump buttons and a "put it together" step. You can also practise from your own MusicXML or MIDI file.
-- **My scores and the song maker.** Attach your own MusicXML, MXL or MIDI file to any library song (or open a file without a row) and practise from it; the file stays in this browser. "Write a song" lets you type or tap your own melody (any of 15 keys, 2/4, 3/4 or 4/4), shows it on the staff as you write, checks every measure and practises it like a built-in song.
-- **Offline and installable.** The production build works without internet and can be installed as an app (Options shows an Install button where the browser allows it).
-- **Backup and restore.** One button (in Options and under the progress) saves your XP, badges, lesson progress, settings and every score into a JSON file; another restores it, in any browser, after showing what the file contains and asking first. Files with the wrong marker, a newer version, unknown keys or odd scores are refused or trimmed.
-- **Song library.** About 4,570 songs by 287 artists (Persian pop and classics, international pop and rock from the 1950s to today, classical and traditional works, modern piano, film, game and anime music). Each song has an estimated level; filter by search, artist, level and kind of music. The library finds the sheet music for you (IMSLP for classical works, MuseScore for the rest); songs marked "In the app" play right inside it.
-- **Practice aids** (the small sliders button next to "Whole piece"). *Wait for me*: the piece stops at each note and moves on when you play it (no count-in, no tempo; a chord waits for all its notes). *Repeat this step*: a step you played well comes again. *Speed up as I improve*: after each clean pass the tempo goes up by 5 until it reaches your tempo. Quick speeds of 50, 75 and 100 percent. *Hands*: practise the right or the left hand alone; the app plays the other one and draws it faintly.
-- **Xylophone.** One row of the computer keyboard becomes a xylophone, left to right: free play, read and play, and play-along songs.
-- **Floating metronome.** A small always-on-top window (Document Picture-in-Picture in Chrome and Edge 116+, with a draggable panel as the fallback) that shares its tempo with the exercise.
-- **Rewards.** XP and ranks, a daily goal with a streak, 18 badges, a combo counter and stars for songs. Everything stays in the browser.
-- **Phones:** the control bar wraps onto two rows so every button, including Options, stays reachable.
-- **Planned:** microphone input for an acoustic instrument.
+<p align="center">
+  <a href="https://hesamsamani.me/zirobam/"><b>Open the app</b></a>
+  &nbsp;·&nbsp;
+  <a href="README.fa.md">راهنمای فارسی</a>
+  &nbsp;·&nbsp;
+  <a href="#run-it-yourself">Run it yourself</a>
+</p>
+
+<p align="center">
+  <a href="https://hesamsamani.me/zirobam/"><img alt="Live" src="https://img.shields.io/badge/live-hesamsamani.me%2Fzirobam-c9a227?style=flat-square"></a>
+  <a href="https://github.com/Hesamsamani/zirobam/actions/workflows/pages.yml"><img alt="Deploy" src="https://github.com/Hesamsamani/zirobam/actions/workflows/pages.yml/badge.svg"></a>
+  <img alt="Languages" src="https://img.shields.io/badge/English%20%C2%B7%20Persian-right--to--left%20ready-2f6fd1?style=flat-square">
+  <img alt="Offline" src="https://img.shields.io/badge/works-offline%20%C2%B7%20installable-2f6b43?style=flat-square">
+  <img alt="Licence" src="https://img.shields.io/badge/licence-LGPL--3.0-5b44b8?style=flat-square">
+</p>
+
+<p align="center">
+  <img src="docs/images/home.png" width="880" alt="The home screen of ZiroBam: the mark on a staff, the name, today's plan, where you left off and the ways to practise">
+</p>
+
+**ZiroBam** (Persian *zir o bam*, "treble and bass", and also "the ins and outs") teaches you to read music and play the piano. Read a staff, hear it, play it on a MIDI keyboard, the on-screen piano or your computer keyboard, and get an answer at once. It starts from the very first note and goes as far as Persian quarter tones.
+
+## What is inside
+
+| | | |
+|---|---|---|
+| **Read** | Sight-reading levels | Twenty levels from whole notes in C to eighths and sixteenths in many keys, right hand, left hand and both, with the notes made fresh every time |
+| | Songs | Well-known tunes practised bar by bar, with a measure map and a "put it together" step; or bring your own MusicXML or MIDI file |
+| | Note quiz | "Name the note" with five stages that open as you improve |
+| **Hear** | Ear training | Intervals, chords and short melodies to play back, and **quarter tones** (koron and sori) |
+| | Tuner | Sing or play into the microphone and see the note and how far from in tune it is, with a mode for Persian quarter tones |
+| **Play** | Rhythm trainer | Ten levels of rhythm tapped in time with the clicks, scored to the millisecond |
+| | Chord reader | Play a chord and see its name, or be shown a name and play the chord |
+| | Xylophone | One row of your computer keyboard becomes a xylophone |
+| **Understand** | Lessons | Forty-seven short lessons on notes, rhythm, the keyboard, and Persian music |
+| | Scale and chord dictionary | Thirty-two scales and thirty-seven chords in every key, on the staff and the keys, with fingering and guitar shapes, and a finder that names a scale from the notes you play |
+| | Persian music | The twelve dastgahs and avazes with koron and sori drawn and heard |
+| **Create** | Music maker | A chord progression, a melody and a backing band in thirteen styles on any scale; practise it, edit it, or download it as MIDI |
+| **Keep going** | Today | A ten-minute plan made from what you missed |
+| | Progress | Ranks, a daily goal, badges, and a map of the notes you slip on |
+
+## See it
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/images/dictionary.png" alt="The scale dictionary showing D Shur with a koron on the staff and the keys"><br><sub><b>Dictionary.</b> D Shur, with its quarter tone drawn on the staff and the keys.</sub></td>
+    <td width="50%"><img src="docs/images/stand.png" alt="The music stand with a staff and the on-screen piano"><br><sub><b>Practice.</b> A staff, the on-screen piano and the control bar.</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/images/maker.png" alt="The music maker in the light theme with eight bars of jazz chords"><br><sub><b>Music maker.</b> Eight bars of jazz chords, in the light theme with the blue accent.</sub></td>
+    <td width="50%"><img src="docs/images/home-light-fa.png" alt="The home screen in Persian, right to left, in the light theme"><br><sub><b>Persian.</b> The whole app turns right to left; the staff and the keys stay as they are.</sub></td>
+  </tr>
+</table>
+
+<p align="center">
+  <img src="docs/images/phone-home.png" width="260" alt="The home screen on a phone">
+  &nbsp;&nbsp;
+  <img src="docs/images/phone-drawer.png" width="260" alt="The menu on a phone, opened from the edge">
+</p>
+<p align="center"><sub>On a phone the menu opens from the edge of the screen.</sub></p>
+
+## Made to feel good
+
+- **Two languages, really.** English and Persian, with the layout turned right to left, Persian digits, and three ways to name notes: letters (C D E), solfège (Do Re Mi) and Persian solfège.
+- **Dark, light, or the device's.** Six accent colours, a rail that opens over the page, and a quick button for the language and the theme on every screen.
+- **Works without internet.** The piano sounds, the fonts and every screen are part of the app. Install it from the browser like any other app. When a new version is ready it asks before it switches.
+- **Nothing leaves your device.** Progress, scores and settings stay in your browser, and a backup file moves them to another one. No accounts, no tracking, no requests to other sites.
+- **Any way to play.** A MIDI keyboard, the on-screen piano, or the computer keyboard (by physical key, so a Persian layout works too).
 
 | Computer keys | Notes |
 |---|---|
@@ -30,164 +84,33 @@
 | `W E T Y U O P` | black keys |
 | `Z` / `X` | octave down / up |
 
-## Run it
+## Run it yourself
 
-On Windows, double-click the Desktop shortcut **ZiroBam**. It starts the app and opens your browser; close its window to stop. (Double-clicking `Start-Trainer.ps1` itself only opens it in an editor.) The shortcut runs `powershell.exe -NoProfile -ExecutionPolicy Bypass -File "<this folder>\Start-Trainer.ps1"` and uses the icon `Start-Trainer.ico`, so it can be recreated by hand. From a terminal: `powershell -ExecutionPolicy Bypass -File Start-Trainer.ps1`.
-
-By hand:
+You need [Node.js](https://nodejs.org/) 20 or newer.
 
 ```bash
 npm ci
-npm run dev      # http://localhost:5173/zirobam/
-npm test         # unit tests
-npx playwright test
-npm run build
+npm run dev        # http://localhost:5173/zirobam/
 ```
 
-## Known limitations
+| Command | What it does |
+|---|---|
+| `npm test` | Unit tests (Vitest) |
+| `npx playwright test` | End-to-end tests (desktop, phone and phone-landscape, plus an offline run on the production build) |
+| `npm run build` | The production build in `dist/`, with the offline worker |
+| `node scripts/readme-shots.mjs` | Takes the pictures of this page again |
 
-- The app needs no internet after its first load: the piano sounds, the fonts and every screen are served from the app's own files, and a service worker (production build only) keeps them in the browser. The development server (`npm run dev`) has no service worker, so there the app needs the dev server.
-- A new version of the app is found in the background. A page that is open shows "A new version of ZiroBam is ready" with Reload and Later; the new version never takes over a page that is being used unless you press Reload (otherwise it is used the next time the app is opened with no window of it left).
-- Persian music terms (دیز, بمل, the lesson texts, the level names) are waiting for the owner's review.
-- The song library lists titles, artists and an estimated level. It contains no notes of copyrighted songs: the notes come from the sheet-music links or from your own file. The lists were put together by hand, so a few details may be wrong, and the Persian list is shorter than the international one.
-- All unit tests (1,386) and the end-to-end tests (about 690, on desktop, phone and phone-landscape profiles, plus an offline run against the production build) pass. One playback-timing check on the phone profile failed once in a full run and then passed 123 times in a row, so it may be a rare timing flake.
-- Audit warnings in dev tooling (Vite, Vitest) are not fixed yet; nothing in the shipped bundle is flagged.
+On Windows, `Start-Trainer.ps1` starts the app and opens the browser (the Desktop shortcut runs it).
 
-Design: [docs/superpowers/specs/2026-10-16-bilingual-note-trainer-design.md](docs/superpowers/specs/2026-10-16-bilingual-note-trainer-design.md). Why this base app was chosen: [research/candidates.md](research/candidates.md).
+Built with Vite and TypeScript with no UI framework, [Verovio](https://www.verovio.org/) for the notation, [Tone.js](https://tonejs.github.io/) for sound, [tonal](https://github.com/tonaljs/tonal) for music theory and [@tonejs/midi](https://github.com/Tonejs/Midi) for MIDI files. How it fits together is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), and how to contribute is in [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Credits and license
+## Credits and licence
 
-The notes of the public-domain songs were read from the LilyPond scores on English and German Wikipedia (CC BY-SA 4.0) and from The Session's ABC settings, compared with each other and with the well-known tunes; see `src/songs/libraryMore.ts`. The tests check the length of every measure and the first notes of every tune, so please tell us if a song sounds wrong anywhere else.
+ZiroBam is free software under the **GNU Lesser General Public License 3.0** (see [LICENSE](LICENSE)). It grew out of the open-source sight-reading app [ftrain/sightreading](https://github.com/ftrain/sightreading) by Paul Ford (LGPL-3.0); the changes since then are in the git history.
 
-Piano sounds: the Salamander Grand Piano by Alexander Holm, licensed [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/) (copied from the Tone.js samples; see `public/samples/salamander/README.md`).
-
-Built with: the upstream app [ftrain/sightreading](https://github.com/ftrain/sightreading) (LGPL-3.0, modified here), [Verovio](https://www.verovio.org/) (LGPL-3.0), [Tone.js](https://tonejs.github.io/), [tonal](https://github.com/tonaljs/tonal) and [@tonejs/midi](https://github.com/Tonejs/Midi) (MIT), [JSZip](https://stuk.github.io/jszip/) (MIT or GPL-3.0), and the fonts Inter and Crimson Pro through `@fontsource` and Vazirmatn (SIL OFL 1.1).
-
-Based on `ftrain/sightreading` at commit `05158c5` (LGPL-3.0). The original `LICENSE` is kept and this fork stays under LGPL-3.0. Changes made in this fork are the ones listed above and in the git history of the `bilingual` branch. The notation engine, [Verovio](https://www.verovio.org/), is LGPL-3.0 too.
-
----
-
-# Sight Reading Practice (upstream README)
-
-**[Try it live](https://ftrain.github.io/sightreading)** | [GitHub](https://github.com/ftrain/sightreading)
-
-A web-based sight reading practice app for piano. Generates infinite procedural exercises with a structured curriculum that progresses from simple whole notes to complex rhythms across multiple keys.
-
-## Features
-
-- **Structured Curriculum**: 23 levels progressing through C major fundamentals, advanced rhythms, then new keys (G, F, D, Bb, etc.)
-- **Interleaved Hand Practice**: Each concept is practiced RH → LH → Both hands before advancing
-- **MIDI Input**: Connect your MIDI keyboard for real-time note detection
-  - Correct notes highlight in teal
-  - Wrong notes highlight in red
-  - Forgiving timing (early notes accepted)
-- **Metronome**: Count-off with 4-3-2-1 display, 16th note subdivisions
-- **Grand Staff**: Clean notation with treble and bass clefs
-- **Progress Tracking**: Mastery system requires consistent correct play before advancing
-- **Tempo Progression**: Start slow (30 BPM), increase as you master each level
-
-## Curriculum Overview
-
-### C Major Foundation (Levels 1-7)
-
-| Level | Focus | Hands |
-|-------|-------|-------|
-| 1 | Whole notes, C-G range | RH only |
-| 2 | Whole notes, bass clef intro | LH only |
-| 3 | Whole notes, coordination | Both |
-| 4 | Half notes | RH → LH → Both |
-| 5 | Quarter notes | RH → LH → Both |
-| 6 | Rests, 3/4 time | RH → LH → Both |
-| 7 | Dotted notes, wider intervals | RH → LH → Both |
-
-### C Major Advanced Rhythms (Levels 8-10)
-
-| Level | Focus | Hands |
-|-------|-------|-------|
-| 8 | Eighth notes | RH → LH → Both |
-| 9 | Dotted eighth rhythms | RH → LH → Both |
-| 10 | Sixteenth notes | RH → LH → Both |
-
-### New Keys (Levels 11+)
-
-Each new key follows the same pattern (RH whole → LH whole → RH varied → Both):
-- 11a-d: G major (1 sharp)
-- 12a-d: F major (1 flat)
-- 13a-d: D major (2 sharps)
-- And so on through the circle of fifths...
-
-## Controls
-
-- **Tempo**: Set BPM (starts at 30 for beginners)
-- **Metronome**: Toggle on/off, adjust volume
-- **Level +/-**: Manually adjust difficulty
-- **Options**: Access level jump, key override, and fingering settings
-- **Start/Stop**: Begin or end practice session
-
-## Tech Stack
-
-- [Vite](https://vitejs.dev/) - Build tool
-- [TypeScript](https://www.typescriptlang.org/) - Type safety
-- [Verovio](https://www.verovio.org/) - Music notation rendering (MusicXML → SVG)
-- [Tone.js](https://tonejs.github.io/) - Web audio (metronome, sounds)
-- [Playwright](https://playwright.dev/) - E2E testing
-- [Vitest](https://vitest.dev/) - Unit testing
-- Web MIDI API - MIDI keyboard input
-
-## Development
-
-```bash
-# Install dependencies
-npm install
-
-# Start dev server
-npm run dev
-
-# Run unit tests
-npm test
-
-# Run E2E tests
-npx playwright test
-
-# Build for production
-npm run build
-
-# Publishing: this fork has no `npm run deploy`; a GitHub Actions workflow builds and publishes the site
-```
-
-## Architecture
-
-```
-src/
-├── core/             # Shared types, events, utilities
-├── curriculum/       # Lessons and progress tracking
-│   └── lessons/      # Lesson implementations
-├── input/            # MIDI and performance tracking
-├── music/            # Music generation and representation
-│   ├── generators/   # Melody, pattern, scale generation
-│   ├── sources/      # MusicSource implementations
-│   └── xml/          # MusicXML building
-├── playback/         # Audio playback engine
-├── rendering/        # Visual rendering (Verovio)
-├── main.ts           # App entry, UI, playback scheduling
-├── musicGenerator.ts # Procedural music generation, curriculum
-├── scheduler.ts      # Timing utilities for playback
-├── fingeringEngine.ts# Piano fingering suggestions
-└── __tests__/        # Unit tests
-```
-
-Key data flow:
-1. `musicGenerator` creates `NoteData[]` for each hand
-2. `buildTimingEvents()` extracts timing from note data
-3. `scheduleMusic()` schedules playback via Tone.js
-4. `visualGroups` maps SVG elements for highlighting
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-## License
-
-LGPL-3.0 - See [LICENSE](LICENSE) for details.
-
-Uses [Verovio](https://www.verovio.org/) (LGPL-3.0).
+- **Piano sounds:** the Salamander Grand Piano by Alexander Holm, [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/) (copied from the Tone.js samples; see `public/samples/salamander/README.md`).
+- **Notation engine:** [Verovio](https://www.verovio.org/) (LGPL-3.0).
+- **Libraries:** Tone.js, tonal and @tonejs/midi (MIT), JSZip (MIT or GPL-3.0).
+- **Fonts:** Inter and Crimson Pro through `@fontsource`, and Vazirmatn (SIL OFL 1.1).
+- **Song notes:** the public-domain tunes were read from the LilyPond scores on English and German Wikipedia (CC BY-SA 4.0) and from The Session's ABC settings; see `src/songs/libraryMore.ts`. The song library lists titles, artists and levels only, with links to the sheet music; it contains no notes of copyrighted songs.
+- **Persian terms and quarter-tone pitches** are a teaching model and are marked as a draft in the app; see `docs/persian-scales-review.md`.
