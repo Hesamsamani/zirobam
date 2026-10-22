@@ -223,7 +223,7 @@
 }
 
 .dict-step[data-tonic='true'] {
-  background: rgba(201, 162, 39, 0.12);
+  background: rgb(var(--current-rgb) / 0.12);
   border-block-start-color: var(--current);
 }
 
@@ -343,8 +343,8 @@
 .dict-primary[aria-pressed='true'],
 .dict-inversions[aria-pressed='true'] {
   border-color: var(--current);
-  background: rgba(201, 162, 39, 0.16);
-  color: #fff;
+  background: rgb(var(--current-rgb) / 0.16);
+  color: var(--on-accent);
 }
 
 .dict-chords-empty,

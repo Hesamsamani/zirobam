@@ -63,7 +63,7 @@
 }
 
 .ch-status[data-tone='bad'] {
-  color: #e69a9a;
+  color: var(--error-text-2);
 }
 
 .ch-keys {

@@ -2,6 +2,9 @@
    DESIGN TOKENS
    The one place for colours, type, spacing, radii, shadows and lines.
    Loaded before style.css and the feature sheets in src/styles/.
+
+   Colours that can change with the theme are written as space-separated triplets too (`--tint`, `--shade`,
+   `--current-rgb` ...), so a translucent colour keeps its own alpha: `rgb(var(--tint) / 0.08)`.
    ============================================ */
 
 :root {
@@ -14,26 +17,63 @@
   --surface-1: var(--bg-warm);
   --surface-2: var(--surface);
   --surface-3: #2c2b29;
+  /* Hover and sunken surfaces, and the two-tone panels */
+  --surface-hover: #2a2926;
+  --surface-sunk: #24211d;
+  --surface-sunk-top: #2c2823;
+  --surface-panel-top: #272420;
+  --surface-panel-bottom: #211f1c;
+  --input-bg: #1a1a1a;
 
-  /* Sheet music paper colors */
+  /* The colour of a hover tint, a hairline or a track on the page: white on dark. */
+  --tint: 255 255 255;
+  /* The colour of a shadow, and how strong shadows are (a light page needs softer ones). */
+  --shade: 0 0 0;
+  --shade-k: 1;
+  /* A scrim over the page (dialogs, the celebration): dark whatever the theme */
+  --scrim-rgb: 0 0 0;
+
+  /* Sheet music paper colors: paper is music, so it is the same in every theme */
   --paper: #f8f5f0;
-  --paper-shadow: rgba(0, 0, 0, 0.15);
+  --paper-shadow: rgb(var(--shade) / calc(0.15 * var(--shade-k)));
   --ink: #1a1a1a;
 
   /* Accent colors - subtle and musical */
   --accent: #8b7355;
+  --accent-rgb: 139 115 85;
   --accent-light: #a08060;
-  --accent-glow: rgba(139, 115, 85, 0.3);
+  --accent-glow: rgb(var(--accent-rgb) / 0.3);
+  /* Text and icons on a filled accent control */
+  --on-accent: #fff;
 
   /* Feedback colors */
   --current: #c9a227;
+  --current-rgb: 201 162 39;
+  /* The highlight of the note being played, on the staff (paper): it keeps its colour whatever accent is chosen */
+  --current-paper: #c9a227;
   --correct: #5a9a6e;
+  --correct-rgb: 90 154 110;
   --wrong: #b54a4a;
+  --wrong-rgb: 181 74 74;
+  --note-past: #999;
+  --error-text: #e0877f;
+  --error-text-2: #e69a9a;
+  --success-text: #7fc093;
+  --star-on: #e8b923;
 
   /* Quarter tones (koron, sori) and nothing else. Never the only signal: the sign is always drawn too. */
   --quarter: #3fb8a8; /* 7.2:1 on --bg, 5.8:1 on --surface-3 */
+  --quarter-rgb: 63 184 168;
   --quarter-ink: #0d6b63; /* on --paper (staves, cards): 5.9:1 */
-  --quarter-soft: rgba(63, 184, 168, 0.16);
+  --quarter-soft: rgb(var(--quarter-rgb) / 0.16);
+
+  /* Colours that tell the units of the course and the levels of the library apart (never the only signal) */
+  --hue-gold: #d0a93a;
+  --hue-teal: #5fb0a8;
+  --hue-coral: #cf7f6e;
+  --hue-green: #5a9a6e;
+  --hue-teal-2: #4fa6a0;
+  --hue-terracotta: #d3765f;
 
   /* Text. --text-subtle is 2.4:1 on --bg: decoration only, never for words that matter. */
   --text: #e8e4e0;
@@ -41,13 +81,14 @@
   --text-subtle: #5a5550;
   /* Small text on cards and raised surfaces: 5.3:1 or better on every surface (--text-muted is 3.9:1 on --surface-3) */
   --text-soft: #a39e98;
+  --text-faint: #6b655e;
 
-  /* Lines (borders and dividers on dark surfaces), from faint to strong */
-  --line-faint: rgba(255, 255, 255, 0.08);
-  --line-soft: rgba(255, 255, 255, 0.1);
-  --line: rgba(255, 255, 255, 0.15);
-  --line-medium: rgba(255, 255, 255, 0.22);
-  --line-strong: rgba(255, 255, 255, 0.3);
+  /* Lines (borders and dividers on the page surfaces), from faint to strong */
+  --line-faint: rgb(var(--tint) / 0.08);
+  --line-soft: rgb(var(--tint) / 0.1);
+  --line: rgb(var(--tint) / 0.15);
+  --line-medium: rgb(var(--tint) / 0.22);
+  --line-strong: rgb(var(--tint) / 0.3);
 
   /* Typography */
   --font-serif: 'Crimson Pro', Georgia, 'Times New Roman', serif;
@@ -73,8 +114,8 @@
 
   /* Elevation: 1 resting card, 2 lifted, 3 dialog or popover */
   --shadow-1: 0 2px 12px var(--paper-shadow);
-  --shadow-2: 0 6px 18px rgba(0, 0, 0, 0.4);
-  --shadow-3: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --shadow-2: 0 6px 18px rgb(var(--shade) / calc(0.4 * var(--shade-k)));
+  --shadow-3: 0 8px 32px rgb(var(--shade) / calc(0.4 * var(--shade-k)));
 
   /* Targets and focus */
   --tap-min: 44px;

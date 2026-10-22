@@ -30,7 +30,7 @@
 
 .tn-status[data-state='denied'],
 .tn-status[data-state='unavailable'] {
-  color: #e69a9a;
+  color: var(--error-text-2);
 }
 
 .tn-note {

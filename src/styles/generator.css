@@ -107,7 +107,7 @@
 .gen-status {
   min-block-size: 1.4em;
   margin: 0 0 var(--space-sm);
-  color: #e69a9a;
+  color: var(--error-text-2);
   font-size: 0.92rem;
 }
 
