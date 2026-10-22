@@ -1,0 +1,72 @@
+/* ============================================
+   UPDATE BANNER (src/pwa/updateBanner.ts)
+   "A new version is ready": centred on the page area, above the toasts. Logical properties and tokens only.
+   ============================================ */
+
+.update-banner {
+  position: fixed;
+  inset-block-start: var(--space-md);
+  left: calc(50% + (var(--rail-left) - var(--rail-right)) / 2);
+  z-index: 600;
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  max-inline-size: min(calc(100vw - var(--rail-space) - 2 * var(--space-md)), 520px);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--surface-3);
+  border: 1px solid var(--current);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-3);
+  color: var(--text);
+  font-size: 0.9rem;
+  transform: translateX(-50%);
+}
+
+.update-actions {
+  display: flex;
+  flex: none;
+  gap: var(--space-xs);
+  margin-inline-start: auto;
+}
+
+.update-reload,
+.update-later {
+  min-block-size: var(--tap-min);
+  padding-inline: var(--space-md);
+  border: 0;
+  border-radius: var(--radius-pill);
+  font: inherit;
+  cursor: pointer;
+}
+
+.update-reload {
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+}
+
+.update-reload:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.update-later {
+  background: none;
+  color: var(--text-soft);
+}
+
+.update-later:hover {
+  color: var(--text);
+}
+
+.update-reload:focus-visible,
+.update-later:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+@media (max-width: 560px) {
+  .update-banner {
+    flex-wrap: wrap;
+  }
+}

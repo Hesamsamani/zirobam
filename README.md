@@ -47,7 +47,7 @@ npm run build
 ## Known limitations
 
 - The app needs no internet after its first load: the piano sounds, the fonts and every screen are served from the app's own files, and a service worker (production build only) keeps them in the browser. The development server (`npm run dev`) has no service worker, so there the app needs the dev server.
-- A new version of the app is used the next time it is opened after the update (the old files stay until then).
+- A new version of the app is found in the background. A page that is open shows "A new version of ZiroBam is ready" with Reload and Later; the new version never takes over a page that is being used unless you press Reload (otherwise it is used the next time the app is opened with no window of it left).
 - Persian music terms (دیز, بمل, the lesson texts, the level names) are waiting for the owner's review.
 - The song library lists titles, artists and an estimated level. It contains no notes of copyrighted songs: the notes come from the sheet-music links or from your own file. The lists were put together by hand, so a few details may be wrong, and the Persian list is shorter than the international one.
 - All unit tests (1,386) and the end-to-end tests (about 690, on desktop, phone and phone-landscape profiles, plus an offline run against the production build) pass. One playback-timing check on the phone profile failed once in a full run and then passed 123 times in a row, so it may be a rare timing flake.

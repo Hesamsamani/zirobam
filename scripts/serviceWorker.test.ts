@@ -110,12 +110,14 @@ function runWorker(options: { precache: string[]; online: boolean }) {
   const caches = new Map<string, FakeCache>();
   const fetched: string[] = [];
   const claimed: boolean[] = [];
+  const skipped: boolean[] = [];
   const context = {
     self: {
       registration: { scope: 'https://example.org/zirobam/' },
       location: { origin: 'https://example.org' },
       addEventListener: (type: string, handler: Handler) => handlers.set(type, handler),
       clients: { claim: async () => void claimed.push(true) },
+      skipWaiting: async () => void skipped.push(true),
     },
     caches: {
       open: async (name: string) => {
@@ -141,7 +143,7 @@ function runWorker(options: { precache: string[]; online: boolean }) {
     return pending;
   };
   const get = (url: string, mode = 'cors') => dispatch('fetch', { request: { method: 'GET', url, mode } }) as Promise<FakeResponse | undefined>;
-  return { dispatch, get, caches, fetched, claimed, handlers };
+  return { dispatch, get, caches, fetched, claimed, skipped, handlers };
 }
 
 describe('public/sw.js', () => {
@@ -207,6 +209,15 @@ describe('public/sw.js', () => {
       handler({ request, respondWith: () => void (touched = true) });
     }
     expect(touched).toBe(false);
+  });
+
+  it('waits for the page to say that a new version may take over, and then does not wait any longer', async () => {
+    await worker.dispatch('install', {});
+    expect(worker.skipped).toEqual([]); // a new version never takes over a running page by itself
+    await worker.dispatch('message', { data: 'something else' });
+    expect(worker.skipped).toEqual([]);
+    await worker.dispatch('message', { data: 'skip-waiting' });
+    expect(worker.skipped).toEqual([true]);
   });
 
   it('removes the stores of older versions when it takes over', async () => {

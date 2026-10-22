@@ -2,9 +2,11 @@ import { defineConfig, devices } from '@playwright/test';
 
 // the offline and first-paint tests need the production build (it has the service worker and the real index.html);
 // everything else runs on the dev server
-const OFFLINE = /(offline|firstpaint\.prod)\.spec\.ts/;
+const OFFLINE = /(offline|firstpaint\.prod|update\.prod)\.spec\.ts/;
 // screenshot baselines: desktop Chrome only, run on purpose (`--project=visual`), not with the default projects
 const VISUAL = /visual\.spec\.ts/;
+// what runs against the published site (the update test serves the build from the test itself, so it does not)
+const LIVE = /(offline|firstpaint\.prod)\.spec\.ts/;
 const NOT_DEFAULT = [OFFLINE, VISUAL];
 // the folder the app is served from (`base` in vite.config.ts), on the dev server (5173) and on `vite preview` (4173)
 const BASE = '/zirobam/';
@@ -54,7 +56,7 @@ export default defineConfig({
       testMatch: OFFLINE,
       use: { ...devices['Desktop Chrome'], baseURL: PREVIEW_URL },
     },
-    ...(LIVE_URL ? [{ name: 'live', testMatch: OFFLINE, use: { ...devices['Desktop Chrome'], baseURL: LIVE_URL } }] : []),
+    ...(LIVE_URL ? [{ name: 'live', testMatch: LIVE, use: { ...devices['Desktop Chrome'], baseURL: LIVE_URL } }] : []),
   ],
 
   // nothing to start when the tests run against the published site

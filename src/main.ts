@@ -14,6 +14,7 @@ import './styles/brand.css';
 import './styles/appearance.css';
 import './styles/nav.css';
 import './styles/home.css';
+import './styles/update.css';
 import createVerovioModule from 'verovio/wasm';
 import { VerovioToolkit } from 'verovio/esm';
 import * as Tone from 'tone';
@@ -108,6 +109,8 @@ import type { MessageKey } from './i18n';
 import { Appearance } from './ui/appearance';
 import { OptionsPanel } from './ui/optionsPanel';
 import { SideNav } from './nav/sideNav';
+import { checkOnReturn, watchForUpdate } from './pwa/updateWatcher';
+import { showUpdateBanner } from './pwa/updateBanner';
 import { bindAppearance } from './ui/appearancePanel';
 import {
   getNoteNameSystem, setNoteNameSystem, loadNoteNameSystem, onNoteNamesChange,
@@ -1099,7 +1102,12 @@ function registerServiceWorker(onReady: () => void) {
   const register = () => {
     navigator.serviceWorker
       .register(`${import.meta.env.BASE_URL}sw.js`)
-      .then(() => navigator.serviceWorker.ready)
+      .then((registration) => {
+        // a new version waits for the person to say so ("A new version is ready"), and a page that stays open looks for one now and then
+        watchForUpdate(registration, navigator.serviceWorker, (apply) => showUpdateBanner(apply), () => window.location.reload());
+        checkOnReturn(registration, document);
+        return navigator.serviceWorker.ready;
+      })
       .then(onReady)
       .catch((error) => console.warn('The app could not be saved for offline use:', error));
   };

@@ -10,6 +10,7 @@ import { todayEn } from './parts/today.en';
 import { appearanceEn } from './parts/appearance.en';
 import { navEn } from './parts/nav.en';
 import { homeEn } from './parts/home.en';
+import { updateEn } from './parts/update.en';
 import { dictionaryEn } from './parts/dictionary.en';
 import { theoryEn } from './parts/theory.en';
 import { uiEn } from './parts/ui.en';
@@ -671,6 +672,7 @@ export const en = {
   ...appearanceEn,
   ...navEn,
   ...homeEn,
+  ...updateEn,
 } as const;
 
 export type MessageKey = keyof typeof en;

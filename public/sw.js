@@ -6,7 +6,10 @@
  * PRECACHE (every file of the build). The page registers this file only in the production build.
  *
  * Everything in the list is fetched while the worker installs and then answered from the cache. A new build has
- * a new cache; the old one is deleted when the new worker takes over, which happens the next time the app is opened.
+ * a new cache and WAITS: it never takes over a page that is open, because that page would then ask it for files of the
+ * old build. The page shows "a new version is ready" (src/pwa/updateWatcher.ts); when the person presses Reload it sends
+ * 'skip-waiting' and the new worker takes over. Otherwise it takes over the next time the app is opened with no window
+ * of it left. The old cache is deleted when the new worker takes over.
  */
 const VERSION = 'dev';
 const PRECACHE = [];
@@ -23,6 +26,11 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE).then((cache) => cache.addAll(PRECACHE.map((path) => new URL(path, SCOPE).href))),
   );
+});
+
+// the page says that a new version may take over now (the person pressed Reload)
+self.addEventListener('message', (event) => {
+  if (event.data === 'skip-waiting') self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
