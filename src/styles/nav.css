@@ -1,0 +1,415 @@
+/* ============================================
+   SIDE RAIL, DRAWER AND HANDLE (src/nav)
+
+   Wide and tall screen: a slim rail of icons at the edge of the page. It widens OVER the page, never pushing it, when
+   the pointer or the keyboard focus is on it. Phone: no rail; a handle at the edge opens a drawer over a scrim.
+   <body data-nav="rail|drawer"> says which. Logical properties only, so the rail is on the right in Persian.
+   ============================================ */
+
+/* --- the room the rail takes, for everything that is placed against the page --- */
+body {
+  --rail-space: 0px;
+  --rail-left: var(--rail-space);
+  --rail-right: 0px;
+}
+
+html[dir='rtl'] body {
+  --rail-left: 0px;
+  --rail-right: var(--rail-space);
+}
+
+/* a 64px rail, 12px from the edge, and a 12px gap; as a drawer only a small gutter is kept for the handle */
+body[data-nav='rail'] {
+  --rail-space: 88px;
+}
+
+body[data-nav='drawer'] {
+  --rail-space: 8px;
+}
+
+#app {
+  padding-inline-start: var(--rail-space);
+}
+
+body.nav-locked {
+  overflow: hidden;
+}
+
+/* --- the rail --- */
+.side-nav {
+  position: fixed;
+  inset-block: 12px;
+  inset-inline-start: 12px;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  inline-size: 64px;
+  padding: 8px;
+  overflow: hidden;
+  background: var(--surface-2);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-2);
+  transition: inline-size var(--transition-med);
+}
+
+/* widens over the page: on hover (not on touch screens, where a tap would leave it open), on keyboard focus, or pinned */
+@media (hover: hover) {
+  body[data-nav='rail'] .side-nav:hover {
+    inline-size: 256px;
+    transition-delay: 0.12s;
+  }
+}
+
+body[data-nav='rail'] .side-nav:has(:focus-visible),
+body[data-nav='rail'] .side-nav[data-pinned='true'] {
+  inline-size: 256px;
+}
+
+.nav-scroll {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+/* 17 places do not fit a laptop screen: the list scrolls, and fades at the edge that has more behind it */
+.nav-scroll[data-fade='bottom'] {
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
+}
+
+.nav-scroll[data-fade='top'] {
+  mask-image: linear-gradient(to bottom, transparent, #000 28px);
+}
+
+.nav-scroll[data-fade='both'] {
+  mask-image: linear-gradient(to bottom, transparent, #000 28px, #000 calc(100% - 28px), transparent);
+}
+
+/* on a short screen the rows are a little tighter, so more places are in sight */
+@media (max-height: 800px) {
+  body[data-nav='rail'] .nav-item,
+  body[data-nav='rail'] .nav-brand {
+    min-block-size: 40px;
+  }
+}
+
+.nav-group + .nav-group {
+  margin-block-start: 6px;
+  padding-block-start: 6px;
+  border-block-start: 1px solid var(--line-faint);
+}
+
+.nav-foot {
+  flex: none;
+  margin-block-start: 6px;
+  padding-block-start: 6px;
+  border-block-start: 1px solid var(--line-faint);
+}
+
+.nav-item,
+.nav-brand {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  inline-size: 100%;
+  min-block-size: var(--tap-min);
+  padding: 0 8px;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-lg);
+  color: var(--text-soft);
+  font: inherit;
+  font-size: 0.9rem;
+  text-align: start;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.nav-item:hover {
+  background: rgb(var(--tint) / 0.08);
+  color: var(--text);
+}
+
+.nav-item:focus-visible,
+.nav-brand:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: -2px;
+}
+
+/* where you are: a tinted item with a bar at the edge of the rail, and the name in the page for a screen reader */
+.nav-item[aria-current='page'] {
+  background: rgb(var(--current-rgb) / 0.14);
+  color: var(--text);
+}
+
+.nav-item[aria-current='page']::before {
+  content: '';
+  position: absolute;
+  inset-block: 10px;
+  inset-inline-start: -5px;
+  inline-size: 3px;
+  background: var(--current);
+  border-radius: var(--radius-xs);
+}
+
+.nav-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: 32px;
+  block-size: 32px;
+}
+
+.nav-icon svg {
+  inline-size: 22px;
+  block-size: 22px;
+}
+
+.nav-label {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+@media (hover: hover) {
+  body[data-nav='rail'] .side-nav:hover .nav-label {
+    opacity: 1;
+    transition-delay: 0.16s;
+  }
+}
+
+body[data-nav='rail'] .side-nav:has(:focus-visible) .nav-label,
+body[data-nav='rail'] .side-nav[data-pinned='true'] .nav-label,
+body[data-nav='drawer'] .nav-label {
+  opacity: 1;
+}
+
+/* the mark and the name at the top */
+.nav-brand {
+  margin-block-end: 6px;
+  color: var(--text);
+}
+
+.nav-brand .nav-icon {
+  inline-size: 32px;
+}
+
+.nav-mark {
+  inline-size: 28px;
+  block-size: 28px;
+}
+
+.nav-mark .mark-z {
+  fill: var(--current);
+}
+
+.nav-mark .mark-note {
+  fill: var(--paper);
+  stroke: var(--surface-2);
+  stroke-width: 1.8;
+}
+
+.nav-wordmark {
+  font-family: var(--font-serif);
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+/* visible only while it has the focus, then it is the first thing in the rail */
+.nav-skip {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.nav-skip:focus {
+  position: static;
+  inline-size: 100%;
+  block-size: auto;
+  margin-block-end: 6px;
+  padding: 8px;
+  clip-path: none;
+  background: var(--current);
+  border: 0;
+  border-radius: var(--radius-md);
+  color: var(--bg);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* --- the drawer (phones, and screens that are too short for the rail) --- */
+body[data-nav='drawer'] .side-nav {
+  inset-block: 0;
+  inset-inline-start: 0;
+  z-index: 450;
+  inline-size: min(300px, 84vw);
+  padding-block: calc(8px + env(safe-area-inset-top)) calc(8px + env(safe-area-inset-bottom));
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+  transform: translateX(-100%);
+  transition: transform var(--transition-med);
+}
+
+html[dir='rtl'] body[data-nav='drawer'] .side-nav {
+  transform: translateX(100%);
+}
+
+body[data-nav='drawer'] .side-nav[data-open='true'],
+html[dir='rtl'] body[data-nav='drawer'] .side-nav[data-open='true'] {
+  transform: none;
+}
+
+body[data-nav='drawer'] .nav-item,
+body[data-nav='drawer'] .nav-brand {
+  min-block-size: 48px;
+}
+
+.nav-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 440;
+  background: rgb(var(--scrim-rgb) / 0.55);
+}
+
+.nav-scrim[hidden] {
+  display: none;
+}
+
+/* the handle at the edge, halfway down, that opens the drawer */
+.nav-handle {
+  position: fixed;
+  inset-block-start: 50%;
+  inset-inline-start: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  inline-size: 16px;
+  block-size: 56px;
+  padding: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--line-soft);
+  border-inline-start: 0;
+  border-start-end-radius: var(--radius-md);
+  border-end-end-radius: var(--radius-md);
+  box-shadow: var(--shadow-1);
+  color: var(--text-soft);
+  cursor: pointer;
+  translate: 0 -50%;
+}
+
+.nav-handle[hidden] {
+  display: none;
+}
+
+/* the touch target is larger than the tab: taller, and out into the gutter */
+.nav-handle::before {
+  content: '';
+  position: absolute;
+  inset-block: -8px;
+  inset-inline: 0 -6px;
+}
+
+.nav-handle svg {
+  inline-size: 14px;
+  block-size: 14px;
+}
+
+html[dir='rtl'] .nav-handle svg {
+  transform: scaleX(-1);
+}
+
+.nav-handle:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+/* --- the things that float above the page keep clear of the rail --- */
+#controlBar,
+.piano-dock,
+#countoff,
+.notice,
+.toasts {
+  left: calc(50% + (var(--rail-left) - var(--rail-right)) / 2);
+}
+
+.piano-dock {
+  width: min(calc(96vw - var(--rail-space)), 980px);
+}
+
+.notice {
+  max-width: min(520px, calc(100vw - var(--rail-space) - 2 * var(--space-md)));
+}
+
+.toasts {
+  width: min(calc(92vw - var(--rail-space)), 420px);
+}
+
+/* the control bar fills the width on small screens: it starts after the rail */
+@media (max-width: 820px) {
+  #controlBar {
+    left: calc(var(--space-sm) + var(--rail-left));
+    right: calc(var(--space-sm) + var(--rail-right));
+  }
+}
+
+.fingering-panel {
+  left: calc(var(--space-lg) + var(--rail-left));
+}
+
+html[dir='rtl'] .fingering-panel {
+  left: auto;
+  right: calc(var(--space-lg) + var(--rail-right));
+}
+
+@media (max-width: 600px) {
+  .fingering-panel,
+  .options-panel {
+    left: calc(var(--space-sm) + var(--rail-left));
+    right: calc(var(--space-sm) + var(--rail-right));
+  }
+}
+
+/* --- other --- */
+@media (forced-colors: active) {
+  .side-nav,
+  .nav-handle {
+    border: 1px solid CanvasText;
+  }
+
+  .nav-item[aria-current='page']::before {
+    background: Highlight;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .side-nav,
+  .nav-label,
+  .nav-item {
+    transition: none;
+  }
+}
+
+@media print {
+  .side-nav,
+  .nav-handle,
+  .nav-scrim {
+    display: none !important;
+  }
+
+  body[data-nav] {
+    --rail-space: 0px;
+  }
+}

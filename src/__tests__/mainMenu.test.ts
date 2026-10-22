@@ -98,14 +98,11 @@ describe('MainMenu', () => {
     expect(navigate).not.toHaveBeenCalled();
   });
 
-  it('does not let the settings click reach the page, which closes the panel on outside clicks', () => {
+  it('says it controls the settings panel, so the panel does not close itself on the click that opens it', () => {
     const { tile } = setup();
-    const outside = vi.fn();
-    document.addEventListener('click', outside);
-    tile('settings').click();
-    tile('levels').click();
-    document.removeEventListener('click', outside);
-    expect(outside).toHaveBeenCalledTimes(1); // only the levels tile bubbled
+    expect(tile('settings').getAttribute('aria-controls')).toBe('optionsPanel');
+    expect(tile('settings').getAttribute('aria-expanded')).toBe('false');
+    expect(tile('levels').hasAttribute('aria-controls')).toBe(false);
   });
 
   it('shows where you left off on a sheet of its own, and continues there', () => {

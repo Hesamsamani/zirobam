@@ -129,13 +129,14 @@
   cursor: not-allowed;
 }
 
-@media (max-width: 899px) {
+/* 88px more than before: the side rail takes that much of a wide screen */
+@media (max-width: 987px) {
   .dict-aside[data-open='false'] .dict-picker {
     display: none;
   }
 }
 
-@media (min-width: 900px) {
+@media (min-width: 988px) {
   .dict-layout {
     grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
   }

@@ -12,6 +12,7 @@ import './styles/heatmap.css';
 import './styles/today.css';
 import './styles/brand.css';
 import './styles/appearance.css';
+import './styles/nav.css';
 import createVerovioModule from 'verovio/wasm';
 import { VerovioToolkit } from 'verovio/esm';
 import * as Tone from 'tone';
@@ -48,7 +49,7 @@ import {
 } from './upload';
 import { buildMusicXML, type NoteIdMapping } from './music/xml/builder';
 import { BUILT_IN_SONGS, getSongById } from './songs';
-import { hashQuery, Router, VIEWS, type View } from './app/router';
+import { formatRoute, hashQuery, Router, VIEWS, type View } from './app/router';
 import { AppShell } from './app/shell';
 import { MainMenu } from './menu/mainMenu';
 import { SongsView } from './menu/songsView';
@@ -104,6 +105,8 @@ import {
 } from './i18n';
 import type { MessageKey } from './i18n';
 import { Appearance } from './ui/appearance';
+import { OptionsPanel } from './ui/optionsPanel';
+import { SideNav } from './nav/sideNav';
 import { bindAppearance } from './ui/appearancePanel';
 import {
   getNoteNameSystem, setNoteNameSystem, loadNoteNameSystem, onNoteNamesChange,
@@ -281,6 +284,10 @@ function updateMobileMode() {
 
 /** How the app looks: the theme and the accent colour. */
 let appearance: Appearance;
+/** The Settings panel: opened by any button that controls it, closed by Escape, its close button or a click outside. */
+let optionsPanel: OptionsPanel;
+/** The rail (or, on a phone, the drawer) that is on every screen. */
+let sideNav: SideNav | null = null;
 
 async function init() {
   initLocale();
@@ -288,6 +295,7 @@ async function init() {
   // the theme and the accent (index.html has already put the stored ones on the page); the group in Settings and the quick button use it
   appearance = new Appearance();
   bindAppearance(appearance);
+  optionsPanel = new OptionsPanel();
 
   // Initialize Verovio
   const VerovioModule = await createVerovioModule();
@@ -1099,9 +1107,7 @@ function registerServiceWorker(onReady: () => void) {
 }
 
 function openOptionsPanel() {
-  const panel = document.getElementById('optionsPanel');
-  if (panel) panel.hidden = false;
-  document.getElementById('optionsToggle')?.setAttribute('aria-expanded', 'true');
+  optionsPanel.open();
 }
 
 /** Builds the home and song screens and decides what each screen needs when it opens or closes. */
@@ -1117,6 +1123,7 @@ function setupMetronomeWindow() {
     title: () => t('metro.title'),
     closeLabel: () => t('metro.close'),
     dragLabel: () => t('metro.drag'),
+    insets: () => sideNav?.reservedInsets() ?? { left: 0, right: 0 },
   });
   metronomePanel = panel;
   metronomeWindow = floating;
@@ -1509,6 +1516,25 @@ function setupNavigation(learn: LearnHandle) {
     },
   });
 
+  // The side rail (a drawer on a phone), on every screen; it follows the screen, the language and the theme
+  const nav = new SideNav({
+    hrefOf: (view) => formatRoute(view),
+    openMetronome: () => {
+      void Tone.start(); // unlock audio now, while the click is fresh
+      void metronomeWindow?.open();
+    },
+    toggleSettings: (opener) => optionsPanel.toggle(opener),
+    toggleLanguage: () => setLocale(getLocale() === 'fa' ? 'en' : 'fa'),
+    toggleTheme: () => void appearance.toggleTheme(),
+    locale: getLocale,
+    theme: () => appearance.theme(),
+  });
+  sideNav = nav;
+  nav.mount();
+  router.onChange((view) => nav.setCurrent(view));
+  onLocaleChange(() => nav.refresh());
+  appearance.onChange(() => nav.refresh());
+
   appShell.start();
 }
 
@@ -1770,37 +1796,9 @@ function setupControls() {
   const levelUpBtn = document.getElementById('levelUp');
   const levelDownBtn = document.getElementById('levelDown');
 
-  // Options panel toggle
+  // Options panel: the three dots of the control bar toggle it. Its close button, Escape and a click outside close it (OptionsPanel).
   const optionsToggle = document.getElementById('optionsToggle');
-  const optionsPanel = document.getElementById('optionsPanel');
-  const optionsClose = document.getElementById('optionsClose');
-
-  if (optionsToggle && optionsPanel) {
-    optionsToggle.addEventListener('click', () => {
-      const isHidden = optionsPanel.hidden;
-      optionsPanel.hidden = !isHidden;
-      optionsToggle.setAttribute('aria-expanded', String(!isHidden));
-    });
-
-    if (optionsClose) {
-      optionsClose.addEventListener('click', () => {
-        optionsPanel.hidden = true;
-        optionsToggle.setAttribute('aria-expanded', 'false');
-      });
-    }
-
-    // Close panel when clicking outside
-    document.addEventListener('click', (e) => {
-      if (
-        !optionsPanel.hidden &&
-        !optionsPanel.contains(e.target as Node) &&
-        !optionsToggle.contains(e.target as Node)
-      ) {
-        optionsPanel.hidden = true;
-        optionsToggle.setAttribute('aria-expanded', 'false');
-      }
-    });
-  }
+  optionsToggle?.addEventListener('click', () => optionsPanel.toggle(optionsToggle));
 
   bpmInput.addEventListener('change', () => {
     setExerciseBpm(bpmInput.value); // also shows the tempo that is actually used
@@ -2759,12 +2757,7 @@ function loadBuiltInSong(songId: string) {
     savePracticeState();
 
     // Close options panel if open
-    const optionsPanel = document.getElementById('optionsPanel');
-    if (optionsPanel && !optionsPanel.hidden) {
-      optionsPanel.hidden = true;
-      const optionsToggle = document.getElementById('optionsToggle');
-      optionsToggle?.setAttribute('aria-expanded', 'false');
-    }
+    optionsPanel.close();
   } catch (error) {
     console.error('Error loading song:', error);
   }

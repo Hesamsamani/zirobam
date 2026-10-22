@@ -21,6 +21,8 @@ export interface FloatingWindowDeps {
   dragLabel(): string;
   /** Replaces the browser's Picture-in-Picture API (for tests); null means "not available". */
   pipApi?: PipApi | null;
+  /** How much room the side rail takes at each side of the page, so the panel in the page never sits under it. */
+  insets?(): { left: number; right: number };
 }
 
 const POSITION_KEY = 'metronome.pos';
@@ -173,7 +175,7 @@ export class FloatingWindow {
     document.body.appendChild(box);
 
     const saved = savedPosition();
-    this.place(box, saved ?? { x: this.win.innerWidth - 320, y: 80 });
+    this.place(box, saved ?? { x: this.win.innerWidth - 320 - this.insets().right, y: 80 });
     this.enableDragging(box, bar);
 
     this.box = box;
@@ -181,10 +183,15 @@ export class FloatingWindow {
     this.changes.emit(true);
   }
 
+  private insets(): { left: number; right: number } {
+    return this.deps.insets?.() ?? { left: 0, right: 0 };
+  }
+
   private place(box: HTMLElement, position: { x: number; y: number }): { x: number; y: number } {
-    const maxX = Math.max(EDGE, this.win.innerWidth - (box.offsetWidth || 280) - EDGE);
+    const { left, right } = this.insets();
+    const maxX = Math.max(left + EDGE, this.win.innerWidth - (box.offsetWidth || 280) - EDGE - right);
     const maxY = Math.max(EDGE, this.win.innerHeight - (box.offsetHeight || 200) - EDGE);
-    const x = Math.max(0, Math.min(maxX, position.x));
+    const x = Math.max(left, Math.min(maxX, position.x));
     const y = Math.max(0, Math.min(maxY, position.y));
     box.style.left = `${x}px`;
     box.style.top = `${y}px`;

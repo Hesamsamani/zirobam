@@ -25,13 +25,14 @@ function fakePipWindow() {
 let content: HTMLElement;
 let changes: boolean[];
 
-function make(api: PipApi | null = null) {
+function make(api: PipApi | null = null, insets?: () => { left: number; right: number }) {
   const floating = new FloatingWindow({
     content,
     title: () => 'Metronome',
     closeLabel: () => 'Close the metronome',
     dragLabel: () => 'Drag to move',
     pipApi: api,
+    insets,
   });
   floating.onChange((open) => changes.push(open));
   return floating;
@@ -125,6 +126,37 @@ describe('in-page window (no Picture-in-Picture)', () => {
     pointer('pointermove', 50000, 50000, window);
     expect(parseFloat(box.style.left)).toBeLessThanOrEqual(window.innerWidth);
     expect(parseFloat(box.style.top)).toBeLessThanOrEqual(window.innerHeight);
+  });
+
+  it('stays clear of the side rail: it is not opened or dragged under it', async () => {
+    // the window is 280 wide in these tests (jsdom has no layout), and the edge gap is 8
+    const floating = make(null, () => ({ left: 88, right: 0 }));
+    await floating.open();
+    const box = document.querySelector<HTMLElement>('.metro-float')!;
+    pointer('pointerdown', 100, 100, box.querySelector('.metro-float-bar')!);
+    pointer('pointermove', -5000, 100, window);
+    expect(parseFloat(box.style.left)).toBe(88);
+    pointer('pointermove', 50000, 100, window);
+    expect(parseFloat(box.style.left)).toBe(window.innerWidth - 280 - 8);
+  });
+
+  it('keeps the other side clear for a right-to-left page, where the rail is on the right', async () => {
+    const floating = make(null, () => ({ left: 0, right: 88 }));
+    await floating.open();
+    const box = document.querySelector<HTMLElement>('.metro-float')!;
+    expect(parseFloat(box.style.left)).toBeLessThanOrEqual(window.innerWidth - 88 - 280 - 8);
+    pointer('pointerdown', 100, 100, box.querySelector('.metro-float-bar')!);
+    pointer('pointermove', 50000, 100, window);
+    expect(parseFloat(box.style.left)).toBe(window.innerWidth - 88 - 280 - 8);
+    pointer('pointermove', -5000, 100, window);
+    expect(parseFloat(box.style.left)).toBe(0);
+  });
+
+  it('moves a position that was saved under the rail out from under it', async () => {
+    localStorage.setItem('metronome.pos', '{"x":10,"y":40}');
+    const floating = make(null, () => ({ left: 88, right: 0 }));
+    await floating.open();
+    expect(parseFloat(document.querySelector<HTMLElement>('.metro-float')!.style.left)).toBe(88);
   });
 
   it('ignores a damaged saved position', async () => {
