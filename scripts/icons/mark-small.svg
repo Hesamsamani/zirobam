@@ -1,5 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <!-- The mark for 16 and 32 pixels: heavier strokes and no notehead, which would be a blur at this size. -->
-  <rect width="64" height="64" rx="12" fill="#1a1a1a"/>
-  <polygon points="7,10 57,10 57,23 32,41 57,41 57,54 7,54 7,41 32,23 7,23" fill="#c9a227"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="#1a1a1a" rx="12"/><polygon fill="#c9a227" points="7 10 57 10 57 23 32 41 57 41 57 54 7 54 7 41 32 23 7 23"/></svg>
